@@ -1,0 +1,20 @@
+{
+  "name": "tempex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Agentic arbitration and settlement layer for the agent economy, built on Tempo",
+  "scripts": {
+    "test": "forge test --root contracts",
+    "abi": "bash scripts/gen-abi.sh",
+    "typecheck": "pnpm -r typecheck",
+    "arbiter": "pnpm --filter @tempex/arbiter start",
+    "demo": "pnpm --filter @tempex/demo start"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "packageManager": "pnpm@10.34.5"
+}
