@@ -1,0 +1,27 @@
+{
+  "name": "@tempex/demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Tempex end-to-end demo: a buyer, a seller and an arbiter settling a disputed job on Tempo Moderato",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/cli.ts",
+    "run": "tsx src/cli.ts run",
+    "predict": "tsx src/cli.ts predict",
+    "drill": "tsx src/cli.ts drill"
+  },
+  "dependencies": {
+    "@tempex/arbiter": "workspace:*",
+    "@tempex/sdk": "workspace:*",
+    "viem": "^2.38.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}
