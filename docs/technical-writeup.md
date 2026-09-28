@@ -1,0 +1,604 @@
+# Tempex — Technical Writeup
+
+**Agentic arbitration and settlement layer for the agent economy, built on Tempo.**
+
+Live on Moderato testnet (chain 42431) · escrow `0x7579736636dd67A8811A8A2ef95c44560fe6ec27`
+
+> Every number in this document was measured against the running system, not estimated. Section 10 lists the exact commands and their results.
+
+---
+
+## 1. The problem, precisely stated
+
+Autonomous agents can now *pay* each other. They cannot *disagree* with each other.
+
+That asymmetry is the whole gap. A payment is a one-shot, verifiable state transition — send tokens, done. A commercial relationship is not: money moves first, work arrives later, and the work is judged. Every real service contract in the agent economy has this shape:
+
+```
+    t0 ─── buyer pays ──────────► [ work happens ] ──────────► t1  was it delivered?
+                                                                      │
+                                        ┌─────────────────────────────┴────────────┐
+                                        │                                          │
+                                    yes, fine                                   no / partial
+                                        │                                          │
+                                        ▼                                          ▼
+                                  relationship ends                    ??? no mechanism ???
+```
+
+The `???` is where every existing primitive stops:
+
+| Primitive | What it does | What it cannot do |
+|---|---|---|
+| Plain TIP-20 transfer | Moves value atomically | Has no concept of an obligation or a deadline |
+| Generic escrow | Holds value until a condition | The condition must be *boolean and objective* — "was the file at this hash delivered" — not "was the file *good*" |
+| Multisig | N-of-M keys approve | Requires N humans to be awake, and presumes trust in who the N are |
+| Human arbitration panel | Actually adjudicates | Doesn't scale to agent speed, doesn't run at 3am, isn't reproducible, costs more than the job |
+| "Just let an LLM decide" | Cheap, fast, general | **Is a liability.** An unbounded model with unilateral authority over money is a single point of capture: prompt-injectable, nondeterministic, unauditable, and it cannot sign anything a contract can verify |
+
+So the requirement decomposes into four things that must all hold at once:
+
+1. **Custody** — the money is provably locked, not held by a trusted party.
+2. **Judgement** — someone can assess *qualitative* delivery ("the localization sprint covered 4 of 8 acceptance criteria").
+3. **Boundedness** — that someone, if it's a model, must not have unbounded power. Its output must be caged inside a deterministic envelope, and the cage must be visible on chain.
+4. **Verifiability** — a third party must be able to reconstruct exactly why the money moved, and the chain must have enforced it without trusting anyone's narration.
+
+Tempex is those four things, composed so that each one is checkable independently of the others.
+
+---
+
+## 2. What was built, in one picture
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│ L4  PROOF / DEMO            packages/demo                             1,908 lines │
+│     8-stage live lifecycle, transcript, JSON receipt, offline corpus              │
+│     (predict = "what would the rules say", drill = "can the judge escape?")       │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ L3  JUDGEMENT               packages/arbiter                          1,657 lines │
+│     rules.ts → band · prompt.ts → the exact bytes sent · llm.ts → judge           │
+│     clampToBand → certify against the deployed contract → EIP-712 sign → relay    │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ L2  CLIENT + CRYPTO         packages/sdk                                1,805 lines │
+│     TempexClient · canonical JSON hashing · EIP-712 verdict type · TIP-20 parsing │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ L1  SETTLEMENT              contracts/src                               385 lines │
+│     one escrow, internal job ledger, pull payments, ECDSA verdict gate, 14 events │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ L0  CHAIN                   Tempo Moderato, chain 42431                           │
+│     type-0x76 transactions · TIP-20 stablecoins · memo'd transfers · fee manager  │
+└───────────────────────────────────────────────────────────────────────────────────┘
+```
+
+5,429 hand-written lines (6,580 including generated ABIs). Four packages, one Solidity contract, no proxies, no upgrade path, no admin god-mode over user funds.
+
+**The split between layers is the design.** Everything that can be checked deterministically *is* — off chain, before anything is signed. Everything that must be enforced *is* — on chain, by the contract, using only a 65-byte signature and two `bytes32` hashes as inputs.
+
+```
+        OFF CHAIN                                        ON CHAIN
+  ┌──────────────────────────┐                  ┌──────────────────────────────┐
+  │ read the evidence        │                  │                              │
+  │ compute objective band   │                  │  credits[] ledger            │
+  │ ask the model inside it  │   ── 1 signature ──►  ECDSA vs arbiter slot     │
+  │ clamp, hash, sign        │      + 2 hashes  │  fee split, pull-withdraw    │
+  └──────────────────────────┘                  └──────────────────────────────┘
+    unlimited compute,                              bounded, cheap, verifiable
+    fully reproducible,                             ~ the only part that must be
+    zero gas                                        trust-minimised
+```
+
+---
+
+## 3. The job lifecycle — `TempexEscrow.sol`
+
+One contract, an internal ledger of jobs, ten externally-callable lifecycle functions. Every arrow below is a function; every guard is a `require` quoted from the source.
+
+```
+   createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow)
+        │  require: seller != 0 && seller != msg.sender
+        │           amount > 0 · deadline > now · reviewWindow > 0
+        ▼
+  ┌──────────┐   cancel()                       [buyer only]
+  │ Created  │ ────────────────────────────────────────────────► Cancelled
+  └──────────┘
+        │
+        │  fund()                                   [buyer only, before deadline]
+        │  ┌──────────────────────────────────────────────────────────────────┐
+        │  │ paymentToken.transferFromWithMemo(                               │
+        │  │     msg.sender, address(this), job.amount, bytes32(jobId))       │
+        │  │                  ▲                                               │
+        │  │                  └── the memo IS the job id. No log-joining,     │
+        │  │                      no off-chain correlation table.            │
+        │  └──────────────────────────────────────────────────────────────────┘
+        ▼
+  ┌──────────┐   refundExpired()                  [PERMISSIONLESS]
+  │  Funded  │ ────────────────────────────────────────────────► Refunded
+  └──────────┘   requires block.timestamp > job.deliveryDeadline
+        │
+        │  deliver(deliverableHash)                 [seller only]
+        │  requires block.timestamp <= job.deliveryDeadline
+        │  sets deliveredAt; reviewDeadline = deliveredAt + reviewWindow
+        ▼
+  ┌───────────┐
+  │ Delivered │
+  └───────────┘
+     │      │
+     │      │  dispute(disputeHash)                  [buyer only]
+     │      │  requires block.timestamp <= deliveredAt + reviewWindow
+     │      │                     ▲
+     │      │                     └── evidence is SEALED here. The bundle the
+     │      │                         arbiter will read is pinned by hash
+     │      │                         BEFORE any judgement exists.
+     │      ▼
+     │  ┌──────────┐
+     │  │ Disputed │
+     │  └──────────┘
+     │      │
+     │      │  resolve(jobId, verdict, signature)      [PERMISSIONLESS]
+     │      │  ┌────────────────────────────────────────────────────────────┐
+     │      │  │ require state == Disputed                                  │
+     │      │  │ require verdict.jobId == jobId      ← can't replay verdict  │
+     │      │  │ require awardBps <= 10_000          ← can't over-pay        │
+     │      │  │ require issuedAt <= now <= validUntil ← verdicts EXPIRE      │
+     │      │  │ require ECDSA.recover(verdictDigest(verdict), signature)    │
+     │      │  │         == arbiter                  ← the only signature    │
+     │      │  │                                        check in the system  │
+     │      │  └────────────────────────────────────────────────────────────┘
+     │      ▼
+     │  accept()                     [buyer]        autoAccept()  [PERMISSIONLESS]
+     │  └──────────┬──────────────────────────────────────┬─────  after review window
+     ▼             ▼                                      ▼
+  ┌────────────────────────────────────────────────────────────────┐
+  │                            Settled                             │
+  │   credits[seller] += …   credits[buyer] += …   credits[treasury] += fee │
+  └────────────────────────────────────────────────────────────────┘
+        │
+        │  withdraw()   [any creditor, any time]
+        │  paymentToken.transferWithMemo(msg.sender, amount, bytes32("tempex.withdraw"))
+        │  zeroes credits[msg.sender] BEFORE the external call (nonReentrant + CEI)
+        ▼
+  stablecoins land in the wallet, tagged
+```
+
+Three deliberate architectural choices are visible in that diagram:
+
+**(a) Pull payments, not push.** `resolve` never transfers. It *credits*. `withdraw` moves. This means a reverting receiver, a gas-griefing token, or a reentrant recipient cannot block a settlement — the ruling lands regardless, and each party collects on their own gas. It also makes the on-chain effect of a verdict a pure ledger write, which is exactly what you want when the thing writing it is an automated agent: `resolve` cannot fail for reasons outside the verdict's own validity.
+
+**(b) `resolve` is permissionless.** The arbiter does not need to hold ETH, or a balance of anything, or even be online at the right moment. It signs; anyone relays. The demo proves this by relaying with a **third wallet that is neither party nor arbiter** (`runner.ts:602`, `stageRelay`) — and the contract accepts it, because `ECDSA.recover` is the only authority that matters. This is a real property, not a rhetorical one: it means the arbitration service is a *signing service*, not a *transaction-sending service*, and it can run with zero operational balance.
+
+**(c) `refundExpired` and `autoAccept` are permissionless.** Dead money has a liveness escape hatch that does not depend on either counterparty being alive or honest. The demo's own job history on Moderato shows both halves of this: jobs 1 and 2 are sitting in `Funded`, which is *correct* — nothing is stuck, either the seller delivers or anyone on earth can refund them after their deadlines.
+
+---
+
+## 4. The eight stages, end to end
+
+The demo runner drives a complete disputed-and-resolved job on live Moderato. Eight stages, five wallets, one of them a pure relayer, one of them a hosted fee payer:
+
+```
+  buyer            ESCROW              seller           arbiter          relayer         sponsor
+  0x…f39e         0x7579…ec27          0x…5e7a          0x92F3…C4A8      0x…            sponsor.moderato…
+    │                 │                   │                 │               │              │
+    │
+    │ ── STAGE 1 · case ──────────────────────────────────────────────────────────────────────
+    │   write terms.json + evidence.json in CANONICAL byte form
+    │   → the bytes on disk ARE the bytes that hash to termsHash / disputeHash
+    │
+    │ ── STAGE 2 · approve ───────────────────────────────────────────────────────────────────
+    │  TIP-20 approve(escrow, 25.00 alphaUSD)
+    ├────────────────►│
+    │
+    │ ── STAGE 3 · open ──────────────────────────────────────────────────────────────────────
+    │  ONE type-0x76 transaction, TWO calls, ATOMIC:
+    │    calls = [ createJob(seller, 25e6, termsHash, deadline, window),
+    │              fund(nextJobId()) ]     ← nextJobId() read BEFORE broadcast
+    ├────────────────►│  emit JobCreated(jobId=4, …, termsHash)
+    │                 │  emit JobFunded(4, 25.00)          ← TIP-20 Transfer, memo = 0x…04
+    │                 │
+    │                 │◄──── STAGE 4 · deliver ─────────────────────────────────────────────────
+    │                 │  deliver(jobId, keccak256(deliverable))
+    │                 │  emit JobDelivered(4, hash, t, t+window)     [seller self-pays fee]
+    │                 │
+    │                 │◄──── STAGE 5 · dispute ─────────────────────────────────────────────────
+    │                 │  dispute(4, hashCanonical(bundle))
+    │                 │  emit DisputeRaised(4, disputeHash, t)        [buyer self-pays fee]
+    │                 │
+    │                 │              ── STAGE 6 · rule (OFF CHAIN, zero gas) ──────────────────
+    │                 │                   │  1. read Job(4) + terms.json + evidence.json
+    │                 │                   │  2. RECOMPUTE disputeHashOf(case) and compare
+    │                 │                   │     to job.disputeHash  ── MISMATCH ⇒ REFUSE
+    │                 │                   │  3. caseIntegrity(case)  ── problems ⇒ REFUSE
+    │                 │                   │  4. analyze() → coverage, corroboration, BAND
+    │                 │                   │  5. buildJudgePrompt() → exact bytes → LLM
+    │                 │                   │  6. clampToBand(proposal, band) → {bps, clamped}
+    │                 │                   │  7. verdictDigest(verdict) off-chain
+    │                 │                   │     ==  verdictDigest(verdict) ON THE DEPLOYED
+    │                 │                   │         CONTRACT (read-only eth_call)
+    │                 │                   │     ── MISMATCH ⇒ REFUSE TO SIGN
+    │                 │                   │  8. sign verdict with arbiter key
+    │                 │◄── STAGE 7 · relay ────────────────────────────────────────────────────
+    │                 │  resolve(4, verdict, signature)   ← sent by RELAYER, not the arbiter
+    │                 │  emit VerdictResolved(4, 3250, 7.9625, 16.5375, 0.50,
+    │                 │                       evidenceHash, rationaleHash, verdictDigest)
+    │
+    │◄── STAGE 8 · settle ────────────────────────────────────────────────────────────────────
+    │  buyer.withdraw()   → 16.5375 alphaUSD, memo "tempex.withdraw"
+    │  seller.withdraw()  →  7.9625 alphaUSD, memo "tempex.withdraw"
+    │  treasury.withdraw()→  0.5000 alphaUSD, memo "tempex.withdraw"
+    │
+    └─ receipt written: transcript + expectations + adjudication, 23/23 checked
+```
+
+Note what stage 3 actually accomplishes. On any ordinary EVM chain, opening a funded job is two transactions with a race in between: `createJob` mints an id you only learn from the receipt, so `fund` must wait for inclusion. On Tempo, the two calls ride in **one** transaction, one fee, atomically — and the id is obtainable in advance from `nextJobId()` (`TempexEscrow.sol:313`), with the real id parsed back out of the receipt's `JobCreated` log afterwards to confirm the batch landed where the client predicted. That's a chain-native pattern, not a port.
+
+---
+
+## 5. The trust chain — why a stranger can verify this
+
+This is the part that makes the whole system more than "an LLM with a wallet". Every arrow is a hash commitment, and every commitment is checked by a different party at a different time:
+
+```
+┌─ EVIDENCE ──────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│   terms.json ──canonicalize()──► keccak256 ──► termsHash ────┐                   │
+│        │                                                      │  createJob()      │
+│        │  canonicalize = JSON.stringify with keys sorted      │  ──► ON CHAIN     │
+│        │  RECURSIVELY, arrays preserved. Both parties, any    │                   │
+│        │  runtime, any key order ⇒ SAME bytes ⇒ SAME hash.    │                   │
+│        │                                                      │                   │
+│   deliverable ──keccak256──────────────► deliverableHash ────┼─► deliver()       │
+│        │                                                      │                   │
+│   evidence.json (claim + deliverable + artifacts)             │                   │
+│        └──canonicalize()──► keccak256 ──► disputeHash ────────┘─► dispute()       │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                    │
+              the arbiter, independently, before it will judge anything:
+                                    │
+              ┌─────────────────────┴─────────────────────┐
+              │  disputeHashOf(case) === job.disputeHash  │  ← is this the bundle
+              │                                           │    the buyer pinned?
+              │  caseIntegrity(case) === []               │  ← does the terms doc hash
+              │                                           │    to what the bundle pins?
+              │                                           │    (check reported as PROSE,
+              │                                           │     not as a wrong hash)
+              └─────────────────────┬─────────────────────┘
+                                    ▼
+┌─ JUDGEMENT ─────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│   analyze(job, terms, bundle)                                                   │
+│        ├── scoreCriterion() per acceptance criterion → coverage 0.00–1.00        │
+│        │     (salient-term presence, negation-awareness, stopword-filtered)      │
+│        ├── artifact verification: declared vs. hash-verifiable                   │
+│        ├── deliverableHash integrity vs. the on-chain delivery commitment        │
+│        └── corroboration: does the buyer's claim match what's actually there?    │
+│                                    │                                            │
+│                                    ▼                                            │
+│              RuleBand { lowBps, highBps, center }        ← DETERMINISTIC,        │
+│                                    │                        gas-free, testable   │
+│                                    ▼                                            │
+│              buildJudgePrompt(...)  → the EXACT user message bytes               │
+│                                    │   (reproducible: the arbiter has no other   │
+│                                    ▼    inputs, so a reviewer can rebuild it)    │
+│              judgeWithLlm()  → { sellerAwardBps, confidence, factors, rationale }│
+│                                    │   ← the model's UNCONSTRAINED opinion       │
+│                                    ▼                                            │
+│              clampToBand(proposal, band) → { bps, clamped }                      │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                    ▼
+┌─ SIGNATURE ─────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│   rationaleHash = keccak256(rationale)        ← the model is committed to its    │
+│   evidenceHash  = hashCanonical(bundle)         own prose. Full text lives in    │
+│                                                 the receipt; only the hash       │
+│   Verdict {                                     crosses the wire.                │
+│     jobId,                                                                       │
+│     sellerAwardBps: the CLAMPED number,      ┐                                   │
+│     evidenceHash,                            │  six fields, field-for-field     │
+│     rationaleHash,                           │  identical to the Solidity       │
+│     issuedAt,                                │  struct (SDK verdict.ts:13)      │
+│     validUntil                               ┘                                   │
+│   }                                                                              │
+│        │                                                                         │
+│        ├──► verdictDigest(v, domain)   OFF CHAIN (viem hashTypedData)            │
+│        │                                                                         │
+│        └──► verdictDigest(v)           ON CHAIN  (eth_call to the real escrow)   │
+│                    │                                                             │
+│                    └──── CERTIFICATION: both must be equal ──── else REFUSE      │
+│                                                                                 │
+│        └──► signVerdict(arbiterKey) → 65-byte secp256k1 signature                │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                    ▼
+┌─ SETTLEMENT ────────────────────────────────────────────────────────────────────┐
+│                                                                                 │
+│   resolve(jobId, verdict, signature)    ← broadcast by ANYONE                    │
+│      digest = verdictDigest(verdict)          [computed by the CONTRACT]         │
+│      require ECDSA.recover(digest, sig) == arbiter     ← the one gate            │
+│      → credits[seller] / credits[buyer] / credits[treasury]                      │
+│      → withdraw() → TIP-20 Transfer with memo "tempex.withdraw"                  │
+│                                                                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+The **certification step** is the one to point at. `adjudicate.ts:270` is `const certified = matches && signerIsArbiter;` — the arbiter does not sign a verdict it has not first round-tripped through the *deployed contract's own* `verdictDigest`. That single line closes an entire class of bug that otherwise only surfaces as a mysterious revert on a live network: a domain-separator mismatch, a field-order drift, a `uint64`-vs-`uint256` widening mistake, a chain-id error. Off-chain signing code and on-chain verification code are two independent implementations of one spec, and they are pinned to each other *before* money is at stake. The comment on `VERDICT_TYPES` says it plainly: *"Any divergence here produces signatures the contract rejects, so the shape is asserted against the live contract's `verdictDigest` in the demo run."*
+
+This is also why there is no upgrade path and no proxy. The arbiter's authority is a single storage slot (`arbiter`, `TempexEscrow.sol:77`) that the owner can rotate, and the *only* thing that slot can do is validate a signature. There is no function that lets the owner move escrowed funds, seize credits, or void a job. The worst-case admin action is choosing who judges future disputes — which is exactly the trust assumption a buyer and seller need to consent to anyway when they transact, and which is public, per-job, and changeable.
+
+---
+
+## 6. The guardrail — the load-bearing idea
+
+If there is one thing to defend in a Q&A, it's this. An LLM arbiter that can output any number between 0 and 10000 is a liability, because the model is the *only* thing standing between a prompt injection and your money. So the model is not given authority. It is given a **range**, derived deterministically from the evidence, and its answer is clamped into that range mechanically:
+
+```
+                        evidence: coverage = 0.375, corroboration = grounded,
+                                  deliverableHash matches, evidence strength = 1.00
+                                                    │
+                                                    ▼
+        center = round(10000 × coverage)            = 3750
+        center -= 500   (claim is 'grounded')       = 3250
+        verified = hashMatches && coverage≠null && strength==1.00  ⇒  TRUE
+        halfWidth = 1200 (verified)  |  2500 (unverified)
+                                                    │
+                                                    ▼
+   ┌──────────────────── THE BAND ─────────────────────────────────────┐
+   │                                                                   │
+   │  0        2050                    3250                  4450   10000
+   │  ├──────────┼───────────────────────┼─────────────────────┼───────┤
+   │             │◄──── ±1200 bps ──────►│                             │
+   │             │                                                 →   │
+   └───────────────────────────────────────────────────────────────────┘
+
+                the judge proposes anywhere it likes:
+
+        proposal  -8000 ────────► clamped to 2050   clamped=true   ┐
+        proposal   3100 ────────► passes through    clamped=false  │ the clamp is RECORDED
+        proposal  10000 ────────► clamped to 4450   clamped=true   ┘ and written into the
+                                                                    ruling that is signed
+```
+
+Two properties make this a real guardrail rather than theatre:
+
+**The band is a function of the evidence alone.** `analyze()` is pure, deterministic, gas-free TypeScript (`rules.ts:180`). Same case files in, same band out, forever, on any machine. It is not the model's opinion of the band — the model never sees a chance to influence it. The band is computed *first*, and the prompt *tells* the model what it is, in a `## Guardrail` section that states the numbers and the consequence (`prompt.ts:94-97`).
+
+**The clamp is asymmetric in the right direction.** An unverified case — hash mismatch, no scoreable criteria, artifacts that don't verify — gets a *wider* band (±2500) because the rules legitimately know less. A verified case gets a *narrower* one (±1200) because the rules know more. So the model's discretion is *largest exactly where the evidence is weakest*, which is the honest allocation: when the deterministic layer can't tell, a general reasoner should be granted more room, not less. And the drift signals push the centre: a grounded claim (the buyer's story matches the artifacts) nudges toward the buyer; a contradicted claim or a deliverable-hash mismatch nudges toward the seller — both by a bounded 500 bps, never enough to override the coverage term.
+
+Then comes the discipline that keeps it from being a rubber stamp. `drill.ts` pushes every scenario's `drill` proposals through `clampToBand` and checks five invariants, the third of which is the one that matters:
+
+> **a proposal already inside the band must come back `clamped: false`.**
+>
+> *"A clamp that fires on every input is not a guardrail, it is a replacement for the judge."*
+
+That's the failure mode nobody tests for. If the clamp were wrong — a sign error, an off-by-one, a band narrower than intended — *every* verdict would come back clamped, and the system would look identical from the outside: money still moves, rulings still land, the demo still passes. The judge would just be decorative, and nobody would notice for months. So the drill asserts the negative: at least one honest proposal must survive untouched. It runs offline in milliseconds, and `pnpm demo drill` prints *"the guardrail held on all 4 scenarios: no judge proposal escaped its band."*
+
+The four-scenario corpus is designed to hit each regime:
+
+| scenario | amount | coverage | corroboration | centre | band | what it exercises |
+|---|---|---|---|---|---|---|
+| `underdelivered` | 25.00 alphaUSD | 0.375 | grounded | 3250 | 2050–4450 | partial credit, the demo's live case |
+| `nodelivery` | 40.00 alphaUSD | 0.00 | grounded | 0 | 0–1200 | band clamped at the 0 floor |
+| `badfaith` | 18.00 alphaUSD | 1.00 | **contradicted** | 10000 | 8800–10000 | claim contradicted by the artifacts; band clamped at the 10000 ceiling |
+| `admission` | 12.50 alphaUSD | 0.75 | grounded | 7000 | 5800–8200 | seller's own text admits the gap |
+
+`pnpm demo predict` runs the *real* `analyze()` over all four and asserts the numbers above — *"all 4 scenarios reproduce their expected band"*. That is a regression test on the arbitration policy itself, and it requires no chain, no key, and no API key. Change a stopword or a nudge constant and the band moves, predict fails, and it tells you which scenario and which field.
+
+---
+
+## 7. The money, exactly
+
+`resolve` (`TempexEscrow.sol:262-271`) is four lines of arithmetic. Here is what happens to 25.00 alphaUSD:
+
+```
+    escrow holds 25.00 alphaUSD
+                 │
+                 │  arbitrationFee = amount × arbitrationFeeBps / 10000
+                 │                = 25.00 × 200/10000        = 0.5000
+                 ▼
+        ┌────────────────────────────────────────────────► credits[treasury]
+        │
+    remaining = amount − fee = 24.5000
+                 │
+                 │  sellerAmount = remaining × verdict.sellerAwardBps / 10000
+                 │              = 24.50 × 3250/10000             = 7.9625
+                 │  buyerAmount  = remaining − sellerAmount      = 16.5375
+                 ▼
+        ┌────────────────────────────────────────────────► credits[seller] 7.9625
+        └────────────────────────────────────────────────► credits[buyer] 16.5375
+
+    the accept() path is simpler — no arbiter, no dispute:
+        fee = amount × platformFeeBps / 10000   (50 bps = 0.5%)
+        sellerAmount = amount − fee
+```
+
+Two things worth noting. First, **the arbitration fee is charged before the split**, on the whole disputed amount, and is not the arbiter's to award — the prompt says so explicitly (`prompt.ts:13`: *"The arbitration fee is charged before your split and is not yours to award."*). The model cannot steer it. Second, `sellerAwardBps` applies to `remaining`, not to `amount`, which means a 10000 award returns `amount − fee`, not `amount` — the fee is unavoidable on the dispute path, and that's intentional: it's what makes a dispute expensive enough to be worth adjudicating and cheap enough (2%) not to be punitive.
+
+The fee ceilings are capped in code, not in policy: `MAX_PLATFORM_FEE_BPS = 500` and `MAX_ARBITRATION_FEE_BPS = 1_000` (`TempexEscrow.sol:25-26`), enforced in both the constructor and `setFees`. The owner cannot set a 50% take rate on this deployment, ever.
+
+---
+
+## 8. Deep on Tempo — the chain-specific engineering
+
+This is the part that distinguishes a Tempo project from an EVM project deployed to Tempo. Every item below is something the code does *because* the chain works this way, and each is verifiable in the run receipt.
+
+### 8.1 There is no gas token. The fee is a TIP-20 transfer.
+
+On Tempo, a transaction pays for itself in the same stablecoin it moves. The fee is not `gasUsed × gasPrice` of a native asset — it is a `Transfer` of the fee token from the payer to the **fee manager**, `0xfeec000000000000000000000000000000000000`, appearing in the receipt's own logs:
+
+```
+  ONE TYPE-0x76 TRANSACTION, ONE RECEIPT, TWO TIP-20 TRANSFERS
+
+  receipt.logs = [
+     ┌─ 0: TIP-20 Transfer ──────────────────────────────────────────────────┐
+     │    from: buyer                                     ← the actual payment│
+     │    to:   0x7579…ec27  (the escrow)                                     │
+     │    value: 25.000000 alphaUSD                                           │
+     │    memo:  0x000…04    ← the JOB ID, as a 32-byte memo                  │
+     └────────────────────────────────────────────────────────────────────────┘
+     ┌─ 1: TIP-20 Transfer ──────────────────────────────────────────────────┐
+     │    from: buyer                                     ← the transaction fee│
+     │    to:   0xfeec000000000000000000000000000000000000000                 │
+     │    value: 0.000485 alphaUSD                                            │
+     └────────────────────────────────────────────────────────────────────────┘
+  ]
+```
+
+That identity — *the fee is just another transfer in the same list* — is the kind of thing that turns into a bug if you don't notice it, and into a feature if you do. It turned into both here:
+
+- **The bug:** the demo's wallet-delta expectations were off by exactly `0.000485` on three accounts, consistently, across runs. Root cause: `after − before` on a stablecoin balance is `credit − fee`, because the fee is deducted from the *same balance* the credit landed in. The fix is arithmetic, not hand-waving — `runner.ts` now subtracts the fee it can see in the receipt from the expected delta, and it asserts the fee's payer is the sender before doing so.
+- **The feature:** `feePaid(receipt.logs)` in the SDK scans logs for a `Transfer` whose `to` is the fee manager and returns `{ payer, amount, token }`. The transcript prints a `fee` row on every stage: `the sender paid 0.000485 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token`. **The demo's transcript is a receipt of the chain's own fee mechanism**, not a claim about it.
+
+### 8.2 Sponsorship is proven, not assumed
+
+`feePayer` being present on a receipt proves nothing — an ordinary unsponsored Tempo transaction names its own sender as fee payer. The only evidence of sponsorship is that the payer *isn't* the sender. The SDK's `reportFeePayer` (`runner.ts:729`) branches on exactly that:
+
+```
+   receipt.feePayer === sender   →   "the sender paid 0.000485 alphaUSD"        [unsponsored]
+   receipt.feePayer !== sender   →   "sponsored by 0x58aa…442c — it paid
+                                      0.011021 alphaUSD"                       [sponsored]
+```
+
+Both branches were verified live. The `--sponsored` run routes through `withFeePayer(http(rpc), http('https://sponsor.moderato.tempo.xyz'))` and `feePayer: true` on the request (`client.ts:89-102`, `client.ts:116-134`), and the receipt shows a *different* address paying a *larger* fee for the same work — because the batched transaction is bigger.
+
+Honest note: on the fresh job the sponsorship run cost more in absolute terms than the unsponsored run, because it batched more work. Sponsorship is about *who pays*, not *how much*.
+
+### 8.3 Code space costs ~800 gas/byte. That's a design constraint.
+
+Tempo prices contract deployment at roughly **800 gas per byte of runtime code**, versus 200 on a standard EVM chain. This escrow's runtime is 13,090 bytes. That's **11,036,281 gas** for one deployment (`deployments/moderato.json`, tx `0xd27c7cd8…`, block 37,010,916).
+
+The consequence is structural: **you cannot afford one contract per job.** A factory that deployed a per-job escrow would cost 11M gas per job. So Tempex has exactly one escrow holding a `mapping(uint256 => Job)` ledger (`TempexEscrow.sol:83`), and per-job data lives in storage, not in code. The fee model has to accommodate it too — a marketplace on Tempo cannot fund itself with per-job contract creation. This is the kind of chain-specific cost structure that a ported EVM design would trip over on day one, and it's why `refundExpired`/`autoAccept` being *permissionless* matters more here than it would elsewhere: a single shared contract means a single shared keeper surface, and anyone can be the keeper.
+
+`forge script` deployment also does not work on this chain — the deployment was done with a direct type-0x76 transaction, which is recorded in the deployment notes along with the failed attempts.
+
+### 8.4 Batched calls: one transaction, one fee, atomic
+
+`createJob` + `fund` in one transaction. The pattern has a specific wrinkle the code handles explicitly: **batched calls cannot see each other's return values**, so `fund(jobId)` cannot read the id `createJob` just minted. Hence `nextJobId()` (`TempexEscrow.sol:313`), a view the client calls *before* building the batch, and `createdJobId(receipt.logs)` in the SDK, which parses the id back out of the `JobCreated` event and reconciles. On-chain proof: `deployments/moderato.json` records job 2's batched open at `gasUsed: 1320324`, one fee.
+
+```
+   NAIVE (any EVM chain)                          TEMPO (batched)
+   ─────────────────────                          ───────────────
+   tx1: createJob(...)                            tx: calls = [ createJob(...),
+   ...wait for inclusion...                                        fund(nextJobId()) ]
+   tx2: fund(receipt.jobId)                            one signature, one fee, atomic
+   two fees, one race window                            reconcile id from JobCreated log
+```
+
+### 8.5 Memos carry business meaning, not just metadata
+
+Tempo's TIP-20 exposes `transferWithMemo`. Tempex uses the memo field for two different jobs:
+
+- **`fund` writes the job id as the memo**: `transferFromWithMemo(msg.sender, address(this), amount, bytes32(jobId))`. An indexer reconciling inbound payments to jobs needs *no* contract-log join — the payment carries its own reconciliation key. The deployment file records the memo-bearing-fund feature with its event topic (`0x57bc7354…`) and a proof transaction.
+- **`withdraw` writes a brand tag**: `WITHDRAW_MEMO = bytes32("tempex.withdraw")` = `0x74656d7065782e7769746864726177…`. Every settlement payout is self-identifying in the token's own transfer history — you can distinguish a Tempex payout from any other transfer without a single contract call. The demo *asserts* this: `withdrawCredit` (`runner.ts:684`) finds the memo'd transfer in the receipt and fails loudly if the tag is missing.
+
+The distinction is deliberate: funding memos carry **variable data** (which job), withdrawal memos carry **a constant tag** (what kind of event this is). One memo namespace, two uses, no collision.
+
+### 8.6 The toolchain reality
+
+- Chain **42431**, RPC `https://rpc.moderato.tempo.xyz`, WS `wss://rpc.moderato.tempo.xyz`, 1s blocks, type-118 (`0x76`) transactions.
+- Explorer: `https://explore.testnet.tempo.xyz/tx/<hash>`. The bare `explore.tempo.xyz` host **404s** — verified live, and recorded in `config.ts` with a comment so nobody re-derives it.
+- `viem/tempo` re-exports `Addresses` and `withFeePayer` but **not** `Hex`. `createClient` from `'viem/tempo'` arrives decorated with public, wallet, and tempo actions.
+- Stablecoins at 6 decimals: pathUSD `0x20c0…0000`, AlphaUSD `…0001`, BetaUSD `…0002`, ThetaUSD `…0003`. This deployment's fee token and payment token are both AlphaUSD.
+- **There is no ERC-8004 agent-identity registry on Tempo.** Verified against the chain's address book in `viem` (`src/tempo/Addresses.js` exports `accountKeychain`, `addressRegistry`, `nonceManager`, `signatureVerifier`, `stablecoinDex`, `tip20Factory`, `tip403Registry`, `zoneFactory`… with no identity or reputation registry), and against the Tempo introduction notes, which say nothing about one. `.env.example` originally carried a `TEMPO_8004=1` flag describing a feature that did not exist; that line was removed and replaced with an honest note: *"agent identity is enforced by the escrow itself, not by an agent registry… the escrow records the arbiter it trusts, and every ruling must recover to that address under EIP-712 or `resolve` reverts."* Claiming a standard you don't integrate is worse than not integrating it.
+
+---
+
+## 9. Where the code lives
+
+```
+  816387b2/
+  ├── contracts/                     385 lines of Solidity
+  │   ├── src/TempexEscrow.sol        361   the whole settlement layer
+  │   └── src/ITIP20.sol               24   minimal interface: transfer/transferWithMemo/
+  │                                          transferFromWithMemo/approve/balanceOf/decimals
+  ├── packages/
+  │   ├── sdk/                     1,805    shared by every process
+  │   │   ├── src/client.ts          442    TempexClient: every read, every write, one funnel
+  │   │   ├── src/evidence.ts        169    canonical JSON, hashing, case files, integrity
+  │   │   ├── src/verdict.ts          92    EIP-712 mirror of the contract's typehash
+  │   │   ├── src/config.ts           89    chain constants, env loading, address resolution
+  │   │   ├── src/abi/TempexEscrow.ts 1051  generated ABI (typed with viem)
+  │   │   └── src/abi/TIP20.ts        100   generated TIP-20 ABI
+  │   ├── arbiter/                 1,657    the judge
+  │   │   ├── src/adjudicate.ts      419    the pipeline + CERTIFICATION before signing
+  │   │   ├── src/rules.ts           418    the deterministic band engine
+  │   │   ├── src/cli.ts             361    adjudicate / watch / verify
+  │   │   ├── src/verify.ts          275    proves the three claims a sceptic would check
+  │   │   ├── src/watch.ts           221    catch-up log scan + live WS subscription
+  │   │   ├── src/llm.ts             184    OpenAI-compatible judge over plain fetch
+  │   │   ├── src/prompt.ts          102    the exact bytes the model receives
+  │   │   └── src/store.ts            57    rulings on disk
+  │   └── demo/                    1,908    the proof
+  │       ├── src/runner.ts          960    8 stages, 23 expectations, receipt builder
+  │       ├── src/scenarios.ts       338    4-case corpus with asserted expectations
+  │       ├── src/cli.ts             265    help/stages/scenarios/predict/drill/run
+  │       ├── src/predict.ts         218    offline band reproduction
+  │       ├── src/drill.ts           113    the guardrail invariants
+  │       └── src/transcript.ts      170    the one artifact read twice
+  ├── runs/                                 JSON receipts of live runs
+  └── deployments/moderato.json             addresses, txs, and the notes on how they got there
+```
+
+The pieces worth quoting:
+
+**`client.ts:116` — `send()` is the single funnel.** Every state-changing call in the whole system goes through one function that assembles a `sendTransaction` with `calls[]`, `feeToken`, optional `nonceKey` / `validBefore` / `validAfter` / `feePayer`, waits, and throws on revert. One place to reason about gas, sponsorship, batching, and nonce keys. `createAndFundJob`, `deliver`, `dispute`, `resolve`, `withdraw` are each ~15 lines because of it.
+
+**`rules.ts:326-340` — the band.** Fifteen lines that decide the entire guardrail. Coverage × 10000, a bounded ±500 nudge from corroboration, a ±500 nudge if the delivered artifact doesn't match its on-chain commitment, then a half-width of 1200 if verified and 2500 if not. Every constant is named and at the top of the file. This is the code that limits the AI.
+
+**`adjudicate.ts:132` — the ordering.** *"pin the evidence, derive the objective band, let the judge speak inside it, then certify against the live contract before anything is broadcast."* Four phases, in that order, for a reason: you cannot judge before you've pinned, you cannot clamp before you've derived, and you must never broadcast before you've certified.
+
+**`adjudicate.ts:270` — `const certified = matches && signerIsArbiter;`.** The line that makes off-chain and on-chain agree.
+
+**`llm.ts:43` — `llmConfigFromEnv` returns `null` when no key.** *"an unconfigured judge must never be able to stall a dispute."* The arbiter degrades to the deterministic rule engine and *says so in the transcript* rather than failing or silently pretending. A missing API key is a configuration state, not an outage.
+
+**`watch.ts:60` — two entry points.** *"an agent that only hears about disputes opened while it happens to be running is not an arbitration service: a catch-up scan over past logs, then a live subscription."* Restart-safety is a design requirement, not a nice-to-have — an arbiter that loses disputes when it reboots is worse than no arbiter, because the parties have already escrowed against it.
+
+**`verify.ts:135` — `verifyArbiter`.** Proves the three claims in the order a sceptic would check them: *the files reproduce the pinned hash, the band is a function of those files, and the signature would be accepted by the deployed escrow.* It runs against a **fabricated dispute that never happened**, with deliberately non-real accounts — so the verification harness itself proves it isn't resting on live state.
+
+**`transcript.ts` — one artifact read twice.** *"Every line goes through here, so the transcript on screen and the JSON receipt are one artifact read twice."* The terminal output and the machine-readable receipt cannot diverge, because there is one writer.
+
+---
+
+## 10. Evidence
+
+Everything below was run, not estimated:
+
+| Check | Command | Result |
+|---|---|---|
+| Contract test suite | `forge test` | **25/25 passing** |
+| Typecheck, all 4 packages | `pnpm -r exec tsc --noEmit` | **clean** |
+| Policy regression | `pnpm demo predict` | *"all 4 scenarios reproduce their expected band"* |
+| Guardrail invariants | `pnpm demo drill` | *"the guardrail held on all 4 scenarios: no judge proposal escaped its band"* |
+| Live E2E, unsponsored | `pnpm demo run --fresh` | job **4**, **23/23** expectations, 8/8 stages, 0 skipped |
+| Live E2E, sponsored | `pnpm demo run --fresh --sponsored` | job **5**, **23/23** expectations, 8/8 stages |
+| Contract deployment | tx `0xd27c7cd8…`, block 37,010,916 | `0x7579736636dd67A8811A8A2ef95c44560fe6ec27`, gasUsed 11,036,281 |
+| Batched create+fund | job 2 open | one tx, `gasUsed: 1,320,324` |
+| Fee mechanism | both runs | fee visible as a TIP-20 `Transfer` to `0xfeec…0000`, payer asserted |
+| Memo reconciliation | both runs | `0x000…05` on funding, `tempex.withdraw` on every payout |
+
+Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4) and `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5). Each receipt carries 19 top-level keys including `expectations` (23 entries), `transcript` (91 beats), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest.
+
+Live job state on Moderato: jobs 1–2 `Funded` (idle, refundable by anyone after their deadlines), jobs 3, 4, 5 `Settled`.
+
+---
+
+## 11. Stated limits
+
+Better these come from the source than from a judge.
+
+1. **The LLM path has never executed live.** `OPENAI_API_KEY` is empty in `.env`, so every run to date went through the deterministic rule engine, and the transcript says so in plain English: `no OPENAI_API_KEY configured; ruled by the deterministic rule engine`. The LLM code path is written, typechecked, and has a fallback contract, but it is **unexercised against a real endpoint**. One pasted key and one `pnpm demo run` closes this.
+2. **No appeal, no arbiter-liveness fallback.** If the arbiter never signs, a `Disputed` job has no timeout and no alternate path. The escape hatches (`refundExpired`, `autoAccept`) cover `Funded` and `Delivered`, not `Disputed`. The honest framing: the arbiter is a trusted-but-constrained role, and its *only* failure mode is refusal, never theft.
+3. **No proxy, no upgrade path.** Deliberate — an upgradeable escrow is an upgradeable promise — but it means a bug is permanent. The 25-test suite and the batch of live jobs are the mitigation.
+4. **`rules.ts` scores by salient-term coverage**, which is a heuristic, not semantic understanding. It is good at "the spec said *glossary* and the deliverable never mentions a glossary" and bad at judging quality. That's precisely why the band widens when verification fails and why the LLM layer exists at all.
+5. **No TypeScript test files.** The offline harness *is* `predict` + `drill` + `verifyArbiter`, which is arguably better evidence (they test the policy, not the plumbing) but it isn't a conventional test suite and a reader looking for `*.test.ts` will not find one.
+6. **The repo has zero git commits.** Everything is untracked on `main` — the largest process risk to the submission, since the repo is a scored artifact.
+
+---
+
+## 12. Why this is the right shape
+
+Three sentences, if the clock is short.
+
+**It solves a real and imminent gap**: agents can pay each other but cannot resolve disagreement, and every work-for-hire relationship in the agent economy is a disagreement waiting to happen.
+
+**It uses the model where models are good and the rules where rules are good**: the deterministic layer reads the evidence, the model reasons inside a band the rules computed, the contract enforces a signature the model cannot forge — so the AI is genuinely useful and genuinely bounded, and the bound is on chain, not in a policy document.
+
+**It is built out of Tempo rather than on top of it**: the fee is a TIP-20 transfer to the fee manager, funding memos carry the reconciliation key, `createJob`+`fund` is one batched type-0x76 transaction, sponsorship is a proven fee-payer difference, and the ~800 gas/byte code pricing is why there is one escrow with an internal ledger instead of a factory. Every one of those is visible in a receipt you can open on `explore.testnet.tempo.xyz`.
