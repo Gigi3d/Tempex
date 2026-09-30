@@ -56,7 +56,7 @@
     }
   },
   "notes": [
-    "Tempo contract creation is priced far above vanilla EVM: ~11.0M gas for this 13,090-byte runtime (~800 gas/byte + ~0.5M fixed) vs the 200 gas/byte EVM default.",
+    "Tempo contract creation is priced far above vanilla EVM: 11,036,281 gas for this deployment, whose runtime is 9,324 bytes (confirmed by eth_getCode at contracts.TempexEscrow.address) and whose creation payload was 11,217 bytes (11,025 initcode + 192 constructor args, in calls[0].input of the type-0x76 tx). Storing the same 9,324 bytes on a standard EVM chain costs 1,864,800 gas at 200 gas/byte, so this deployment is 5.92x that - an all-in effective 1,183.6 gas per runtime byte.",
     "forge script cannot deploy this: it ignores --gas-limit and broadcasts with its own estimate (2,845,784), which reverts out of gas. Use scripts/deploy-escrow.sh (forge create --gas-limit 20000000).",
     "Failed attempts (left as evidence in the record, none of which created code): forge script 0x57546be5 (gas 2845784), forge script 0x947a0739 (gas 2845784), forge create 0xabcf76c8 (gas 6000000), cast send nonce-3 (gas 3000000).",
     "Supersedes 0x1D3F259A2693361E58fC7237c66ACB8304D1A6a4 (pre-memo build, block 37010034).",

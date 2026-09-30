@@ -3,7 +3,7 @@
 #
 # Why not `forge script`: forge script ignores --gas-limit for the broadcast and sends with
 # its own estimate (2.85M for this contract). Tempo prices contract creation far above the
-# EVM default (measured: ~11.0M gas for 13,090 bytes of runtime code), so the tx reverts
+# EVM default (measured: 11,036,281 gas for a 9,324-byte runtime), so the tx reverts
 # out of gas. `forge create` honors --gas-limit.
 set -euo pipefail
 cd "$(dirname "$0")/.."

@@ -465,9 +465,13 @@ Both branches were verified live. The `--sponsored` run routes through `withFeeP
 
 Honest note: on the fresh job the sponsorship run cost more in absolute terms than the unsponsored run, because it batched more work. Sponsorship is about *who pays*, not *how much*.
 
-### 8.3 Code space costs ~800 gas/byte. That's a design constraint.
+### 8.3 Deploying code costs ~5.9× what a standard EVM chain charges just to store it. That's a design constraint.
 
-Tempo prices contract deployment at roughly **800 gas per byte of runtime code**, versus 200 on a standard EVM chain. This escrow's runtime is 13,090 bytes. That's **11,036,281 gas** for one deployment (`deployments/moderato.json`, tx `0xd27c7cd8…`, block 37,010,916).
+Deploying the escrow cost **11,036,281 gas** (`deployments/moderato.json`, tx `0xd27c7cd8…`, block 37,010,916, status `0x1`). Its runtime bytecode is **9,324 bytes**, verifiable two independent ways: `deployedBytecode.object` in `contracts/out/TempexEscrow.sol/TempexEscrow.json`, and `eth_getCode` at `0x7579736636dd67A8811A8A2ef95c44560fe6ec27`, which returns those same 9,324 bytes from the live chain. The creation payload actually sent was 11,217 bytes — 11,025 of initcode plus 192 of constructor arguments, in `calls[0].input` of the type-0x76 transaction (the payload is *not* at the top-level `input`; that field is empty for batched transactions).
+
+A standard EVM chain charges 200 gas per byte to deposit runtime code, so storing these same 9,324 bytes costs **1,864,800 gas** before any execution gas. One Tempo deployment cost **5.92×** that — an all-in effective **1,183.6 gas per runtime byte** (11,036,281 ÷ 9,324).
+
+On the record: an earlier revision of this section quoted a "~800 gas/byte" Tempo tariff and a 13,090-byte runtime. Neither was measured, and 13,090 is not this contract's runtime size. The numbers above are the measured ones, and every input is reproducible from a receipt or from the chain.
 
 The consequence is structural: **you cannot afford one contract per job.** A factory that deployed a per-job escrow would cost 11M gas per job. So Tempex has exactly one escrow holding a `mapping(uint256 => Job)` ledger (`TempexEscrow.sol:83`), and per-job data lives in storage, not in code. The fee model has to accommodate it too — a marketplace on Tempo cannot fund itself with per-job contract creation. This is the kind of chain-specific cost structure that a ported EVM design would trip over on day one, and it's why `refundExpired`/`autoAccept` being *permissionless* matters more here than it would elsewhere: a single shared contract means a single shared keeper surface, and anyone can be the keeper.
 
@@ -673,6 +677,6 @@ Four sentences, if the clock is short.
 
 **It uses the model where models are good and the rules where rules are good**: the deterministic layer reads the evidence, the model reasons inside a band the rules computed, the contract enforces a signature the model cannot forge — so the AI is genuinely useful and genuinely bounded, and the bound is on chain, not in a policy document.
 
-**It is built out of Tempo rather than on top of it**: the fee is a TIP-20 transfer to the fee manager, funding memos carry the reconciliation key, `createJob`+`fund` is one batched type-0x76 transaction, sponsorship is a proven fee-payer difference, and the ~800 gas/byte code pricing is why there is one escrow with an internal ledger instead of a factory. Every one of those is visible in a receipt you can open on `explore.testnet.tempo.xyz`.
+**It is built out of Tempo rather than on top of it**: the fee is a TIP-20 transfer to the fee manager, funding memos carry the reconciliation key, `createJob`+`fund` is one batched type-0x76 transaction, sponsorship is a proven fee-payer difference, and the measured 11,036,281-gas cost of deploying a 9,324-byte runtime is why there is one escrow with an internal ledger instead of a factory. Every one of those is visible in a receipt you can open on `explore.testnet.tempo.xyz`.
 
 **It can be adopted by something that has never heard of it**: the beacon answers *what is this, what does it cost, can I use it with no balance* in machine-readable JSON, prices the one expensive query so spam costs something, carries its fix inside every error, and holds no keys at all — so the front door can be trusted by an agent that trusts nothing, including the front door.
