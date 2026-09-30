@@ -75,6 +75,8 @@ Tempex is those four things, composed so that each one is checkable independentl
 
 10,362 hand-written lines (11,513 including generated ABIs). Five packages, one Solidity contract, no proxies, no upgrade path, no admin god-mode over user funds.
 
+The box says **14 events** because that is the ABI's count, not the source's: `TempexEscrow.sol` declares 12, and `Ownable` and `EIP712` contribute `OwnershipTransferred` and `EIP712DomainChanged`. A reader who runs `grep -c "^    event " contracts/src/TempexEscrow.sol` gets 12 and is right; both numbers describe the same contract.
+
 **The split between layers is the design.** Everything that can be checked deterministically *is* — off chain, before anything is signed. Everything that must be enforced *is* — on chain, by the contract, using only a 65-byte signature and two `bytes32` hashes as inputs.
 
 ```
@@ -548,7 +550,7 @@ A protocol with no front door waits to be discovered. `packages/beacon` is 4,933
 
 That is the adoption thesis in one sentence: **the beacon makes Tempex easy to start using and impossible to be defrauded by while starting**, because the entity doing the convincing has no authority over anything.
 
-Measured, not asserted: `pnpm --filter @tempex/beacon smoke` runs **185 assertions against the live chain** — a cold index rebuild over ~570k blocks, all 14 free GET routes, the 402 refusal path, a challenge/signature registration, replay and wrong-signer refusals, and a settled job's proof — then finishes with the treasury balance provably unchanged at 1,000,001,101,204 units. Receipt: `runs/beacon-smoke-2026-09-30T16-17-48-750Z.json`.
+Measured, not asserted: `pnpm --filter @tempex/beacon smoke` runs **185 assertions against the live chain** — a cold index rebuild over 578,075 blocks (37,010,916→37,588,991), all 14 free GET routes, the 402 refusal path, a challenge/signature registration, replay and wrong-signer refusals, and a settled job's proof — then finishes with the treasury balance provably unchanged at 1,000,001,101,204 units. Receipt: `runs/beacon-smoke-2026-09-30T17-32-38-630Z.json`.
 
 ---
 
@@ -678,14 +680,14 @@ Everything below was run, not estimated:
 | Batched create+fund | job 2 open | one tx, `gasUsed: 1,320,324` |
 | Fee mechanism | both runs | fee visible as a TIP-20 `Transfer` to `0xfeec…0000`, payer asserted |
 | Memo reconciliation | both runs | `0x000…05` on funding, `tempex.withdraw` on every payout |
-| Beacon cold start | `pnpm --filter @tempex/beacon smoke` | 29 events folded into **5 jobs**, blocks 37,010,916→37,581,537, agreeing with `jobCount()=5`, `nextJobId()=6` |
+| Beacon cold start | `pnpm --filter @tempex/beacon smoke` | 29 events folded into **5 jobs**, blocks 37,010,916→37,588,991, agreeing with `jobCount()=5`, `nextJobId()=6` |
 | Beacon, live | same | **185 assertions**, 0 failures, **0 units spent**, treasury balance unchanged at 1,000,001,101,204 |
 | Manifest honesty | same | governance in the manifest equals `arbiter()`/`treasury()`/`owner()` read live; fee **measured** from tx `0xfbb77eb2…`, not estimated |
 | Route consistency | `assertRoutesAgree()` at import | 18 routes, 9 tools, 1 paid — docs and router cannot diverge, or the process will not start |
 | Paid discovery gate | `GET /discover` unpaid | **402**; five distinct ways of not paying all refused, zero units moved |
 | Registration integrity | `POST /registry` | replayed challenge → 400; wrong signer → 400 *"signature recovers to …"*; entry re-verifies offline |
 
-Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4), `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5), and `runs/beacon-smoke-2026-09-30T16-17-48-750Z.json` (the beacon's 185-assertion live run, all eight steps with every assertion and evidence line). Each demo receipt carries 19 top-level keys including `expectations` (23 entries), `transcript` (91 beats), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest. The beacon receipt is written **last**, after every assertion, so a receipt can only exist for a run that passed end to end.
+Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4), `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5), and `runs/beacon-smoke-2026-09-30T17-32-38-630Z.json` (the beacon's 185-assertion live run, all eight steps with every assertion and evidence line). Each demo receipt carries 20 top-level keys including `expectations` (23 entries, 23 passed), `transcript` (90 beats for job 4, 91 for job 5), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest. The beacon receipt is written **last**, after every assertion, so a receipt can only exist for a run that passed end to end.
 
 Live state on Moderato, as the beacon reads it: **5 jobs** — 1–2 `Funded` (idle, refundable by anyone after their deadlines), 3–5 `Resolved` by verdict — 9 withdrawals, 150 alphaUSD escrowed to date, 23.8875 paid out to sellers, 76.5 still in escrow, 3 verdicts all inside their bands, and 19 receipts available as proofs.
 
