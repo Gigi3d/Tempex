@@ -1,6 +1,6 @@
 # Tempex
 
-**Agentic arbitration and settlement layer for the agent economy, built on Tempo.**
+**The default referee for every MPP and x402 business. No humans required.**
 
 Agents can pay each other. They cannot disagree — a payment is boolean, but the work behind it is judged qualitatively, and no primitive settles "was this good enough?" Tempex is the missing referee: an escrow that holds the money, an arbiter that judges the delivery, and an on-chain guardrail that cages the judge inside the band the evidence justifies.
 

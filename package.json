@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Agentic arbitration and settlement layer for the agent economy, built on Tempo",
+  "description": "Default referee for every MPP and x402 business — agentic arbitration and settlement on Tempo",
   "scripts": {
     "test": "forge test --root contracts",
     "abi": "bash scripts/gen-abi.sh",
