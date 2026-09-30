@@ -4,7 +4,7 @@
 
 Live on Moderato testnet (chain 42431) · escrow `0x7579736636dd67A8811A8A2ef95c44560fe6ec27`
 
-> Every number in this document was measured against the running system, not estimated. Section 10 lists the exact commands and their results.
+> Every number in this document was measured against the running system, not estimated. Section 11 lists the exact commands and their results.
 
 ---
 
@@ -50,15 +50,19 @@ Tempex is those four things, composed so that each one is checkable independentl
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────────┐
-│ L4  PROOF / DEMO            packages/demo                             1,908 lines │
+│ L5  ADOPTION / BEACON       packages/beacon                           4,933 lines │
+│     18 routes: manifest · evidence · reputation · zero-balance onboarding         │
+│     · 402-gated discovery · signed portable registry · no keys, no custody        │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│ L4  PROOF / DEMO            packages/demo                             2,108 lines │
 │     8-stage live lifecycle, transcript, JSON receipt, offline corpus              │
 │     (predict = "what would the rules say", drill = "can the judge escape?")       │
 ├───────────────────────────────────────────────────────────────────────────────────┤
-│ L3  JUDGEMENT               packages/arbiter                          1,657 lines │
+│ L3  JUDGEMENT               packages/arbiter                          2,075 lines │
 │     rules.ts → band · prompt.ts → the exact bytes sent · llm.ts → judge           │
 │     clampToBand → certify against the deployed contract → EIP-712 sign → relay    │
 ├───────────────────────────────────────────────────────────────────────────────────┤
-│ L2  CLIENT + CRYPTO         packages/sdk                                1,805 lines │
+│ L2  CLIENT + CRYPTO         packages/sdk                                861 lines │
 │     TempexClient · canonical JSON hashing · EIP-712 verdict type · TIP-20 parsing │
 ├───────────────────────────────────────────────────────────────────────────────────┤
 │ L1  SETTLEMENT              contracts/src                               385 lines │
@@ -69,7 +73,7 @@ Tempex is those four things, composed so that each one is checkable independentl
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-5,429 hand-written lines (6,580 including generated ABIs). Four packages, one Solidity contract, no proxies, no upgrade path, no admin god-mode over user funds.
+10,362 hand-written lines (11,513 including generated ABIs). Five packages, one Solidity contract, no proxies, no upgrade path, no admin god-mode over user funds.
 
 **The split between layers is the design.** Everything that can be checked deterministically *is* — off chain, before anything is signed. Everything that must be enforced *is* — on chain, by the contract, using only a 65-byte signature and two `bytes32` hashes as inputs.
 
@@ -499,9 +503,52 @@ The distinction is deliberate: funding memos carry **variable data** (which job)
 - Stablecoins at 6 decimals: pathUSD `0x20c0…0000`, AlphaUSD `…0001`, BetaUSD `…0002`, ThetaUSD `…0003`. This deployment's fee token and payment token are both AlphaUSD.
 - **There is no ERC-8004 agent-identity registry on Tempo.** Verified against the chain's address book in `viem` (`src/tempo/Addresses.js` exports `accountKeychain`, `addressRegistry`, `nonceManager`, `signatureVerifier`, `stablecoinDex`, `tip20Factory`, `tip403Registry`, `zoneFactory`… with no identity or reputation registry), and against the Tempo introduction notes, which say nothing about one. `.env.example` originally carried a `TEMPO_8004=1` flag describing a feature that did not exist; that line was removed and replaced with an honest note: *"agent identity is enforced by the escrow itself, not by an agent registry… the escrow records the arbiter it trusts, and every ruling must recover to that address under EIP-712 or `resolve` reverts."* Claiming a standard you don't integrate is worse than not integrating it.
 
+### 8.7 `eth_getLogs` is capped at 100,000 blocks. That cap sets an indexer's maximum downtime.
+
+The beacon keeps no database. Its index is rebuilt from `eth_getLogs` on every cold start (`ledger.ts:69`: *"Deliberately not a database. A beacon that can be restarted and rebuild its entire view from `eth_getLogs` cannot drift from the chain, cannot be poisoned by a stale write, and can be audited by anyone who runs the same scan."*). That makes the chain's read limits load-bearing rather than incidental.
+
+Moderato rejects a wider range outright:
+
+```
+InvalidParamsRpcError: query exceeds max block range 100000
+```
+
+At 1-second blocks, 100,000 blocks is **27.7 hours of chain**. The escrow deployed at block 37,010,916; the head is now past 37,581,537 — a span of ~570,000 blocks, nearly six times the ceiling. So "scan from deployment to head" fails on the first call, and fails in the hardest way to catch: it works against a freshly deployed contract and breaks the first time the beacon has been offline for a day.
+
+`scanEvents` (`chain.ts:151`) therefore walks the range in slices of `DEFAULT_SCAN_CHUNK_BLOCKS = 50_000n`, and `config.ts:114` clamps an operator-supplied `BEACON_SCAN_CHUNK_BLOCKS` back under `MAX_SCAN_CHUNK_BLOCKS = 100_000n`. The clamp exists because the failure mode is configuration-shaped — one well-meaning env var would turn every cold start into an RPC error, and the error would name the RPC, not the env var.
+
+The trade is chosen, not inherited: ~12 requests to rebuild a complete index today, growing by ~86,400 blocks a day, in exchange for a service with no state to lose, no state to poison, and no state to trust. Statelessness costs requests. A database costs an argument about whose numbers are right.
+
 ---
 
-## 9. Where the code lives
+## 9. Adoption — the Beacon, or how a protocol gets a front door
+
+The four pillars in §1 are trust properties. None of them answers the question an agent actually arrives with, which is: *what is this, what does it cost, and can I use it before I have anything?*
+
+A protocol with no front door waits to be discovered. `packages/beacon` is 4,933 lines whose entire job is to answer that question truthfully, while never being in a position to lie about money.
+
+**Five constraints, each of which removes a way to be wrong.**
+
+1. **It holds no keys and no custody.** `chain.ts:30`: *"Read-only chain access. No account, no key: a beacon that cannot sign cannot move funds, and that is a property worth being able to state plainly."* It is checkable: `grep -rnE 'privateKeyToAccount|accountFor|privateKeyFor|createWalletClient|walletClient' packages/beacon/src` returns nothing, so the server has no way to construct a signer. The two `eth_sendTransaction` strings in `src/` are metadata returned *to the caller*, naming the RPC method for calldata the beacon built; the single `privateKey` hit is a suggested `cast wallet new` in an onboarding hint. The only private keys in the package live in `scripts/smoke.ts`, signing as a *client* — used to prove the server refuses what it is handed.
+2. **It has no database of record.** Every figure is folded from events on cold start and re-derivable by anyone running the same scan (§8.7). Nothing it says can be true only of itself.
+3. **Zero balance is the default, not a favour.** `/quote` prices onboarding line by line and returns **total 0** for a seller, with the transaction fee *measured from a real receipt* — 6,284 units = 0.006284 alphaUSD on tx `0xfbb77eb2…`, block 37,026,074, jobId 5 — rather than estimated. Tempo is what makes that claim honest: no gas token means the hosted fee payer can sign the fee, and the escrow's pull-based credits mean a seller never fronts capital.
+4. **Discovery has a price; everything an agent needs to decide does not.** `/discover` answers **402** with a quote until the caller settles on chain in the payment token, and the gate decodes the receipt's memo so a payment made for anything else is refused. `config.ts:22`: *"Not a revenue model — a spam price… Free tiers stay free: manifest, stats, reputation, onboarding."* An agent should never have to pay to find out whether paying is worth it.
+5. **Registration is portable.** The credential is a signature over a challenge bound to *this* beacon, *this* escrow, and an expiry (`registry.ts:62`), so it cannot be replayed against another beacon or reused after the window closes — and the resulting registry file can be served by any other beacon without either trusting the other. The signature is the credential, not the host.
+
+**Two structural choices worth naming.**
+
+- **One route table, read by both the docs and the router.** `manifest.ts:26`: *"Shared so the documented API and the served API cannot drift apart — a manifest that advertises a route the server does not implement is worse than no manifest."* It is enforced rather than hoped for: `assertRoutesAgree()` (`server.ts:188`) runs at **import time** and throws if the documented set and the implemented set differ in *either* direction. 18 HTTP routes (14 free GET, 3 free POST, 1 paid GET) and 17 CLI commands over the same surface, with drift made impossible at process start.
+- **Every error carries its fix.** `BeaconError` has a `hint` field — `beacon.ts:615`: *"Every error an agent can receive carries the fix with it."* So a 400 says `Send "terms": "text" or any JSON value; the beacon hashes it canonically and shows the digest in the decoded call, so you can check it before signing` instead of `invalid request`. An agent that hits it recovers without a human, which is the entire point of a front door for machines.
+
+**What the beacon deliberately cannot do:** sign, hold funds, adjudicate, or hand an agent something to sign without showing its work. `/blueprint/:action` returns encoded calldata with arguments labelled by the ABI's own parameter names — `blueprint.ts:68`: *"An agent that cannot name what it is about to sign cannot check it, and checking before signing is the point of a blueprint."* The agent signs elsewhere, with a key the beacon has never seen.
+
+That is the adoption thesis in one sentence: **the beacon makes Tempex easy to start using and impossible to be defrauded by while starting**, because the entity doing the convincing has no authority over anything.
+
+Measured, not asserted: `pnpm --filter @tempex/beacon smoke` runs **185 assertions against the live chain** — a cold index rebuild over ~570k blocks, all 14 free GET routes, the 402 refusal path, a challenge/signature registration, replay and wrong-signer refusals, and a settled job's proof — then finishes with the treasury balance provably unchanged at 1,000,001,101,204 units. Receipt: `runs/beacon-smoke-2026-09-30T16-17-48-750Z.json`.
+
+---
+
+## 10. Where the code lives
 
 ```
   816387b2/
@@ -510,14 +557,14 @@ The distinction is deliberate: funding memos carry **variable data** (which job)
   │   └── src/ITIP20.sol               24   minimal interface: transfer/transferWithMemo/
   │                                          transferFromWithMemo/approve/balanceOf/decimals
   ├── packages/
-  │   ├── sdk/                     1,805    shared by every process
+  │   ├── sdk/                       861    shared by every process
   │   │   ├── src/client.ts          442    TempexClient: every read, every write, one funnel
   │   │   ├── src/evidence.ts        169    canonical JSON, hashing, case files, integrity
   │   │   ├── src/verdict.ts          92    EIP-712 mirror of the contract's typehash
   │   │   ├── src/config.ts           89    chain constants, env loading, address resolution
-  │   │   ├── src/abi/TempexEscrow.ts 1051  generated ABI (typed with viem)
-  │   │   └── src/abi/TIP20.ts        100   generated TIP-20 ABI
-  │   ├── arbiter/                 1,657    the judge
+  │   │   ├── src/index.ts            69    the package's public surface
+  │   │   └── src/abi/             1,151    generated: TempexEscrow.ts 1,051 · TIP20.ts 100
+  │   ├── arbiter/                 2,075    the judge
   │   │   ├── src/adjudicate.ts      419    the pipeline + CERTIFICATION before signing
   │   │   ├── src/rules.ts           418    the deterministic band engine
   │   │   ├── src/cli.ts             361    adjudicate / watch / verify
@@ -525,14 +572,31 @@ The distinction is deliberate: funding memos carry **variable data** (which job)
   │   │   ├── src/watch.ts           221    catch-up log scan + live WS subscription
   │   │   ├── src/llm.ts             184    OpenAI-compatible judge over plain fetch
   │   │   ├── src/prompt.ts          102    the exact bytes the model receives
-  │   │   └── src/store.ts            57    rulings on disk
-  │   └── demo/                    1,908    the proof
-  │       ├── src/runner.ts          960    8 stages, 23 expectations, receipt builder
-  │       ├── src/scenarios.ts       338    4-case corpus with asserted expectations
-  │       ├── src/cli.ts             265    help/stages/scenarios/predict/drill/run
-  │       ├── src/predict.ts         218    offline band reproduction
-  │       ├── src/drill.ts           113    the guardrail invariants
-  │       └── src/transcript.ts      170    the one artifact read twice
+  │   │   ├── src/store.ts            57    rulings on disk
+  │   │   └── src/index.ts            38
+  │   ├── demo/                    2,108    the proof
+  │   │   ├── src/runner.ts          960    8 stages, 23 expectations, receipt builder
+  │   │   ├── src/scenarios.ts       338    4-case corpus with asserted expectations
+  │   │   ├── src/cli.ts             265    help/stages/scenarios/predict/drill/run
+  │   │   ├── src/predict.ts         218    offline band reproduction
+  │   │   ├── src/transcript.ts      170    the one artifact read twice
+  │   │   ├── src/drill.ts           113    the guardrail invariants
+  │   │   └── src/index.ts            44
+  │   └── beacon/                  4,933    the front door — read-only, holds no keys
+  │       ├── src/beacon.ts          664    the Beacon class: 24 reads over one folded index
+  │       ├── src/manifest.ts        594    the route table, shared by docs and router
+  │       ├── src/server.ts          569    18 HTTP routes, 402 on /discover, body caps
+  │       ├── src/onboard.ts         517    policy templates, readiness, all-in quotes
+  │       ├── src/reputation.ts      486    network stats, measured latency, itemised score
+  │       ├── src/cli.ts             425    17 commands over the same surface, JSON out
+  │       ├── src/payments.ts        394    quote → memo → settle, verified against logs
+  │       ├── src/registry.ts        328    challenge/sign registration, portable file
+  │       ├── src/ledger.ts          279    events folded into job records, in memory
+  │       ├── src/blueprint.ts       241    encoded calldata per intent; the agent signs
+  │       ├── src/chain.ts           198    read-only chain access, chunked log scans
+  │       ├── src/config.ts          136    beacon env, deployment block, chunk clamping
+  │       ├── src/index.ts           102
+  │       └── scripts/smoke.ts       737    185 live assertions; writes runs/beacon-smoke-*.json
   ├── runs/                                 JSON receipts of live runs
   └── deployments/moderato.json             addresses, txs, and the notes on how they got there
 ```
@@ -557,14 +621,14 @@ The pieces worth quoting:
 
 ---
 
-## 10. Evidence
+## 11. Evidence
 
 Everything below was run, not estimated:
 
 | Check | Command | Result |
 |---|---|---|
 | Contract test suite | `forge test` | **25/25 passing** |
-| Typecheck, all 4 packages | `pnpm -r exec tsc --noEmit` | **clean** |
+| Typecheck, all 5 packages | `pnpm -r exec tsc --noEmit` | **clean** |
 | Policy regression | `pnpm demo predict` | *"all 4 scenarios reproduce their expected band"* |
 | Guardrail invariants | `pnpm demo drill` | *"the guardrail held on all 4 scenarios: no judge proposal escaped its band"* |
 | Live E2E, unsponsored | `pnpm demo run --fresh` | job **4**, **23/23** expectations, 8/8 stages, 0 skipped |
@@ -573,14 +637,20 @@ Everything below was run, not estimated:
 | Batched create+fund | job 2 open | one tx, `gasUsed: 1,320,324` |
 | Fee mechanism | both runs | fee visible as a TIP-20 `Transfer` to `0xfeec…0000`, payer asserted |
 | Memo reconciliation | both runs | `0x000…05` on funding, `tempex.withdraw` on every payout |
+| Beacon cold start | `pnpm --filter @tempex/beacon smoke` | 29 events folded into **5 jobs**, blocks 37,010,916→37,581,537, agreeing with `jobCount()=5`, `nextJobId()=6` |
+| Beacon, live | same | **185 assertions**, 0 failures, **0 units spent**, treasury balance unchanged at 1,000,001,101,204 |
+| Manifest honesty | same | governance in the manifest equals `arbiter()`/`treasury()`/`owner()` read live; fee **measured** from tx `0xfbb77eb2…`, not estimated |
+| Route consistency | `assertRoutesAgree()` at import | 18 routes, 9 tools, 1 paid — docs and router cannot diverge, or the process will not start |
+| Paid discovery gate | `GET /discover` unpaid | **402**; five distinct ways of not paying all refused, zero units moved |
+| Registration integrity | `POST /registry` | replayed challenge → 400; wrong signer → 400 *"signature recovers to …"*; entry re-verifies offline |
 
-Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4) and `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5). Each receipt carries 19 top-level keys including `expectations` (23 entries), `transcript` (91 beats), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest.
+Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4), `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5), and `runs/beacon-smoke-2026-09-30T16-17-48-750Z.json` (the beacon's 185-assertion live run, all eight steps with every assertion and evidence line). Each demo receipt carries 19 top-level keys including `expectations` (23 entries), `transcript` (91 beats), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest. The beacon receipt is written **last**, after every assertion, so a receipt can only exist for a run that passed end to end.
 
-Live job state on Moderato: jobs 1–2 `Funded` (idle, refundable by anyone after their deadlines), jobs 3, 4, 5 `Settled`.
+Live state on Moderato, as the beacon reads it: **5 jobs** — 1–2 `Funded` (idle, refundable by anyone after their deadlines), 3–5 `Resolved` by verdict — 9 withdrawals, 150 alphaUSD escrowed to date, 23.8875 paid out to sellers, 76.5 still in escrow, 3 verdicts all inside their bands, and 19 receipts available as proofs.
 
 ---
 
-## 11. Stated limits
+## 12. Stated limits
 
 Better these come from the source than from a judge.
 
@@ -588,17 +658,21 @@ Better these come from the source than from a judge.
 2. **No appeal, no arbiter-liveness fallback.** If the arbiter never signs, a `Disputed` job has no timeout and no alternate path. The escape hatches (`refundExpired`, `autoAccept`) cover `Funded` and `Delivered`, not `Disputed`. The honest framing: the arbiter is a trusted-but-constrained role, and its *only* failure mode is refusal, never theft.
 3. **No proxy, no upgrade path.** Deliberate — an upgradeable escrow is an upgradeable promise — but it means a bug is permanent. The 25-test suite and the batch of live jobs are the mitigation.
 4. **`rules.ts` scores by salient-term coverage**, which is a heuristic, not semantic understanding. It is good at "the spec said *glossary* and the deliverable never mentions a glossary" and bad at judging quality. That's precisely why the band widens when verification fails and why the LLM layer exists at all.
-5. **No TypeScript test files.** The offline harness *is* `predict` + `drill` + `verifyArbiter`, which is arguably better evidence (they test the policy, not the plumbing) but it isn't a conventional test suite and a reader looking for `*.test.ts` will not find one.
-6. **The repo has zero git commits.** Everything is untracked on `main` — the largest process risk to the submission, since the repo is a scored artifact.
+5. **No TypeScript test files.** The offline harness *is* `predict` + `drill` + `verifyArbiter` + the beacon's 185-assertion live smoke, which is arguably better evidence (they test the policy and the served claims, not the plumbing) but it isn't a conventional test suite and a reader looking for `*.test.ts` will not find one.
+6. **The beacon's index is memory-only, and its cold start grows with the chain.** ~570k blocks today, +86,400 a day, walked in 50k chunks (§8.7). It is correct by construction and gets slower by construction. A snapshot cache would fix the latency and reintroduce exactly the drift the design removes; the production answer is a checkpointed snapshot that is still re-verifiable against the chain, which is not built.
+7. **Reputation is derived from this escrow alone.** A score of 518 means *"518 on Tempex's Moderato deployment"*, not a portable cross-protocol identity. The registry signature travels between beacon instances; the history behind the score does not, because that history lives in one contract's events.
+8. **The registry proves identity, not competence.** A registration signature binds host, escrow, address and expiry — deliberately *not* the name or the capabilities, which the agent self-declares. The smoke run prints this limit out loud (`the signature binds host, escrow, address and expiry — not the name or capabilities`) rather than leaving a reader to discover it.
 
 ---
 
-## 12. Why this is the right shape
+## 13. Why this is the right shape
 
-Three sentences, if the clock is short.
+Four sentences, if the clock is short.
 
 **It solves a real and imminent gap**: agents can pay each other but cannot resolve disagreement, and every work-for-hire relationship in the agent economy is a disagreement waiting to happen.
 
 **It uses the model where models are good and the rules where rules are good**: the deterministic layer reads the evidence, the model reasons inside a band the rules computed, the contract enforces a signature the model cannot forge — so the AI is genuinely useful and genuinely bounded, and the bound is on chain, not in a policy document.
 
 **It is built out of Tempo rather than on top of it**: the fee is a TIP-20 transfer to the fee manager, funding memos carry the reconciliation key, `createJob`+`fund` is one batched type-0x76 transaction, sponsorship is a proven fee-payer difference, and the ~800 gas/byte code pricing is why there is one escrow with an internal ledger instead of a factory. Every one of those is visible in a receipt you can open on `explore.testnet.tempo.xyz`.
+
+**It can be adopted by something that has never heard of it**: the beacon answers *what is this, what does it cost, can I use it with no balance* in machine-readable JSON, prices the one expensive query so spam costs something, carries its fix inside every error, and holds no keys at all — so the front door can be trusted by an agent that trusts nothing, including the front door.
