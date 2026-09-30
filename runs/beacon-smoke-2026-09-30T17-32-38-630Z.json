@@ -1,0 +1,168 @@
+{
+  "kind": "tempex/beacon-smoke/1",
+  "generatedAt": "2026-09-30T17:32:38.630Z",
+  "result": "ok",
+  "checks": 185,
+  "network": "tempo:moderato",
+  "chainId": 42431,
+  "rpcUrl": "https://rpc.moderato.tempo.xyz",
+  "escrow": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+  "explorer": "https://explore.testnet.tempo.xyz/address/0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+  "paymentToken": "0x20c0000000000000000000000000000000000001",
+  "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+  "spent": {
+    "units": "0",
+    "note": "every paid path was refused, quoted, or free; nothing settled"
+  },
+  "treasuryBalance": {
+    "before": "1000001101204",
+    "after": "1000001101204"
+  },
+  "index": {
+    "events": 29,
+    "jobs": 5,
+    "jobCount": "5",
+    "nextJobId": "6",
+    "fromBlock": "37010916",
+    "headBlock": "37588991",
+    "withdrawals": 9
+  },
+  "routes": {
+    "total": 18,
+    "freeGet": 14,
+    "paid": 1
+  },
+  "steps": [
+    {
+      "n": 0,
+      "title": "configuration",
+      "passed": [],
+      "evidence": {
+        "network": "tempo:moderato (chainId 42431)",
+        "rpc": "https://rpc.moderato.tempo.xyz",
+        "escrow": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+        "payment token": "0x20c0000000000000000000000000000000000001",
+        "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "index from block": "37010916",
+        "fee payer": "https://sponsor.moderato.tempo.xyz",
+        "state dir": "/var/folders/pb/4yz5y2yn745gm5klc0jc5d700000gn/T/tempex-beacon-B2OQqd"
+      }
+    },
+    {
+      "n": 1,
+      "title": "Cold start: rebuild the index from eth_getLogs and agree with the escrow",
+      "passed": [
+        "indexed 29 events into 5 jobs, blocks 37010916..37588991",
+        "index agrees with the contract: jobCount()=5, nextJobId()=6"
+      ],
+      "evidence": {
+        "stages": "funded=2  resolved=3",
+        "withdrawals": "9",
+        "newest job": "#5 resolved created in block 37026074",
+        "scored seller": "0x352a9f3267e835064279712df2d73c30d749fc72",
+        "scored buyer": "0xd4744c3da5f43545c1090c0de2114f12cdd6c9b3"
+      }
+    },
+    {
+      "n": 2,
+      "title": "The manifest quotes the chain, and every claim in it is recomputable here",
+      "passed": [
+        "governance in the manifest equals arbiter(), treasury() and owner() read just now",
+        "fees 50/200 bps, caps 500/1000",
+        "withdrawal memo 0x74656d7065782e7769… == bytes32(\"tempex.withdraw\")",
+        "verdictDigest selector 0x117d5ee9",
+        "custody claims are stated, and the owner powers list is published next to them",
+        "onboarding costs 0 and the transaction fee is measured from a mined transaction, not estimated",
+        "7 claims, each with a verification recipe",
+        "18 routes, 9 tools, 1 paid",
+        "agent card agrees with the manifest"
+      ],
+      "evidence": {
+        "measured fee": "0.006284 alphaUSD on 0xfbb77eb2ae16967a3018b823faab1a2567c13a392f026ef4d7afdf4cab2082e4",
+        "index": "head 37588998, lag 7, storage \"memory, rebuilt from eth_getLogs on every start\""
+      }
+    },
+    {
+      "n": 3,
+      "title": "Reputation and network stats are arithmetic, recomputed here from the factors",
+      "passed": [
+        "0x352a9f3267e835064279712df2d73c30d749fc72 scores 518 (settled) from 5 factors",
+        "5 jobs, 0 accepted, 3 resolved by verdict, settlement rate 60%"
+      ],
+      "evidence": {
+        "+500 baseline": "every address starts neutral; escrow and arbitration stand in for history",
+        "+180 settled-as-seller": "3 job(s) delivered and paid out, +60 each, capped at +240",
+        "-35 verdict-favour": "arbiters awarded this seller 3250 bps on average; above 5000 earns, below costs",
+        "-150 disputed-as-seller": "3 dispute(s) raised against this seller, -50 each",
+        "+23 volume": "+1 per whole token settled through escrow, capped at +100",
+        "money": "escrowed 150, paid to sellers 23.8875, still in escrow 76.5",
+        "arbitration": "3 verdict(s), bounded=true, 3 timed",
+        "proofs": "19 receipts, e.g. 0xb2ec00ac09f1b1b09fd4fc64fe2c575c8a03d2ffee70b78ed8d930db6f7a631e"
+      }
+    },
+    {
+      "n": 4,
+      "title": "Serve it: every documented free route answers, and errors teach the fix",
+      "passed": [
+        "14 free GET routes answer from the same route table the manifest publishes",
+        "POST /blueprint/withdraw -> 1 call, fee paid by fee-payer",
+        "POST /blueprint/withdraw {\"sponsored\":false} -> fee.payer=caller",
+        "POST /blueprint/accept {jobId:5} -> decoded args match",
+        "POST /blueprint/create-and-fund -> createJob + fund in one Tempo transaction",
+        "POST /blueprint/nope -> 404 with the valid action list in the hint",
+        "POST /blueprint/resolve {jobId} -> 400 whose hint is a working request body",
+        "POST /registry with a non-JSON body -> 400 \"body must be a JSON object\"",
+        "GET /nope -> 404 pointing at the manifest",
+        "GET /registry/challenge -> 405 with allow: POST",
+        "OPTIONS /stats -> 204 with CORS and the payment headers allowed"
+      ],
+      "evidence": {
+        "listening": "http://127.0.0.1:63438"
+      }
+    },
+    {
+      "n": 5,
+      "title": "Discovery is priced: refuse every way of not paying, and spend nothing",
+      "passed": [
+        "GET /discover -> 402 0.01 alphaUSD, requirement body included",
+        "GET /discover?quote=1 -> free quote 0xbfdf5f1c267350ae802e84ea2046e208, memo 0x4cdb5b6868b9b2dc…",
+        "GET /discover with x-payment: bitcoin:please -> 400",
+        "GET /discover with a tx but no x-payment-quote -> 400",
+        "GET /discover with a hash that never mined -> 402 \"no receipt\"",
+        "GET /discover paid with a real receipt 0xfbb77eb2ae16… -> 402, the memo does not match",
+        "five refusals, zero units moved, zero state written"
+      ],
+      "evidence": {
+        "treasury balance": "1000001101204 units before",
+        "reason": "/discover costs 0.01 units of token 0x20c0000000000000000000000000000000000001. GET /discover?quote=1 for a quote, send its amount to payTo with transferWithMemo, then retry with x-payment: tempo-tx:<transactionHash> and x-payment-quote: <quote id>.",
+        "pay with": "10000 units to 0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "proves": "the gate really fetched and decoded that receipt; it did not take the hash on faith"
+      }
+    },
+    {
+      "n": 6,
+      "title": "Registration is a signature: challenge, sign, list, re-verify offline",
+      "passed": [
+        "POST /registry/challenge -> 0x548b201e67f3360709dc461b8f46ac10, expires 2026-09-30T17:37:38.508Z",
+        "POST /registry -> 201, defaults filled from the beacon config",
+        "verifyEntry(entry) is true, and false the moment the address changes",
+        "discover(capability=tempex-smoke) -> rank 1, score 518, band settled",
+        "replaying the same challenge and signature -> 400",
+        "a challenge signed by a different key -> 400 \"signature recovers to ...\""
+      ],
+      "evidence": {
+        "signer": "0x352A9F3267e835064279712dF2D73C30d749fC72",
+        "honest limit": "the signature binds host, escrow, address and expiry — not the name or capabilities",
+        "unforgeable part": "reputation: score 518 (settled)"
+      }
+    },
+    {
+      "n": 7,
+      "title": "Clean up, and prove the run left nothing behind",
+      "passed": [
+        "server closed, temp state removed, no beacon state written to the repo, no funds moved"
+      ],
+      "evidence": {}
+    }
+  ]
+}
