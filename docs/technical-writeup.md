@@ -625,7 +625,44 @@ The pieces worth quoting:
 
 ---
 
-## 11. Evidence
+## 11. Design decisions, and what was rejected
+
+A writeup that lists only what was built reads like marketing, because it hides the branch points. Every row below names an alternative that was genuinely available and the measured or structural reason it lost. Where the reason is a number, the number is in a receipt or in the source at the cited line.
+
+| # | Decision | Rejected alternative | Why it lost |
+|---|---|---|---|
+| 1 | **One escrow with an internal job ledger** | A factory minting one escrow per job | Deploying this runtime costs **11,036,281 gas** (§8.3) — 5.92× what a standard EVM chain charges merely to *store* the same 9,324 bytes. A factory pays that per job instead of once. The isolation a factory would have bought is already provided by `_jobs[jobId]` and per-account `credits[]`, so it was separation nobody needed at a price every user would feel. |
+| 2 | **Pull settlement**: rulings credit `credits[]`, parties call `withdraw()` | Push — `resolve()` transfers to both parties inline | Push makes the escrow's solvency depend on a token's revert behaviour and opens a re-entrancy surface at the exact moment money moves. Pull means **`resolve()` makes zero external calls** — read `:248-283`: state writes and one `emit`, nothing else. The `nonReentrant` on it is therefore redundant by construction, and was kept deliberately: a belt on a brace that already holds. |
+| 3 | **Three owner powers, both fee caps as `constant`** | Proxy + pause + blacklist + `rescueTokens` | `setArbiter`, `setTreasury`, `setFees` are the entire admin surface (`:341-360`). `MAX_PLATFORM_FEE_BPS = 500` and `MAX_ARBITRATION_FEE_BPS = 1_000` are `constant` and re-checked *inside* `setFees`, so the owner cannot raise a fee past 5% / 10% even in principle. `grep -rniE "pause\|delegatecall\|proxy\|blacklist\|rescue\|sweep\|emergencyWithdraw" contracts/src` returns **nothing**. The consequence worth stating plainly: **the owner cannot move one unit of user funds**, because `withdraw()` pays `credits[msg.sender]` and only `msg.sender` can call it (`:300-306`). |
+| 4 | **Permissionless relay; authority is the signature** | The arbiter broadcasts its own verdict | If the arbiter must send the transaction, the arbiter needs gas, a funded key and uptime — three new failure modes bolted onto the one role that already has to be trusted. Instead `resolve` has no `onlyArbiter` and anyone may relay it; the only thing that decides is `ECDSA.recover(digest, signature) == arbiter` (`:260`). The arbiter's failure mode collapses to **refusal** — never theft, never censorship-by-fee. |
+| 5 | **`createJob` and `fund` separate, then batched into one type-0x76 tx** | A single fused `createAndFund` | Separation is what makes `cancel()` meaningful: a job that exists unfunded can be withdrawn without ever touching the token. The usual cost of separating them — two transactions, and a window where a job sits unfunded — is removed by Tempo batching: one tx, two calls, `gasUsed: 1,320,324` (`deployments/moderato.json`). `nextJobId()` (`:313`) exists **only** because batched calls cannot see each other's return values; it is a Tempo-shaped workaround, not an API flourish. |
+| 6 | **The model receives a band, not a decision** | Let the LLM return `sellerAwardBps` directly | An unbounded model is the only thing standing between a prompt injection and someone's money. `clampToBand` (`adjudicate.ts:117`) makes the model's number advisory inside a range the evidence computed — and the clamp is *recorded* in the ruling, so a rubber stamp is visible as one rather than passing unnoticed. |
+| 7 | **Rules always run; the LLM is optional** | LLM required, rules only as a fallback | `llmConfigFromEnv` returns `null` when no key is configured (`llm.ts:43`) and the pipeline continues deterministically, saying so in the transcript. A missing API key becomes a **configuration state, not an outage**: no dispute can be stalled by a vendor, a quota, or a latency spike. |
+| 8 | **Certify against the live contract before broadcasting** | Trust the off-chain signing stack | `adjudicate.ts:270`: `const certified = matches && signerIsArbiter;`. The digest is recomputed by the *deployed* contract and the recovered signer is compared to the *registered* arbiter before anything is sent. Off-chain and on-chain are made to agree by a check, not by the accident of sharing a library. |
+| 9 | **The beacon holds no keys and no database of record** | A signed, cached, "fast" index service | A service that can sign can be robbed; a cache can be true only of itself. Every figure is re-folded from chain events on cold start (§8.7), and grepping `packages/beacon/src` for wallet construction returns nothing (§9, constraint 1). It is slower, and it is incapable of the two worst failure modes a front door can have. |
+| 10 | **One route table, read by both the docs and the router** | Hand-maintained API documentation | `assertRoutesAgree()` is called at **import time** (`server.ts:188`) and throws if the documented set and the implemented set differ in *either* direction. Documentation drift is not discouraged here, it is unstartable: the process will not boot. |
+| 11 | **Discovery is paid; every decision-relevant read is free** | Free discovery, or a subscription | An agent must be able to learn *what this is, what it costs, and whether it can start with nothing* before it spends anything — so manifest, stats, reputation and onboarding are free (14 free GET routes in the live receipt). `/discover` answers **402** with a quote because an unpriced enumeration endpoint on a service meant to run unattended is a DoS vector. Priced spam, free judgement. |
+| 12 | **Every error carries its own fix** | Conventional error strings | `BeaconError.hint` means a 400 arrives with the corrected request inside it. The consumer is a machine with no human to ask, so `invalid request` is a dead end — and dead ends, not fees, are what actually stop adoption. |
+
+### 11.1 The trust boundary, stated exactly
+
+"Trustless" is a marketing word and this system is not one. Here is the real list: who you must trust, for what, and what physically stops it going further. Every row is checkable in the cited source.
+
+| You must trust… | To do what | What stops it going further |
+|---|---|---|
+| **The arbiter's key** | Sign a verdict on a `Disputed` job | It signs a *percentage*, never an amount. `sellerAwardBps <= BPS_DENOMINATOR` is enforced on chain (`:255`), the verdict must be inside `[issuedAt, validUntil]`, it is bound to one `jobId` and to the exact `evidenceHash` / `rationaleHash` it evaluated, and the contract does the split itself (`:262-271`). There is no argument by which the arbiter can address funds to itself. |
+| **The escrow's owner** | Change arbiter, treasury, and fees | Three functions, both caps `constant` and re-checked, and **no path to user funds** — `withdraw()` pays `credits[msg.sender]` and nothing else. No pause, no proxy, no delegatecall, no rescue, no blacklist: verified by grep, not by promise. `setFees` also cannot reach backwards — *"Fees apply to jobs settled after this call; open jobs are unaffected"* (`:353`). |
+| **The rule engine** | Compute the band the judge is confined to | It is 418 lines with every constant named at the top of `rules.ts`, reproducible offline by `pnpm demo predict` across all four scenarios, and printed into the transcript on every run. A wrong band is auditable; a hidden one is not. |
+| **The LLM** | Propose a number | Nothing — and that is the design. Its proposal is clamped, the clamp is recorded, and the signature covers the *clamped* value, so what lands on chain is provably inside the band whether the model cooperated or not. The model is never the last word. |
+| **The beacon** | Tell an agent what this protocol is and what it costs | It cannot sign (no wallet construction anywhere in `src`), cannot hold funds (no custody), and cannot report a number it did not read (no database of record). Its single paid route settles on chain and is verified against logs before the gate opens. |
+| **Nobody** | Release funds on a missed deadline or an idle review window | `refundExpired` (`:287`) and `autoAccept` (`:214`) are deliberately permissionless, so any keeper — or the counterparty themselves — can close a stuck job. Liveness does not depend on Tempex being online, funded, or even existing. |
+
+The one row with no mitigation is the arbiter's **refusal**: if it never signs, a `Disputed` job has no timeout and no alternate path (§13, limit 2). That is written down rather than papered over, because a trust model with a labelled hole is survivable and one with a hidden hole is not.
+
+---
+
+## 12. Evidence
+
 
 Everything below was run, not estimated:
 
@@ -654,7 +691,7 @@ Live state on Moderato, as the beacon reads it: **5 jobs** — 1–2 `Funded` (i
 
 ---
 
-## 12. Stated limits
+## 13. Stated limits
 
 Better these come from the source than from a judge.
 
@@ -663,13 +700,13 @@ Better these come from the source than from a judge.
 3. **No proxy, no upgrade path.** Deliberate — an upgradeable escrow is an upgradeable promise — but it means a bug is permanent. The 25-test suite and the batch of live jobs are the mitigation.
 4. **`rules.ts` scores by salient-term coverage**, which is a heuristic, not semantic understanding. It is good at "the spec said *glossary* and the deliverable never mentions a glossary" and bad at judging quality. That's precisely why the band widens when verification fails and why the LLM layer exists at all.
 5. **No TypeScript test files.** The offline harness *is* `predict` + `drill` + `verifyArbiter` + the beacon's 185-assertion live smoke, which is arguably better evidence (they test the policy and the served claims, not the plumbing) but it isn't a conventional test suite and a reader looking for `*.test.ts` will not find one.
-6. **The beacon's index is memory-only, and its cold start grows with the chain.** ~570k blocks today, +86,400 a day, walked in 50k chunks (§8.7). It is correct by construction and gets slower by construction. A snapshot cache would fix the latency and reintroduce exactly the drift the design removes; the production answer is a checkpointed snapshot that is still re-verifiable against the chain, which is not built.
+6. **The beacon's index is memory-only, and its cold start grows with the chain.** ~578k blocks today, +86,400 a day, walked in 50k chunks (§8.7). It is correct by construction and gets slower by construction. A snapshot cache would fix the latency and reintroduce exactly the drift the design removes; the production answer is a checkpointed snapshot that is still re-verifiable against the chain, which is not built.
 7. **Reputation is derived from this escrow alone.** A score of 518 means *"518 on Tempex's Moderato deployment"*, not a portable cross-protocol identity. The registry signature travels between beacon instances; the history behind the score does not, because that history lives in one contract's events.
 8. **The registry proves identity, not competence.** A registration signature binds host, escrow, address and expiry — deliberately *not* the name or the capabilities, which the agent self-declares. The smoke run prints this limit out loud (`the signature binds host, escrow, address and expiry — not the name or capabilities`) rather than leaving a reader to discover it.
 
 ---
 
-## 13. Why this is the right shape
+## 14. Why this is the right shape
 
 Four sentences, if the clock is short.
 
