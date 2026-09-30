@@ -9,7 +9,9 @@
     "abi": "bash scripts/gen-abi.sh",
     "typecheck": "pnpm -r typecheck",
     "arbiter": "pnpm --filter @tempex/arbiter start",
-    "demo": "pnpm --filter @tempex/demo start"
+    "demo": "pnpm --filter @tempex/demo start",
+    "beacon": "pnpm --filter @tempex/beacon start",
+    "smoke": "pnpm --filter @tempex/sdk smoke && pnpm --filter @tempex/beacon smoke"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
