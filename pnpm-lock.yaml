@@ -31,6 +31,19 @@ importers:
         specifier: ^4.19.2
         version: 4.23.15
 
+  packages/beacon:
+    dependencies:
+      '@tempex/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+      viem:
+        specifier: ^2.38.5
+        version: 2.56.9(typescript@5.9.3)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.15
+
   packages/demo:
     dependencies:
       '@tempex/arbiter':

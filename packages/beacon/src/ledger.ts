@@ -1,0 +1,279 @@
+import type { Address, Hex } from 'viem';
+
+import {
+  headBlock,
+  scanEvents,
+  type ChainReader,
+  type EscrowEvent,
+} from './chain.js';
+
+export type JobStage =
+  | 'created'
+  | 'funded'
+  | 'delivered'
+  | 'accepted'
+  | 'disputed'
+  | 'resolved'
+  | 'refunded'
+  | 'cancelled';
+
+type Stamp = { block: number; tx: Hex };
+
+export type JobRecord = {
+  jobId: bigint;
+  buyer: Address;
+  seller: Address;
+  amount: bigint;
+  termsHash: Hex;
+  deliveryDeadline: number;
+  reviewWindow: number;
+  stage: JobStage;
+  created: Stamp;
+  funded?: Stamp & { amount: bigint };
+  delivered?: Stamp & { deliverableHash: Hex; deliveredAt: number; reviewDeadline: number };
+  accepted?: Stamp & { sellerAmount: bigint; platformFee: bigint };
+  dispute?: Stamp & { disputeHash: Hex; disputedAt: number };
+  verdict?: Stamp & {
+    sellerAwardBps: number;
+    sellerAmount: bigint;
+    buyerAmount: bigint;
+    arbitrationFee: bigint;
+    evidenceHash: Hex;
+    rationaleHash: Hex;
+    verdictDigest: Hex;
+  };
+  refund?: Stamp & { amount: bigint };
+};
+
+export type WithdrawalRecord = { account: Address; amount: bigint } & Stamp;
+
+export type LedgerView = {
+  fromBlock: bigint;
+  toBlock: bigint;
+  eventCount: number;
+  jobs: JobRecord[];
+  withdrawals: WithdrawalRecord[];
+  arbiterUpdates: (Stamp & { arbiter: Address })[];
+  treasuryUpdates: (Stamp & { treasury: Address })[];
+  feeUpdates: (Stamp & { platformFeeBps: number; arbitrationFeeBps: number })[];
+};
+
+export type LedgerParams = {
+  escrow: Address;
+  fromBlock: bigint;
+  chunkBlocks?: bigint;
+};
+
+/// The escrow's history, folded into job records and held in memory.
+///
+/// Deliberately not a database. A beacon that can be restarted and rebuild its
+/// entire view from `eth_getLogs` cannot drift from the chain, cannot be poisoned
+/// by a stale write, and can be audited by anyone who runs the same scan.
+export class EscrowLedger {
+  private readonly reader: ChainReader;
+  private readonly params: LedgerParams;
+  private readonly jobs = new Map<string, JobRecord>();
+  private readonly withdrawals: WithdrawalRecord[] = [];
+  private readonly arbiterUpdates: LedgerView['arbiterUpdates'] = [];
+  private readonly treasuryUpdates: LedgerView['treasuryUpdates'] = [];
+  private readonly feeUpdates: LedgerView['feeUpdates'] = [];
+  private scannedTo: bigint | null = null;
+  private eventCount = 0;
+
+  constructor(reader: ChainReader, params: LedgerParams) {
+    this.reader = reader;
+    this.params = params;
+  }
+
+  /// Extends the index to the current head. Cheap when already caught up: the scan
+  /// starts at the block after the last one seen.
+  async sync(): Promise<{ added: number; fromBlock: bigint; toBlock: bigint }> {
+    const head = await headBlock(this.reader);
+    const start = this.scannedTo === null ? this.params.fromBlock : this.scannedTo + 1n;
+    if (start > head) {
+      return { added: 0, fromBlock: this.params.fromBlock, toBlock: head };
+    }
+
+    const events = await scanEvents(this.reader, {
+      escrow: this.params.escrow,
+      fromBlock: start,
+      toBlock: head,
+      chunkBlocks: this.params.chunkBlocks,
+    });
+
+    for (const event of events) this.fold(event);
+    this.eventCount += events.length;
+    this.scannedTo = head;
+    return { added: events.length, fromBlock: start, toBlock: head };
+  }
+
+  get caughtUpTo(): bigint | null {
+    return this.scannedTo;
+  }
+
+  view(): LedgerView {
+    const jobs = [...this.jobs.values()].sort((a, b) => Number(a.jobId - b.jobId));
+    return {
+      fromBlock: this.params.fromBlock,
+      toBlock: this.scannedTo ?? this.params.fromBlock - 1n,
+      eventCount: this.eventCount,
+      jobs,
+      withdrawals: [...this.withdrawals],
+      arbiterUpdates: [...this.arbiterUpdates],
+      treasuryUpdates: [...this.treasuryUpdates],
+      feeUpdates: [...this.feeUpdates],
+    };
+  }
+
+  job(jobId: bigint): JobRecord | undefined {
+    return this.jobs.get(jobId.toString());
+  }
+
+  private fold(event: EscrowEvent): void {
+    const args = event.args;
+    const stamp: Stamp = { block: event.blockNumber, tx: event.transactionHash };
+
+    switch (event.name) {
+      case 'JobCreated': {
+        const jobId = big(args['jobId']);
+        this.jobs.set(jobId.toString(), {
+          jobId,
+          buyer: addr(args['buyer']),
+          seller: addr(args['seller']),
+          amount: big(args['amount']),
+          termsHash: hex(args['termsHash']),
+          deliveryDeadline: num(args['deliveryDeadline']),
+          reviewWindow: num(args['reviewWindow']),
+          stage: 'created',
+          created: stamp,
+        });
+        return;
+      }
+      case 'JobFunded': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.funded = { ...stamp, amount: big(args['amount']) };
+          if (job.stage === 'created') job.stage = 'funded';
+        }
+        return;
+      }
+      case 'JobDelivered': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.delivered = {
+            ...stamp,
+            deliverableHash: hex(args['deliverableHash']),
+            deliveredAt: num(args['deliveredAt']),
+            reviewDeadline: num(args['reviewDeadline']),
+          };
+          if (job.stage === 'funded') job.stage = 'delivered';
+        }
+        return;
+      }
+      case 'JobAccepted': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.accepted = {
+            ...stamp,
+            sellerAmount: big(args['sellerAmount']),
+            platformFee: big(args['platformFee']),
+          };
+          job.stage = 'accepted';
+        }
+        return;
+      }
+      case 'DisputeRaised': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.dispute = {
+            ...stamp,
+            disputeHash: hex(args['disputeHash']),
+            disputedAt: num(args['disputedAt']),
+          };
+          job.stage = 'disputed';
+        }
+        return;
+      }
+      case 'VerdictResolved': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.verdict = {
+            ...stamp,
+            sellerAwardBps: num(args['sellerAwardBps']),
+            sellerAmount: big(args['sellerAmount']),
+            buyerAmount: big(args['buyerAmount']),
+            arbitrationFee: big(args['arbitrationFee']),
+            evidenceHash: hex(args['evidenceHash']),
+            rationaleHash: hex(args['rationaleHash']),
+            verdictDigest: hex(args['verdictDigest']),
+          };
+          job.stage = 'resolved';
+        }
+        return;
+      }
+      case 'JobRefunded': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.refund = { ...stamp, amount: big(args['amount']) };
+          job.stage = 'refunded';
+        }
+        return;
+      }
+      case 'JobCancelled': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) job.stage = 'cancelled';
+        return;
+      }
+      case 'Withdrawal': {
+        this.withdrawals.push({
+          account: addr(args['account']),
+          amount: big(args['amount']),
+          ...stamp,
+        });
+        return;
+      }
+      case 'ArbiterUpdated': {
+        this.arbiterUpdates.push({ ...stamp, arbiter: addr(args['arbiter']) });
+        return;
+      }
+      case 'TreasuryUpdated': {
+        this.treasuryUpdates.push({ ...stamp, treasury: addr(args['treasury']) });
+        return;
+      }
+      case 'FeesUpdated': {
+        this.feeUpdates.push({
+          ...stamp,
+          platformFeeBps: num(args['platformFeeBps']),
+          arbitrationFeeBps: num(args['arbitrationFeeBps']),
+        });
+        return;
+      }
+      default:
+        // Ownership and EIP-712 domain events do not describe a job.
+        return;
+    }
+  }
+
+  private mutate(jobId: bigint): JobRecord | undefined {
+    return this.jobs.get(jobId.toString());
+  }
+}
+
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000' as Address;
+const ZERO_HASH = `0x${'00'.repeat(32)}` as Hex;
+
+function big(value: unknown): bigint {
+  return typeof value === 'bigint' ? value : BigInt(String(value ?? 0));
+}
+
+function num(value: unknown): number {
+  return Number(big(value));
+}
+
+function addr(value: unknown): Address {
+  return typeof value === 'string' ? (value as Address) : ZERO_ADDRESS;
+}
+
+function hex(value: unknown): Hex {
+  return typeof value === 'string' ? (value as Hex) : ZERO_HASH;
+}
