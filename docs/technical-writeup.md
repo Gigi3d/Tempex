@@ -665,6 +665,11 @@ The one row with no mitigation is the arbiter's **refusal**: if it never signs, 
 
 ## 12. Evidence
 
+**The results first, in the form a sceptic can check.** Tempex is deployed on Tempo Moderato and has real state: **5 jobs**, of which 1–2 sit `Funded` and idle (refundable by anyone after their deadlines) and 3–5 were `Resolved` by signed verdict. Across them, **150 alphaUSD was escrowed, 23.8875 was paid out to sellers, 76.5 remains in escrow**, and **9 withdrawals** have been pulled — not pushed, because `resolve()` credits and the parties withdraw. That accounting is not a database; a cold beacon scan folded it from **29 events** and then cross-checked itself against the contract, finding `jobCount()=5` and `nextJobId()=6`. **19 receipts** are on disk as proofs for anyone who wants to re-derive any of it.
+
+Two full end-to-end runs are complete: job **4** unsponsored, job **5** with every write routed through the hosted fee payer at `0x58aa…442c`. Each passed **8/8 stages, 23/23 expectations, 0 skipped**. The **25/25** Solidity tests and **185** live beacon assertions pass too, with the beacon spending **0 units** and the treasury balance unchanged at 1,000,001,101,204 — the point being that the read layer provably cannot move money.
+
+Cost, measured from receipts rather than estimated: the unsponsored run paid **0.027070 alphaUSD across 8 transactions** (largest single fee 0.010888); the sponsored run paid **0.028595 across 8** (largest 0.011021), with the fee payer absorbing it. Every one of those is a TIP-20 `Transfer` to `0xfeec…0000`, because there is no gas token on this chain. And the figure the beacon uses to price onboarding for a seller with **zero balance** is not a guess: **6,284 units = 0.006284 alphaUSD**, read off tx `0xfbb77eb2…` in block 37,026,074 for jobId 5 — which is why that quote can honestly return **total 0**.
 
 Everything below was run, not estimated:
 
@@ -689,7 +694,7 @@ Everything below was run, not estimated:
 
 Receipts on disk: `runs/demo-underdelivered-2026-09-26T18-49-36-666Z.json` (unsponsored, job 4), `runs/demo-underdelivered-2026-09-26T18-54-40-645Z.json` (sponsored, job 5), and `runs/beacon-smoke-2026-09-30T17-32-38-630Z.json` (the beacon's 185-assertion live run, all eight steps with every assertion and evidence line). Each demo receipt carries 20 top-level keys including `expectations` (23 entries, 23 passed), `transcript` (90 beats for job 4, 91 for job 5), `session`, `corpus`, and a full `adjudication` block with the band, the clamp flag, both hashes, and the digest. The beacon receipt is written **last**, after every assertion, so a receipt can only exist for a run that passed end to end.
 
-Live state on Moderato, as the beacon reads it: **5 jobs** — 1–2 `Funded` (idle, refundable by anyone after their deadlines), 3–5 `Resolved` by verdict — 9 withdrawals, 150 alphaUSD escrowed to date, 23.8875 paid out to sellers, 76.5 still in escrow, 3 verdicts all inside their bands, and 19 receipts available as proofs.
+**On the clamp, precisely, because it is the claim most worth attacking.** All three live verdicts awarded **3,250 bps** and all three recorded `"clamped": false`, inside a band of `[2050, 4450]`. That is not evidence the guardrail works — 3,250 *is* the band's centre, and with no `OPENAI_API_KEY` the rule engine proposed its own centre, so there was nothing to clamp. The honest reading: **the clamp has never had to fire on chain.** What proves it fires is offline and reproducible without keys — `verifyArbiter` pushes `lowBps − 2500` and `highBps + 2500` through the real `clampToBand` and asserts both come back clamped while the centre passes through untouched (`verify.ts:192-203`), and `pnpm demo drill` runs the same check across all four corpus scenarios, including the invariant that a proposal already inside the band must return `clamped: false`. A guardrail that has only ever been exercised by its own author's inputs is exactly why §6 quotes the code instead of the outcome.
 
 ---
 
