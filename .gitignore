@@ -8,3 +8,4 @@ runs/*
 *.log
 .DS_Store
 contracts/broadcast/
+.beacon/
