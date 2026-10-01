@@ -12,6 +12,7 @@ import {
   type VerdictStruct,
   type WriteOptions,
   SELLER_RESPONSE_WINDOW_SECONDS,
+  disputeSettlement,
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
@@ -64,9 +65,15 @@ export type RelayReceipt = {
 /// arithmetic against a fee schedule that may since have changed.
 export type VerdictMoney = {
   amount: bigint;
+  /// the buyer's dispute bond, settled with the ruling
+  bond: bigint;
+  /// the part of the bond forfeited to the seller
+  bondToSeller: bigint;
   arbitrationFee: bigint;
   arbitrationFeeBps: number;
+  /// everything credited to the seller, forfeited bond included
   sellerAmount: bigint;
+  /// everything credited to the buyer, bond refund included
   buyerAmount: bigint;
 };
 
@@ -324,15 +331,15 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   log(`signature recovers to ${recovered}${signerIsArbiter ? ' (registered arbiter)' : ' (NOT the arbiter)'}`);
 
   // ---- the ruling in money, using the fee rate this job locked at creation ----
-  const arbitrationFee = (amount * BigInt(arbitrationFeeBps)) / 10_000n;
-  const remaining = amount - arbitrationFee;
-  const sellerAmount = (remaining * BigInt(chosenBps)) / 10_000n;
+  const settlement = disputeSettlement({ amount, arbitrationFeeBps, sellerAwardBps: chosenBps });
   const money: VerdictMoney = {
     amount,
-    arbitrationFee,
+    bond: settlement.bond,
+    bondToSeller: settlement.bondToSeller,
+    arbitrationFee: settlement.arbitrationFee,
     arbitrationFeeBps,
-    sellerAmount,
-    buyerAmount: remaining - sellerAmount,
+    sellerAmount: settlement.sellerAmount,
+    buyerAmount: settlement.buyerAmount,
   };
 
   const result: AdjudicationResult = {

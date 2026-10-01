@@ -56,6 +56,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// @notice Longest review window a buyer may set; past this a buyer could
     /// hold delivered work hostage while keeping the option to dispute.
     uint64 public constant MAX_REVIEW_WINDOW = 30 days;
+    /// @notice Bond a buyer posts to open a dispute, as a share of the job amount.
+    /// It is split by the award: a buyer who loses forfeits it to the seller, a
+    /// buyer who wins gets it back. Disputing work that was delivered costs money.
+    uint16 public constant DISPUTE_BOND_BPS = 500;
     /// @notice Most the protocol may take of a listed arbiter's fee.
     uint16 public constant MAX_PROTOCOL_CUT_BPS = 5_000;
 
@@ -157,6 +161,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     event ArbiterListed(address indexed arbiter, uint16 feeBps, string metadataURI);
     event ArbiterDelisted(address indexed arbiter);
     event ProtocolCutUpdated(uint16 protocolCutBps);
+    event DisputeBondPosted(uint256 indexed jobId, uint256 bond);
+    /// @notice How much of the buyer's bond was forfeited to the seller. The rest
+    /// paid the buyer's share of the fee or went back to the buyer.
+    event DisputeBondSettled(uint256 indexed jobId, uint256 forfeitedToSeller);
     event DisputeLapsed(uint256 indexed jobId, uint256 sellerAmount, uint256 buyerAmount);
     event JobFunded(uint256 indexed jobId, uint256 amount);
     event JobCancelled(uint256 indexed jobId);
@@ -343,7 +351,9 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
 
     /// @notice Buyer disputes a delivery inside the review window. The claim bundle
     /// hash is pinned on-chain so the arbiter's ruling references fixed evidence.
-    function dispute(uint256 jobId, bytes32 disputeHash) external {
+    /// @notice Buyer disputes a delivery inside the review window, posting a bond of
+    /// `disputeBond(jobId)` (pulled with the job id as memo, so approve it first).
+    function dispute(uint256 jobId, bytes32 disputeHash) external nonReentrant {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Delivered, "not delivered");
         require(msg.sender == job.buyer, "only buyer");
@@ -353,8 +363,51 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         job.disputeHash = disputeHash;
         job.disputedAt = uint64(block.timestamp);
 
+        uint256 bond = disputeBond(jobId);
+        paymentToken.transferFromWithMemo(msg.sender, address(this), bond, bytes32(jobId));
+
         emit DisputeRaised(jobId, disputeHash, job.disputedAt);
+        emit DisputeBondPosted(jobId, bond);
         emit SellerResponseRequested(jobId, job.seller, job.disputedAt + SELLER_RESPONSE_WINDOW);
+    }
+
+    /// @notice The bond a buyer posts to dispute this job.
+    function disputeBond(uint256 jobId) public view returns (uint256) {
+        return (_jobs[jobId].amount * DISPUTE_BOND_BPS) / BPS_DENOMINATOR;
+    }
+
+    /// @notice How a ruling splits the disputed amount and the buyer's bond.
+    ///
+    /// Loser pays: each side bears the arbitration fee in proportion to the share
+    /// it lost. The buyer's share is paid out of its bond first, and whatever is
+    /// left of the bond follows the award, so a buyer who loses outright pays the
+    /// fee and forfeits the rest of its bond to the seller. A side can only pay out
+    /// of what it receives; any shortfall falls on the other side.
+    /// @return sellerAmount everything credited to the seller
+    /// @return buyerAmount everything credited to the buyer, bond refund included
+    /// @return bondToSeller the part of the bond forfeited to the seller
+    function disputeSettlement(uint256 amount, uint256 bond, uint256 fee, uint16 sellerAwardBps)
+        public
+        pure
+        returns (uint256 sellerAmount, uint256 buyerAmount, uint256 bondToSeller)
+    {
+        uint256 sellerGross = (amount * sellerAwardBps) / BPS_DENOMINATOR;
+        uint256 sellerFee = (fee * (BPS_DENOMINATOR - sellerAwardBps)) / BPS_DENOMINATOR;
+        uint256 buyerFee = fee - sellerFee;
+        if (sellerFee > sellerGross) {
+            buyerFee += sellerFee - sellerGross;
+            sellerFee = sellerGross;
+        }
+        uint256 fromBond = buyerFee < bond ? buyerFee : bond;
+        buyerFee -= fromBond;
+        uint256 buyerGross = amount - sellerGross;
+        if (buyerFee > buyerGross) {
+            sellerFee += buyerFee - buyerGross;
+            buyerFee = buyerGross;
+        }
+        bondToSeller = ((bond - fromBond) * sellerAwardBps) / BPS_DENOMINATOR;
+        sellerAmount = sellerGross - sellerFee + bondToSeller;
+        buyerAmount = buyerGross - buyerFee + (bond - fromBond - bondToSeller);
     }
 
     /// @notice Seller pins the hash of its evidence bundle (proof the work was done
@@ -408,15 +461,15 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(ECDSA.recover(digest, signature) == job.arbiter, "bad verdict signature");
 
         uint256 fee = (job.amount * job.arbitrationFeeBps) / BPS_DENOMINATOR;
-        uint256 remaining = job.amount - fee;
-        uint256 sellerAmount = (remaining * verdict.sellerAwardBps) / BPS_DENOMINATOR;
-        uint256 buyerAmount = remaining - sellerAmount;
+        (uint256 sellerAmount, uint256 buyerAmount, uint256 bondToSeller) =
+            disputeSettlement(job.amount, disputeBond(jobId), fee, verdict.sellerAwardBps);
 
         job.state = JobState.Settled;
         job.verdictHash = digest;
         credits[job.seller] += sellerAmount;
         credits[job.buyer] += buyerAmount;
         _payArbitrationFee(job, fee);
+        emit DisputeBondSettled(jobId, bondToSeller);
 
         emit VerdictResolved(
             jobId,
@@ -454,10 +507,13 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
 
         job.state = JobState.Settled;
         credits[job.seller] += sellerAmount;
-        credits[job.buyer] += buyerAmount;
+        // the arbiter failed, not the buyer: the bond goes back in full
+        credits[job.buyer] += buyerAmount + disputeBond(jobId);
+        emit DisputeBondSettled(jobId, 0);
 
         emit DisputeLapsed(jobId, sellerAmount, buyerAmount);
     }
+
 
     function _payArbitrationFee(Job storage job, uint256 fee) private {
         uint256 protocolShare = (fee * job.protocolCutBps) / BPS_DENOMINATOR;

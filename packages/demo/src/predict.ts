@@ -1,5 +1,5 @@
 import { analyze, formatBps } from '@tempex/arbiter';
-import { formatToken, hashCanonical, tokenAmount } from '@tempex/sdk';
+import { disputeSettlement, formatToken, hashCanonical, tokenAmount } from '@tempex/sdk';
 
 import {
   SCENARIOS,
@@ -32,6 +32,8 @@ const PREDICT_SUBMITTED_AT = '2026-01-01T00:00:00.000Z';
 /// would sign.
 export type PredictedMoney = {
   amount: bigint;
+  /// the buyer's dispute bond; seller and buyer amounts include its settlement
+  bond: bigint;
   arbitrationFee: bigint;
   arbitrationFeeBps: number;
   sellerAmount: bigint;
@@ -123,9 +125,11 @@ export function predictScenario(
 
   const rulingBps = band.center;
   const amount = tokenAmount(scenario.amount);
-  const arbitrationFee = (amount * BigInt(ARBITRATION_FEE_BPS)) / 10_000n;
-  const remaining = amount - arbitrationFee;
-  const sellerAmount = (remaining * BigInt(rulingBps)) / 10_000n;
+  const settlement = disputeSettlement({
+    amount,
+    arbitrationFeeBps: ARBITRATION_FEE_BPS,
+    sellerAwardBps: rulingBps,
+  });
 
   return {
     id: scenario.id,
@@ -150,10 +154,11 @@ export function predictScenario(
     rulingBps,
     money: {
       amount,
-      arbitrationFee,
+      bond: settlement.bond,
+      arbitrationFee: settlement.arbitrationFee,
       arbitrationFeeBps: ARBITRATION_FEE_BPS,
-      sellerAmount,
-      buyerAmount: remaining - sellerAmount,
+      sellerAmount: settlement.sellerAmount,
+      buyerAmount: settlement.buyerAmount,
     },
     expected,
   };

@@ -191,6 +191,8 @@ function relayableFromRecord(
     digest: need('digest') as Hex,
     money: {
       amount: BigInt(need('amount')),
+      bond: BigInt(need('bond')),
+      bondToSeller: BigInt(need('bondToSeller')),
       arbitrationFee: BigInt(need('arbitrationFee')),
       arbitrationFeeBps: Number(need('arbitrationFeeBps')),
       sellerAmount: BigInt(need('sellerAmount')),
@@ -600,11 +602,11 @@ class DemoRun {
     this.transcript.row(
       'ruling',
       `${ruling.sellerAwardBps} bps to the seller (${formatToken(money.sellerAmount)}), ` +
-        `${formatToken(money.buyerAmount)} back to the buyer`,
+        `${formatToken(money.buyerAmount)} back to the buyer (bond of ${formatToken(money.bond)} included: ${formatToken(money.bondToSeller)} forfeited to the seller)`,
     );
     this.transcript.row(
       'arbitration fee',
-      `${formatToken(money.arbitrationFee)} — ${money.arbitrationFeeBps} bps of ${formatToken(money.amount)}, to the treasury`,
+      `${formatToken(money.arbitrationFee)} — ${money.arbitrationFeeBps} bps of ${formatToken(money.amount)}, borne by each side in proportion to what it lost`,
     );
     this.transcript.row('rationaleHash', `${ruling.rationaleHash} — the text stays off chain`);
     this.transcript.row('evidenceHash', `${ruling.evidenceHash} — the hash pinned at dispute time`);
@@ -635,6 +637,8 @@ class DemoRun {
       issuedAt: String(ruling.issuedAt),
       validUntil: String(ruling.validUntil),
       amount: money.amount.toString(),
+      bond: money.bond.toString(),
+      bondToSeller: money.bondToSeller.toString(),
       arbitrationFee: money.arbitrationFee.toString(),
       arbitrationFeeBps: String(money.arbitrationFeeBps),
       sellerAmount: money.sellerAmount.toString(),

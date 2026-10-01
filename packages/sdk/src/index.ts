@@ -55,6 +55,9 @@ export type { VerdictStruct } from './verdict.js';
 
 export {
   ARBITRATION_WINDOW_SECONDS,
+  DISPUTE_BOND_BPS,
+  disputeBond,
+  disputeSettlement,
   JOB_STATES,
   SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,

@@ -188,8 +188,16 @@ export function blueprintAutoAccept(ctx: BlueprintContext, jobId: bigint): Bluep
   ]);
 }
 
-export function blueprintDispute(ctx: BlueprintContext, jobId: bigint, disputeHash: Hex): Blueprint {
-  return base(ctx, `dispute job ${jobId} and hand it to the arbiter`, 'buyer', [
+/// Opening a dispute posts a bond (5% of the job amount) that follows the award,
+/// so the allowance for it rides in the same transaction, ahead of the call.
+export function blueprintDispute(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  disputeHash: Hex,
+  bond: bigint,
+): Blueprint {
+  return base(ctx, `dispute job ${jobId}, posting a bond of ${bond} units, and hand it to the arbiter`, 'buyer', [
+    { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, bond] },
     { contract: 'escrow', to: ctx.escrow, fn: 'dispute', args: [jobId, disputeHash] },
   ]);
 }

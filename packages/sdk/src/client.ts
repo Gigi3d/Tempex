@@ -74,6 +74,58 @@ export const SELLER_RESPONSE_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 /// settle the dispute on an even split. Mirrors `TempexEscrow.ARBITRATION_WINDOW`.
 export const ARBITRATION_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 
+/// Bond a buyer posts to dispute, in bps of the job amount. Mirrors
+/// `TempexEscrow.DISPUTE_BOND_BPS`.
+export const DISPUTE_BOND_BPS = 500;
+
+export function disputeBond(amount: bigint): bigint {
+  return (amount * BigInt(DISPUTE_BOND_BPS)) / 10_000n;
+}
+
+/// What a ruling pays each side, bond included. A line-for-line mirror of
+/// `TempexEscrow.disputeSettlement`, so a receipt can predict the exact credits
+/// before the verdict is relayed: loser pays the fee, the buyer's share comes out
+/// of its bond first, and the rest of the bond follows the award.
+export function disputeSettlement(params: {
+  amount: bigint;
+  arbitrationFeeBps: number;
+  sellerAwardBps: number;
+}): {
+  bond: bigint;
+  arbitrationFee: bigint;
+  sellerAmount: bigint;
+  buyerAmount: bigint;
+  bondToSeller: bigint;
+} {
+  const BPS = 10_000n;
+  const award = BigInt(params.sellerAwardBps);
+  const { amount } = params;
+  const bond = disputeBond(amount);
+  const fee = (amount * BigInt(params.arbitrationFeeBps)) / BPS;
+  const sellerGross = (amount * award) / BPS;
+  let sellerFee = (fee * (BPS - award)) / BPS;
+  let buyerFee = fee - sellerFee;
+  if (sellerFee > sellerGross) {
+    buyerFee += sellerFee - sellerGross;
+    sellerFee = sellerGross;
+  }
+  const fromBond = buyerFee < bond ? buyerFee : bond;
+  buyerFee -= fromBond;
+  const buyerGross = amount - sellerGross;
+  if (buyerFee > buyerGross) {
+    sellerFee += buyerFee - buyerGross;
+    buyerFee = buyerGross;
+  }
+  const bondToSeller = ((bond - fromBond) * award) / BPS;
+  return {
+    bond,
+    arbitrationFee: fee,
+    sellerAmount: sellerGross - sellerFee + bondToSeller,
+    buyerAmount: buyerGross - buyerFee + (bond - fromBond - bondToSeller),
+    bondToSeller,
+  };
+}
+
 /// When the seller's response deadline falls, or null if the job was never disputed.
 export function responseDeadline(job: Job): number | null {
   return job.disputedAt === 0 ? null : job.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS;
@@ -291,12 +343,28 @@ export class TempexClient {
     return this.send([this.call('autoAccept', [jobId])], options);
   }
 
+  /// Opens a dispute. The escrow pulls a bond of 5% of the job amount, so the
+  /// allowance for it rides in the same Tempo transaction, ahead of the call.
   async dispute(
     jobId: bigint,
     disputeHash: Hex,
     options: WriteOptions = {},
   ): Promise<TempexReceipt> {
-    return this.send([this.call('dispute', [jobId, disputeHash])], options);
+    const bond = await this.read<bigint>('disputeBond', [jobId]);
+    return this.send(
+      [
+        {
+          to: this.addresses.token,
+          data: encodeFunctionData({
+            abi: tip20Abi,
+            functionName: 'approve',
+            args: [this.addresses.escrow, bond],
+          }),
+        },
+        this.call('dispute', [jobId, disputeHash]),
+      ],
+      options,
+    );
   }
 
   /// Seller pins its evidence that the work was done, inside the response window

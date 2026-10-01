@@ -254,10 +254,14 @@ contract TempexEscrowTest is Test {
         vm.prank(keeper);
         escrow.resolve(jobId, verdict, signature);
 
+        // loser pays: the seller lost 40% so bears 40% of the 20e6 fee (8e6); the
+        // buyer's 12e6 share comes out of its 50e6 bond, and the remaining 38e6 of
+        // bond splits 60/40 by the award
         uint256 fee = (AMOUNT * ARBITRATION_FEE_BPS) / 10_000; // 20e6
-        uint256 remaining = AMOUNT - fee; // 980e6
-        uint256 sellerAmount = (remaining * 6_000) / 10_000; // 588e6
-        uint256 buyerAmount = remaining - sellerAmount; // 392e6
+        uint256 bond = (AMOUNT * 500) / 10_000; // 50e6
+        uint256 sellerAmount = 600e6 - 8e6 + 22.8e6; // 614.8e6
+        uint256 buyerAmount = 400e6 + 15.2e6; // 415.2e6
+        assertEq(sellerAmount + buyerAmount + fee, AMOUNT + bond);
 
         assertEq(uint8(escrow.getJob(jobId).state), uint8(TempexEscrow.JobState.Settled));
         assertEq(escrow.credits(seller), sellerAmount);
@@ -267,7 +271,7 @@ contract TempexEscrowTest is Test {
 
         vm.prank(buyer);
         escrow.withdraw();
-        assertEq(token.balanceOf(buyer), 1_000_000e6 - AMOUNT + buyerAmount);
+        assertEq(token.balanceOf(buyer), 1_000_000e6 - AMOUNT - bond + buyerAmount);
     }
 
     function test_ResolveWithZeroAwardRefundsBuyer() public {
@@ -282,9 +286,11 @@ contract TempexEscrowTest is Test {
         vm.prank(keeper);
         escrow.resolve(jobId, verdict, _sign(ARBITER_PK, verdict));
 
+        // the seller won nothing, so it cannot pay its share of the fee: the buyer
+        // covers it, and gets its whole bond back
         uint256 fee = (AMOUNT * ARBITRATION_FEE_BPS) / 10_000;
         assertEq(escrow.credits(seller), 0);
-        assertEq(escrow.credits(buyer), AMOUNT - fee);
+        assertEq(escrow.credits(buyer), AMOUNT - fee + escrow.disputeBond(jobId));
     }
 
     function test_ResolveRevertsForNonArbiterSignature() public {
@@ -463,7 +469,10 @@ contract TempexEscrowTest is Test {
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 0, keccak256("c"));
         escrow.resolve(jobId, verdict, _sign(ARBITER_PK, verdict));
-        assertEq(escrow.credits(buyer), AMOUNT - (AMOUNT * ARBITRATION_FEE_BPS) / 10_000);
+        assertEq(
+            escrow.credits(buyer),
+            AMOUNT - (AMOUNT * ARBITRATION_FEE_BPS) / 10_000 + escrow.disputeBond(jobId)
+        );
     }
 
     function test_VerdictSignedBeforeSellerEvidenceIsRejected() public {
@@ -506,6 +515,80 @@ contract TempexEscrowTest is Test {
         vm.prank(seller);
         vm.expectRevert("already responded");
         escrow.respond(jobId, keccak256("proof v2"));
+    }
+
+    // ------------------------------------------------- bond and loser pays
+
+    function test_DisputePullsBondWithJobMemo() public {
+        uint256 jobId = _createFundedJob();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+        uint256 before = token.balanceOf(buyer);
+
+        vm.prank(buyer);
+        escrow.dispute(jobId, keccak256("c"));
+
+        assertEq(escrow.disputeBond(jobId), AMOUNT / 20);
+        assertEq(token.balanceOf(buyer), before - AMOUNT / 20);
+        assertEq(token.lastMemo(), bytes32(jobId));
+        assertEq(token.balanceOf(address(escrow)), AMOUNT + AMOUNT / 20);
+    }
+
+    function test_DisputeRevertsWithoutBondAllowance() public {
+        uint256 jobId = _createFundedJob();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+        vm.prank(buyer);
+        token.approve(address(escrow), 0);
+
+        vm.prank(buyer);
+        vm.expectRevert();
+        escrow.dispute(jobId, keccak256("c"));
+        assertEq(uint8(escrow.getJob(jobId).state), uint8(TempexEscrow.JobState.Delivered));
+    }
+
+    function test_BuyerWhoLosesPaysFeeAndForfeitsBond() public {
+        uint256 jobId = _deliveredAndDisputed();
+        _respond(jobId);
+        TempexEscrow.Verdict memory v = _verdict(jobId, 10_000, keccak256("c"));
+        escrow.resolve(jobId, v, _sign(ARBITER_PK, v));
+
+        // the seller keeps the full amount; the buyer's bond pays the whole fee and
+        // the rest of it is forfeited to the seller
+        uint256 fee = (AMOUNT * ARBITRATION_FEE_BPS) / 10_000;
+        assertEq(escrow.credits(seller), AMOUNT + AMOUNT / 20 - fee);
+        assertEq(escrow.credits(buyer), 0);
+        assertEq(escrow.credits(treasury), (AMOUNT * ARBITRATION_FEE_BPS) / 10_000);
+    }
+
+    function test_EveryDisputeSettlementIsSolvent() public {
+        uint16[5] memory awards = [uint16(0), 1, 3_250, 9_999, 10_000];
+        for (uint256 i = 0; i < awards.length; i++) {
+            uint256 jobId = _deliveredAndDisputed();
+            _respond(jobId);
+            TempexEscrow.Verdict memory v = _verdict(jobId, awards[i], keccak256("c"));
+            escrow.resolve(jobId, v, _sign(ARBITER_PK, v));
+        }
+        uint256 owed = escrow.credits(seller) + escrow.credits(buyer) + escrow.credits(treasury)
+            + escrow.credits(arbiter);
+        assertEq(owed, token.balanceOf(address(escrow)), "credits equal exactly what the escrow holds");
+    }
+
+    function testFuzz_DisputeSettlementConservesMoney(uint256 amount, uint16 feeBps, uint16 awardBps)
+        public
+        view
+    {
+        amount = bound(amount, 1, 1e30);
+        feeBps = uint16(bound(feeBps, 0, 1_000));
+        awardBps = uint16(bound(awardBps, 0, 10_000));
+        uint256 fee = (amount * feeBps) / 10_000;
+        uint256 bond = (amount * 500) / 10_000;
+        (uint256 sellerAmount, uint256 buyerAmount, uint256 bondToSeller) =
+            escrow.disputeSettlement(amount, bond, fee, awardBps);
+        assertEq(sellerAmount + buyerAmount + fee, amount + bond, "nothing created or lost");
+        assertLe(bondToSeller, bond);
+        // a seller never receives more than its award plus the forfeited bond
+        assertLe(sellerAmount, (amount * awardBps) / 10_000 + bondToSeller);
     }
 
     // ------------------------------------------- per-job arbiter and fees
@@ -677,7 +760,7 @@ contract TempexEscrowTest is Test {
 
         assertEq(uint8(escrow.getJob(jobId).state), uint8(TempexEscrow.JobState.Settled));
         assertEq(escrow.credits(seller), AMOUNT / 2);
-        assertEq(escrow.credits(buyer), AMOUNT / 2);
+        assertEq(escrow.credits(buyer), AMOUNT / 2 + escrow.disputeBond(jobId), "bond comes back");
         assertEq(escrow.credits(treasury), 0, "an arbiter that never ruled earns nothing");
     }
 
@@ -699,7 +782,7 @@ contract TempexEscrowTest is Test {
         uint256 jobId = _deliveredAndDisputed();
         vm.warp(block.timestamp + 14 days + 1);
         escrow.settleLapsed(jobId);
-        assertEq(escrow.credits(buyer), AMOUNT / 2);
+        assertEq(escrow.credits(buyer), AMOUNT / 2 + escrow.disputeBond(jobId));
     }
 
     // --------------------------------------------------------------- limits

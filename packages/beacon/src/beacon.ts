@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import type { Address, Hex } from 'viem';
 
-import { hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
+import { disputeBond, hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
 
 import {
   blueprintAccept,
@@ -608,12 +608,23 @@ export class Beacon {
         return blueprintAccept(ctx, big(required(params['jobId'], 'jobId')));
       case 'auto-accept':
         return blueprintAutoAccept(ctx, big(required(params['jobId'], 'jobId')));
-      case 'dispute':
+      case 'dispute': {
+        const jobId = big(required(params['jobId'], 'jobId'));
+        const job = this.ledger.job(jobId);
+        if (!job) {
+          throw new BeaconError(
+            `job ${jobId} is not in this beacon's index`,
+            404,
+            'GET /jobs lists the jobs this beacon has seen; the bond is 5% of the job amount, so the job must exist.',
+          );
+        }
         return blueprintDispute(
           ctx,
-          big(required(params['jobId'], 'jobId')),
+          jobId,
           this.hash(params['disputeHash'], params['evidence'], 'evidence'),
+          disputeBond(job.amount),
         );
+      }
       case 'respond':
         return blueprintRespond(
           ctx,
