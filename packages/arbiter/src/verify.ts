@@ -121,6 +121,7 @@ function fixture(): { terms: JobTerms; bundle: EvidenceBundle; job: Job } {
     arbiter: `0x${'0'.repeat(40)}`,
     platformFeeBps: 0,
     arbitrationFeeBps: 0,
+    protocolCutBps: 0,
   };
 
   return { terms, bundle, job };

@@ -570,6 +570,96 @@ contract TempexEscrowTest is Test {
         escrow.resolve(jobId, v, signature);
     }
 
+    // ------------------------------------------------------ arbiter market
+
+    uint256 internal constant MARKET_ARBITER_PK = 0xC0DE;
+
+    function _marketJob(uint16 feeBps) internal returns (uint256 jobId, address judge) {
+        judge = vm.addr(MARKET_ARBITER_PK);
+        vm.prank(judge);
+        escrow.listArbiter(feeBps, "ipfs://judge-profile");
+        vm.prank(buyer);
+        jobId = escrow.createJobWithArbiter(
+            seller, AMOUNT, keccak256("t"), deliveryDeadline, REVIEW_WINDOW, judge
+        );
+        vm.prank(buyer);
+        escrow.fund(jobId);
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+        vm.prank(buyer);
+        escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
+    }
+
+    function test_BuyerChoosesListedArbiterWhoEarnsItsFee() public {
+        (uint256 jobId, address judge) = _marketJob(300);
+        TempexEscrow.Job memory job = escrow.getJob(jobId);
+        assertEq(job.arbiter, judge);
+        assertEq(job.arbitrationFeeBps, 300);
+        assertEq(job.protocolCutBps, 2_000);
+
+        TempexEscrow.Verdict memory v = _verdict(jobId, 5_000, keccak256("c"));
+        bytes memory houseSig = _sign(ARBITER_PK, v);
+        vm.expectRevert("bad verdict signature");
+        escrow.resolve(jobId, v, houseSig); // the house arbiter cannot rule a market job
+
+        escrow.resolve(jobId, v, _sign(MARKET_ARBITER_PK, v));
+        uint256 fee = (AMOUNT * 300) / 10_000; // 30e6
+        assertEq(escrow.credits(treasury), (fee * 2_000) / 10_000); // 6e6
+        assertEq(escrow.credits(judge), fee - (fee * 2_000) / 10_000); // 24e6
+    }
+
+    function test_HouseJobFeeGoesWhollyToTreasury() public {
+        uint256 jobId = _deliveredAndDisputed();
+        _respond(jobId);
+        TempexEscrow.Verdict memory v = _verdict(jobId, 5_000, keccak256("c"));
+        escrow.resolve(jobId, v, _sign(ARBITER_PK, v));
+        assertEq(escrow.credits(treasury), (AMOUNT * ARBITRATION_FEE_BPS) / 10_000);
+        assertEq(escrow.credits(arbiter), 0);
+    }
+
+    function test_ArbiterRepricingAndDelistingSpareOpenJobs() public {
+        (uint256 jobId, address judge) = _marketJob(300);
+        vm.prank(judge);
+        escrow.listArbiter(1_000, "ipfs://judge-profile"); // raises its fee
+        vm.prank(judge);
+        escrow.delistArbiter();
+        vm.prank(owner);
+        escrow.setProtocolCut(5_000);
+
+        TempexEscrow.Verdict memory v = _verdict(jobId, 5_000, keccak256("c"));
+        escrow.resolve(jobId, v, _sign(MARKET_ARBITER_PK, v));
+        uint256 fee = (AMOUNT * 300) / 10_000;
+        assertEq(escrow.credits(judge), fee - (fee * 2_000) / 10_000, "locked fee and cut hold");
+
+        vm.prank(buyer);
+        vm.expectRevert("arbiter not listed");
+        escrow.createJobWithArbiter(seller, AMOUNT, keccak256("t"), deliveryDeadline, REVIEW_WINDOW, judge);
+    }
+
+    function test_ArbiterListingGuards() public {
+        vm.prank(seller);
+        vm.expectRevert("arbitrationFee too high");
+        escrow.listArbiter(1_001, "");
+
+        vm.prank(seller);
+        escrow.listArbiter(100, "");
+        vm.prank(buyer);
+        vm.expectRevert("party cannot judge");
+        escrow.createJobWithArbiter(seller, AMOUNT, keccak256("t"), deliveryDeadline, REVIEW_WINDOW, seller);
+
+        vm.prank(buyer);
+        vm.expectRevert("arbiter not listed");
+        escrow.createJobWithArbiter(seller, AMOUNT, keccak256("t"), deliveryDeadline, REVIEW_WINDOW, keeper);
+
+        vm.prank(buyer);
+        vm.expectRevert();
+        escrow.setProtocolCut(0);
+        vm.prank(owner);
+        vm.expectRevert("protocolCut too high");
+        escrow.setProtocolCut(5_001);
+    }
+
     // ------------------------------------------------------- lapsed disputes
 
     function test_SilentArbiterLetsAnyoneSettleEvenSplit() public {

@@ -103,6 +103,19 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "MAX_PROTOCOL_CUT_BPS",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_REVIEW_WINDOW",
     "inputs": [],
     "outputs": [
@@ -169,6 +182,35 @@ export const tempexEscrowAbi = [
         "name": "",
         "type": "address",
         "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "arbiterListings",
+    "inputs": [
+      {
+        "name": "arbiter",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "active",
+        "type": "bool",
+        "internalType": "bool"
+      },
+      {
+        "name": "feeBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "stateMutability": "view"
@@ -253,6 +295,50 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "createJobWithArbiter",
+    "inputs": [
+      {
+        "name": "seller",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "termsHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "deliveryDeadline",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "reviewWindow",
+        "type": "uint64",
+        "internalType": "uint64"
+      },
+      {
+        "name": "chosenArbiter",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "jobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "credits",
     "inputs": [
       {
@@ -269,6 +355,13 @@ export const tempexEscrowAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "delistArbiter",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -481,6 +574,11 @@ export const tempexEscrowAbi = [
             "name": "arbitrationFeeBps",
             "type": "uint16",
             "internalType": "uint16"
+          },
+          {
+            "name": "protocolCutBps",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
@@ -499,6 +597,24 @@ export const tempexEscrowAbi = [
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "listArbiter",
+    "inputs": [
+      {
+        "name": "feeBps",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -555,6 +671,19 @@ export const tempexEscrowAbi = [
   {
     "type": "function",
     "name": "platformFeeBps",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "protocolCutBps",
     "inputs": [],
     "outputs": [
       {
@@ -691,6 +820,19 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "setProtocolCut",
+    "inputs": [
+      {
+        "name": "protocolCutBps_",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "setTreasury",
     "inputs": [
       {
@@ -804,6 +946,44 @@ export const tempexEscrowAbi = [
       }
     ],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "event",
+    "name": "ArbiterDelisted",
+    "inputs": [
+      {
+        "name": "arbiter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ArbiterListed",
+    "inputs": [
+      {
+        "name": "arbiter",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
+      },
+      {
+        "name": "feeBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
+      },
+      {
+        "name": "metadataURI",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
+      }
+    ],
+    "anonymous": false
   },
   {
     "type": "event",
@@ -1076,6 +1256,12 @@ export const tempexEscrowAbi = [
         "type": "uint16",
         "indexed": false,
         "internalType": "uint16"
+      },
+      {
+        "name": "protocolCutBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false
@@ -1114,6 +1300,19 @@ export const tempexEscrowAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "ProtocolCutUpdated",
+    "inputs": [
+      {
+        "name": "protocolCutBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false

@@ -33,6 +33,12 @@ import {ITIP20} from "./ITIP20.sol";
 /// apply to new jobs only, so nobody can swap the judge or raise the fee on a
 /// deal already in flight. If the arbiter never rules, `settleLapsed` lets
 /// anyone close the dispute on a fixed default split with no arbitration fee.
+///
+/// Arbiters compete. Anyone can list itself as an arbiter with its own fee, and a
+/// buyer can name a listed arbiter for a job with `createJobWithArbiter`; the
+/// seller sees that choice on chain before it delivers. A listed arbiter earns
+/// its fee minus the protocol's cut. Jobs created with `createJob` use the
+/// house arbiter, whose whole fee goes to the treasury.
 contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     uint16 public constant BPS_DENOMINATOR = 10_000;
     uint16 public constant MAX_PLATFORM_FEE_BPS = 500;
@@ -50,6 +56,8 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// @notice Longest review window a buyer may set; past this a buyer could
     /// hold delivered work hostage while keeping the option to dispute.
     uint64 public constant MAX_REVIEW_WINDOW = 30 days;
+    /// @notice Most the protocol may take of a listed arbiter's fee.
+    uint16 public constant MAX_PROTOCOL_CUT_BPS = 5_000;
 
     /// @dev Memo tag on settlement withdrawals. Funding memos carry the job id itself,
     /// so an indexer can reconcile a transfer to a job without reading contract logs.
@@ -83,6 +91,17 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         address arbiter;
         uint16 platformFeeBps;
         uint16 arbitrationFeeBps;
+        /// share of the arbitration fee that goes to the treasury; the rest
+        /// goes to the arbiter. 10000 for the house arbiter.
+        uint16 protocolCutBps;
+    }
+
+    /// @notice A self-listed arbiter. `feeBps` applies to jobs created while it is
+    /// listed; each job locks the fee it was created with.
+    struct ArbiterListing {
+        bool active;
+        uint16 feeBps;
+        string metadataURI;
     }
 
     /// @notice Arbiter ruling over a disputed job.
@@ -110,6 +129,9 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     address public treasury;
     uint16 public platformFeeBps;
     uint16 public arbitrationFeeBps;
+    /// @notice Share of a listed arbiter's fee the treasury keeps, for new jobs.
+    uint16 public protocolCutBps = 2_000;
+    mapping(address arbiter => ArbiterListing) public arbiterListings;
 
     uint256 public jobCount;
     mapping(uint256 jobId => Job) private _jobs;
@@ -126,8 +148,15 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     );
     /// @notice The arbiter and fee rates this job settles under, fixed at creation.
     event JobTermsLocked(
-        uint256 indexed jobId, address indexed arbiter, uint16 platformFeeBps, uint16 arbitrationFeeBps
+        uint256 indexed jobId,
+        address indexed arbiter,
+        uint16 platformFeeBps,
+        uint16 arbitrationFeeBps,
+        uint16 protocolCutBps
     );
+    event ArbiterListed(address indexed arbiter, uint16 feeBps, string metadataURI);
+    event ArbiterDelisted(address indexed arbiter);
+    event ProtocolCutUpdated(uint16 protocolCutBps);
     event DisputeLapsed(uint256 indexed jobId, uint256 sellerAmount, uint256 buyerAmount);
     event JobFunded(uint256 indexed jobId, uint256 amount);
     event JobCancelled(uint256 indexed jobId);
@@ -179,6 +208,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
 
     // ---------------------------------------------------------------- jobs
 
+    /// @notice Creates a job judged by the house arbiter at the house fee.
     function createJob(
         address seller,
         uint256 amount,
@@ -186,6 +216,34 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         uint64 deliveryDeadline,
         uint64 reviewWindow
     ) external returns (uint256 jobId) {
+        jobId = _createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow);
+        _lockTerms(jobId, arbiter, arbitrationFeeBps, BPS_DENOMINATOR);
+    }
+
+    /// @notice Creates a job judged by a listed arbiter of the buyer's choosing, at
+    /// that arbiter's listed fee. Neither party may be its own judge.
+    function createJobWithArbiter(
+        address seller,
+        uint256 amount,
+        bytes32 termsHash,
+        uint64 deliveryDeadline,
+        uint64 reviewWindow,
+        address chosenArbiter
+    ) external returns (uint256 jobId) {
+        ArbiterListing storage listing = arbiterListings[chosenArbiter];
+        require(listing.active, "arbiter not listed");
+        require(chosenArbiter != msg.sender && chosenArbiter != seller, "party cannot judge");
+        jobId = _createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow);
+        _lockTerms(jobId, chosenArbiter, listing.feeBps, protocolCutBps);
+    }
+
+    function _createJob(
+        address seller,
+        uint256 amount,
+        bytes32 termsHash,
+        uint64 deliveryDeadline,
+        uint64 reviewWindow
+    ) private returns (uint256 jobId) {
         require(seller != address(0) && seller != msg.sender, "invalid seller");
         require(amount > 0, "amount=0");
         require(deliveryDeadline > block.timestamp, "deadline in past");
@@ -201,14 +259,21 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         job.reviewWindow = reviewWindow;
         job.state = JobState.Created;
         job.termsHash = termsHash;
-        job.arbiter = arbiter;
-        job.platformFeeBps = platformFeeBps;
-        job.arbitrationFeeBps = arbitrationFeeBps;
 
         emit JobCreated(
             jobId, msg.sender, seller, amount, termsHash, deliveryDeadline, reviewWindow
         );
-        emit JobTermsLocked(jobId, arbiter, platformFeeBps, arbitrationFeeBps);
+    }
+
+    function _lockTerms(uint256 jobId, address arbiter_, uint16 arbitrationFee, uint16 cut)
+        private
+    {
+        Job storage job = _jobs[jobId];
+        job.arbiter = arbiter_;
+        job.platformFeeBps = platformFeeBps;
+        job.arbitrationFeeBps = arbitrationFee;
+        job.protocolCutBps = cut;
+        emit JobTermsLocked(jobId, arbiter_, platformFeeBps, arbitrationFee, cut);
     }
 
     function fund(uint256 jobId) external nonReentrant {
@@ -351,7 +416,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         job.verdictHash = digest;
         credits[job.seller] += sellerAmount;
         credits[job.buyer] += buyerAmount;
-        credits[treasury] += fee;
+        _payArbitrationFee(job, fee);
 
         emit VerdictResolved(
             jobId,
@@ -392,6 +457,12 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         credits[job.buyer] += buyerAmount;
 
         emit DisputeLapsed(jobId, sellerAmount, buyerAmount);
+    }
+
+    function _payArbitrationFee(Job storage job, uint256 fee) private {
+        uint256 protocolShare = (fee * job.protocolCutBps) / BPS_DENOMINATOR;
+        credits[treasury] += protocolShare;
+        credits[job.arbiter] += fee - protocolShare;
     }
 
     /// @notice Refunds the buyer when the seller misses the delivery deadline.
@@ -448,7 +519,31 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         );
     }
 
+    // ------------------------------------------------------------ arbiters
+
+    /// @notice Lists the caller as an arbiter, or updates its fee and metadata.
+    /// A fee change reaches only jobs created afterwards.
+    function listArbiter(uint16 feeBps, string calldata metadataURI) external {
+        require(feeBps <= MAX_ARBITRATION_FEE_BPS, "arbitrationFee too high");
+        arbiterListings[msg.sender] = ArbiterListing(true, feeBps, metadataURI);
+        emit ArbiterListed(msg.sender, feeBps, metadataURI);
+    }
+
+    /// @notice Stops new jobs naming the caller. Jobs it already judges are unaffected.
+    function delistArbiter() external {
+        require(arbiterListings[msg.sender].active, "not listed");
+        arbiterListings[msg.sender].active = false;
+        emit ArbiterDelisted(msg.sender);
+    }
+
     // --------------------------------------------------------------- admin
+
+    /// @notice Treasury's share of listed arbiters' fees, for jobs created afterwards.
+    function setProtocolCut(uint16 protocolCutBps_) external onlyOwner {
+        require(protocolCutBps_ <= MAX_PROTOCOL_CUT_BPS, "protocolCut too high");
+        protocolCutBps = protocolCutBps_;
+        emit ProtocolCutUpdated(protocolCutBps_);
+    }
 
     /// @notice Arbiter for jobs created after this call. Existing jobs keep theirs.
     function setArbiter(address arbiter_) external onlyOwner {

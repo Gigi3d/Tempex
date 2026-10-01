@@ -6,7 +6,7 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 25/25 Forge tests, 10,362 hand-written lines, one Solidity contract, no proxies
+- 44/44 Forge tests, 10,362 hand-written lines, one Solidity contract, no proxies
 - Live deployment: `0x7579736636dd67A8811A8A2ef95c44560fe6ec27` ([explorer](https://explore.testnet.tempo.xyz/address/0x7579736636dd67A8811A8A2ef95c44560fe6ec27)), 5 jobs funded, 3 settled by verdict
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
@@ -43,7 +43,11 @@ buyer                TempexEscrow                seller                arbiter
 
 **The seller is heard before any verdict.** Once work is delivered, the buyer either pays (`accept`, or `autoAccept` after the review window) or opens a dispute. A dispute emits `SellerResponseRequested` to the seller with a deadline 7 days out (`SELLER_RESPONSE_WINDOW`). Inside that window the seller calls `respond(jobId, responseHash)`, pinning its own evidence bundle: its copy of the deliverable and its account of why the work meets the terms. `resolve` reverts until the seller has responded or the window has closed, and it rejects any verdict issued before that moment. The arbiter scores whichever copy of the deliverable actually hashes to the on-chain delivery, so neither side can win by describing work the other never saw.
 
-`resolve`, `refundExpired`, and `autoAccept` are permissionless — no stuck money, no admin god-mode over funds.
+**Each job locks its referee and its fees.** `createJob` uses the house arbiter; `createJobWithArbiter` names any arbiter that listed itself with `listArbiter(feeBps, metadataURI)`. Either way the job records its arbiter, its platform and arbitration fee rates, and the protocol's cut of the arbitration fee (`JobTermsLocked`). Later calls to `setArbiter`, `setFees`, `setProtocolCut`, or an arbiter re-pricing or delisting itself, reach new jobs only. A listed arbiter earns its fee minus the protocol cut (20% by default, capped at 50%); the house arbiter's fee goes to the treasury. `GET /arbiters` on the beacon lists the market with each arbiter's track record, and `pnpm arbiter list --fee <bps>` puts a key on it.
+
+**A silent arbiter cannot lock funds.** If no verdict lands within `ARBITRATION_WINDOW` (7 days after the seller responds or its window closes), anyone can call `settleLapsed`, which splits the job evenly and pays no arbitration fee. A verdict must also cite the exact evidence the buyer pinned (`evidenceHash == disputeHash`), the review window is capped at 30 days, and ownership transfers in two steps.
+
+`resolve`, `refundExpired`, and `autoAccept` are permissionless, as is `settleLapsed` — no stuck money, no admin god-mode over funds.
 
 ## Repository layout
 

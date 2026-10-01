@@ -105,6 +105,8 @@ const HANDLERS: Record<string, Handler> = {
     return proof;
   },
 
+  'GET /arbiters': ({ beacon }) => beacon.arbiters(),
+
   'GET /reputation/:address': ({ beacon, params }) => beacon.reputation(addr(params['address'], 'address')),
 
   'GET /policy': ({ beacon }) => ({

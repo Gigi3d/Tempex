@@ -47,9 +47,24 @@ export type JobRecord = {
   };
   refund?: Stamp & { amount: bigint };
   /// The arbiter and fee rates the job locked at creation.
-  terms?: Stamp & { arbiter: Address; platformFeeBps: number; arbitrationFeeBps: number };
+  terms?: Stamp & {
+    arbiter: Address;
+    platformFeeBps: number;
+    arbitrationFeeBps: number;
+    protocolCutBps: number;
+  };
   /// The arbiter never ruled in time; anyone settled it on the default split.
   lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
+};
+
+/// An arbiter that listed itself on the escrow, as folded from its events.
+export type ArbiterRecord = {
+  arbiter: Address;
+  active: boolean;
+  feeBps: number;
+  metadataURI: string;
+  listed: Stamp;
+  delisted?: Stamp;
 };
 
 export type WithdrawalRecord = { account: Address; amount: bigint } & Stamp;
@@ -61,6 +76,7 @@ export type LedgerView = {
   jobs: JobRecord[];
   withdrawals: WithdrawalRecord[];
   arbiterUpdates: (Stamp & { arbiter: Address })[];
+  arbiters: ArbiterRecord[];
   treasuryUpdates: (Stamp & { treasury: Address })[];
   feeUpdates: (Stamp & { platformFeeBps: number; arbitrationFeeBps: number })[];
 };
@@ -82,6 +98,7 @@ export class EscrowLedger {
   private readonly jobs = new Map<string, JobRecord>();
   private readonly withdrawals: WithdrawalRecord[] = [];
   private readonly arbiterUpdates: LedgerView['arbiterUpdates'] = [];
+  private readonly arbiters = new Map<string, ArbiterRecord>();
   private readonly treasuryUpdates: LedgerView['treasuryUpdates'] = [];
   private readonly feeUpdates: LedgerView['feeUpdates'] = [];
   private scannedTo: bigint | null = null;
@@ -127,6 +144,7 @@ export class EscrowLedger {
       jobs,
       withdrawals: [...this.withdrawals],
       arbiterUpdates: [...this.arbiterUpdates],
+      arbiters: [...this.arbiters.values()],
       treasuryUpdates: [...this.treasuryUpdates],
       feeUpdates: [...this.feeUpdates],
     };
@@ -242,6 +260,7 @@ export class EscrowLedger {
             arbiter: String(args['arbiter']) as Address,
             platformFeeBps: num(args['platformFeeBps']),
             arbitrationFeeBps: num(args['arbitrationFeeBps']),
+            protocolCutBps: num(args['protocolCutBps']),
           };
         }
         return;
@@ -277,6 +296,27 @@ export class EscrowLedger {
           amount: big(args['amount']),
           ...stamp,
         });
+        return;
+      }
+      case 'ArbiterListed': {
+        const arbiter = addr(args['arbiter']);
+        const { delisted: _previous, ...prior } = this.arbiters.get(arbiter.toLowerCase()) ?? {};
+        this.arbiters.set(arbiter.toLowerCase(), {
+          ...prior,
+          arbiter,
+          active: true,
+          feeBps: num(args['feeBps']),
+          metadataURI: String(args['metadataURI'] ?? ''),
+          listed: stamp,
+        });
+        return;
+      }
+      case 'ArbiterDelisted': {
+        const record = this.arbiters.get(addr(args['arbiter']).toLowerCase());
+        if (record) {
+          record.active = false;
+          record.delisted = stamp;
+        }
         return;
       }
       case 'ArbiterUpdated': {

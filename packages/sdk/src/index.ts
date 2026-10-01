@@ -67,6 +67,7 @@ export {
   responseDeadline,
 } from './client.js';
 export type {
+  ArbiterListing,
   FeePayment,
   Job,
   JobState,

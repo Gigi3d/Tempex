@@ -54,6 +54,16 @@ export type Job = {
   /// Fee rates fixed when the job was created; later admin changes do not reach them.
   platformFeeBps: number;
   arbitrationFeeBps: number;
+  /// Treasury's share of the arbitration fee; the arbiter gets the rest. 10000
+  /// for jobs judged by the house arbiter.
+  protocolCutBps: number;
+};
+
+/// An arbiter's self-listing on the escrow.
+export type ArbiterListing = {
+  active: boolean;
+  feeBps: number;
+  metadataURI: string;
 };
 
 /// How long a seller has, from the dispute, to pin its evidence before the
@@ -236,19 +246,24 @@ export class TempexClient {
       termsHash: Hex;
       deliveryDeadline: number;
       reviewWindow: number;
+      /// A listed arbiter to judge this job. Omit for the house arbiter.
+      arbiter?: Address;
     },
     options: WriteOptions = {},
   ): Promise<{ jobId: bigint; hash: Hex }> {
     const predicted = await this.nextJobId();
+    const common = [
+      params.seller,
+      params.amount,
+      params.termsHash,
+      params.deliveryDeadline,
+      params.reviewWindow,
+    ] as const;
     const receipt = await this.send(
       [
-        this.call('createJob', [
-          params.seller,
-          params.amount,
-          params.termsHash,
-          params.deliveryDeadline,
-          params.reviewWindow,
-        ]),
+        params.arbiter === undefined
+          ? this.call('createJob', [...common])
+          : this.call('createJobWithArbiter', [...common, params.arbiter]),
         this.call('fund', [predicted]),
       ],
       options,
@@ -306,6 +321,28 @@ export class TempexClient {
       [this.call('resolve', [jobId, verdict, signature])],
       options,
     );
+  }
+
+  /// Lists this account as an arbiter buyers can name, or updates its fee and
+  /// metadata. A fee change reaches only jobs created afterwards.
+  async listArbiter(
+    feeBps: number,
+    metadataURI: string,
+    options: WriteOptions = {},
+  ): Promise<TempexReceipt> {
+    return this.send([this.call('listArbiter', [feeBps, metadataURI])], options);
+  }
+
+  async delistArbiter(options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('delistArbiter', [])], options);
+  }
+
+  async arbiterListing(arbiter: Address): Promise<ArbiterListing> {
+    const [active, feeBps, metadataURI] = await this.read<readonly [boolean, number, string]>(
+      'arbiterListings',
+      [arbiter],
+    );
+    return { active, feeBps: Number(feeBps), metadataURI };
   }
 
   /// Closes a dispute the arbiter never ruled on, on the contract's even split.
@@ -497,6 +534,7 @@ function decodeJob(raw: unknown): Job {
     arbiter: (at(14, 'arbiter') ?? ZERO_ADDRESS) as Address,
     platformFeeBps: Number(at(15, 'platformFeeBps') ?? 0),
     arbitrationFeeBps: Number(at(16, 'arbitrationFeeBps') ?? 0),
+    protocolCutBps: Number(at(17, 'protocolCutBps') ?? 0),
   };
 }
 

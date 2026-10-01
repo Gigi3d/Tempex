@@ -13,6 +13,8 @@ import {
   blueprintRespond,
   blueprintRefundExpired,
   blueprintSettleLapsed,
+  blueprintListArbiter,
+  blueprintDelistArbiter,
   blueprintResolve,
   blueprintWithdraw,
   type Blueprint,
@@ -86,6 +88,21 @@ export type Proof = {
   replay: string[];
 };
 
+export type ArbiterSummary = {
+  arbiter: Address;
+  active: boolean;
+  feeBps: number;
+  metadataURI: string | null;
+  record: {
+    jobs: number;
+    disputes: number;
+    ruled: number;
+    lapsed: number;
+    openDisputes: number;
+    averageSellerAwardBps: number | null;
+  };
+};
+
 export type BlueprintAction =
   | 'create-and-fund'
   | 'approve'
@@ -97,6 +114,8 @@ export type BlueprintAction =
   | 'resolve'
   | 'refund-expired'
   | 'settle-lapsed'
+  | 'list-arbiter'
+  | 'delist-arbiter'
   | 'withdraw';
 
 /// Returned verbatim when a resolve request is malformed: the cheapest possible way
@@ -115,6 +134,8 @@ export const BLUEPRINT_ACTIONS: BlueprintAction[] = [
   'resolve',
   'refund-expired',
   'settle-lapsed',
+  'list-arbiter',
+  'delist-arbiter',
   'withdraw',
 ];
 
@@ -408,6 +429,64 @@ export class Beacon {
     };
   }
 
+  /// The arbiter market: the house arbiter plus every self-listed one, each with
+  /// a track record folded from the jobs that locked it in. Buyers pick from this
+  /// list with `create-and-fund {arbiter}`; sellers see the pick before delivering.
+  arbiters(): { house: ArbiterSummary; listed: ArbiterSummary[]; note: string } {
+    const { jobs, arbiters } = this.view;
+    const summarize = (
+      arbiter: Address,
+      listing: { active: boolean; feeBps: number; metadataURI: string } | null,
+    ): ArbiterSummary => {
+      const mine = jobs.filter(
+        (job) => job.terms?.arbiter.toLowerCase() === arbiter.toLowerCase(),
+      );
+      const ruled = mine.filter((job) => job.verdict !== undefined);
+      const awards = ruled.map((job) => job.verdict!.sellerAwardBps);
+      return {
+        arbiter,
+        active: listing?.active ?? true,
+        feeBps: listing?.feeBps ?? this.escrowState.arbitrationFeeBps,
+        metadataURI: listing?.metadataURI ?? null,
+        record: {
+          jobs: mine.length,
+          disputes: mine.filter((job) => job.dispute !== undefined).length,
+          ruled: ruled.length,
+          lapsed: mine.filter((job) => job.lapsed !== undefined).length,
+          openDisputes: mine.filter((job) => job.stage === 'disputed').length,
+          averageSellerAwardBps:
+            awards.length === 0
+              ? null
+              : Math.round(awards.reduce((sum, bps) => sum + bps, 0) / awards.length),
+        },
+      };
+    };
+    return {
+      house: summarize(this.escrowState.arbiter, null),
+      listed: arbiters
+        .map((record) => summarize(record.arbiter, record))
+        .sort((a, b) => Number(b.active) - Number(a.active) || b.record.ruled - a.record.ruled),
+      note: 'Every figure is folded from escrow events: JobTermsLocked says which arbiter a job locked, VerdictResolved and DisputeLapsed say how it ended. A lapsed dispute is one the arbiter never ruled on in time.',
+    };
+  }
+
+  /// A buyer may only name an arbiter that is listed right now; checking here turns
+  /// a revert the agent would pay for into an error that says what to do instead.
+  private listedArbiter(raw: string): Address {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(raw)) {
+      throw new BeaconError(`arbiter must be an address, got "${raw}"`, 400, 'GET /arbiters lists who you can choose.');
+    }
+    const listing = this.view.arbiters.find((record) => record.arbiter.toLowerCase() === raw.toLowerCase());
+    if (!listing?.active) {
+      throw new BeaconError(
+        `${raw} is not a listed arbiter`,
+        400,
+        'GET /arbiters lists who you can choose; omit "arbiter" to use the house arbiter.',
+      );
+    }
+    return listing.arbiter;
+  }
+
   reputation(address: Address): Reputation {
     return reputationFor(this.view, address, this.decimals);
   }
@@ -510,6 +589,9 @@ export class Beacon {
           termsHash: this.hash(params['termsHash'], params['terms'], 'terms'),
           deliveryDeadline: seconds(params['deliveryDeadline'], now + policy.deliveryDeadlineSeconds),
           reviewWindow: seconds(params['reviewWindow'], policy.reviewWindowSeconds),
+          ...(params['arbiter'] !== undefined
+            ? { arbiter: this.listedArbiter(String(params['arbiter'])) }
+            : {}),
           nextJobId,
           allowance,
         });
@@ -569,6 +651,19 @@ export class Beacon {
         return blueprintRefundExpired(ctx, big(required(params['jobId'], 'jobId')));
       case 'settle-lapsed':
         return blueprintSettleLapsed(ctx, big(required(params['jobId'], 'jobId')));
+      case 'list-arbiter': {
+        const feeBps = Number(required(params['feeBps'], 'feeBps'));
+        if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > this.escrowState.maxArbitrationFeeBps) {
+          throw new BeaconError(
+            `feeBps must be an integer from 0 to ${this.escrowState.maxArbitrationFeeBps}`,
+            400,
+            'POST {"feeBps":250,"metadataURI":"https://you.example/arbiter.json"}; the URI should describe your model, rules and contact.',
+          );
+        }
+        return blueprintListArbiter(ctx, feeBps, String(params['metadataURI'] ?? ''));
+      }
+      case 'delist-arbiter':
+        return blueprintDelistArbiter(ctx);
       case 'withdraw':
         return blueprintWithdraw(ctx);
     }

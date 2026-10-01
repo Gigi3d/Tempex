@@ -135,6 +135,8 @@ export function blueprintCreateAndFund(
     reviewWindow: number;
     nextJobId: bigint;
     allowance: bigint;
+    /// a listed arbiter the buyer chose; omitted means the house arbiter
+    arbiter?: Address;
   },
 ): Blueprint {
   const needsApproval = params.allowance < params.amount;
@@ -145,17 +147,17 @@ export function blueprintCreateAndFund(
     decoded: [{ contract: 'token' as const, function: 'approve', args: show('token', 'approve', [ctx.escrow, params.amount]) }],
   };
 
+  const common = [params.seller, params.amount, params.termsHash, params.deliveryDeadline, params.reviewWindow];
   return base(
     ctx,
-    `open job ${params.nextJobId} with ${params.seller} for ${params.amount} units and fund it atomically`,
+    `open job ${params.nextJobId} with ${params.seller} for ${params.amount} units${
+      params.arbiter ? `, judged by ${params.arbiter},` : ''
+    } and fund it atomically`,
     'buyer',
     [
-      {
-        contract: 'escrow',
-        to: ctx.escrow,
-        fn: 'createJob',
-        args: [params.seller, params.amount, params.termsHash, params.deliveryDeadline, params.reviewWindow],
-      },
+      params.arbiter
+        ? { contract: 'escrow', to: ctx.escrow, fn: 'createJobWithArbiter', args: [...common, params.arbiter] }
+        : { contract: 'escrow', to: ctx.escrow, fn: 'createJob', args: common },
       { contract: 'escrow', to: ctx.escrow, fn: 'fund', args: [params.nextJobId] },
     ],
     needsApproval ? [approve] : [],
@@ -233,6 +235,20 @@ export function blueprintResolve(
       },
     ],
   );
+}
+
+/// Lists the signer as an arbiter buyers can name, at its own fee.
+export function blueprintListArbiter(ctx: BlueprintContext, feeBps: number, metadataURI: string): Blueprint {
+  return base(ctx, `list yourself as an arbiter at ${feeBps} bps`, 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'listArbiter', args: [feeBps, metadataURI] },
+  ]);
+}
+
+/// Stops new jobs naming the signer; jobs it already judges are unaffected.
+export function blueprintDelistArbiter(ctx: BlueprintContext): Blueprint {
+  return base(ctx, 'stop accepting new jobs as an arbiter', 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'delistArbiter', args: [] },
+  ]);
 }
 
 /// Closes a dispute whose arbiter never ruled within its window, on the escrow's
