@@ -12,6 +12,7 @@ import {
   type VerdictStruct,
   type WriteOptions,
   SELLER_RESPONSE_WINDOW_SECONDS,
+  awardBounds,
   disputeSettlement,
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
@@ -89,6 +90,10 @@ export type AdjudicationResult = {
   digest: Hex;
   recovered: Address;
   registeredArbiter: Address;
+  /// The range the parties' final offers allow, as the escrow enforces it.
+  offers: { lowBps: number; highBps: number };
+  /// The rule band narrowed to the offers: the range the judge was clamped into.
+  boundedBand: RuleBand;
   /// signature recovers to the registered arbiter AND the contract agrees with
   /// our digest. False here means the verdict would be rejected on chain.
   certified: boolean;
@@ -130,6 +135,19 @@ export function clampToBand(
 ): { bps: number; clamped: boolean } {
   const bps = clamp(requestedBps, band.lowBps, band.highBps);
   return { bps, clamped: bps !== requestedBps };
+}
+
+/// Narrows the rule band to the range the parties' final offers allow. The escrow
+/// rejects any award outside the offers, so a band reaching past them would only
+/// let the judge propose something that cannot settle. When the two ranges do
+/// not meet, the band collapses to the offer edge nearest the evidence.
+export function withinOffers(
+  band: RuleBand,
+  offers: { lowBps: number; highBps: number },
+): RuleBand {
+  const lowBps = clamp(band.lowBps, offers.lowBps, offers.highBps);
+  const highBps = clamp(band.highBps, offers.lowBps, offers.highBps);
+  return { lowBps, highBps, center: clamp(band.center, lowBps, highBps) };
 }
 
 /// Evidence bundle in, signed verdict out.
@@ -209,7 +227,16 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     ...(response !== undefined ? { response } : {}),
   });
   if (analysis.blocking.length > 0) throw new RefusalError(analysis.blocking);
-  const { signals, band, flags } = analysis;
+  const { signals, band: ruleBand, flags } = analysis;
+
+  // ---- the parties' final offers bound the band, as the escrow will ----
+  const offers = awardBounds(job);
+  const band = withinOffers(ruleBand, offers);
+  if (band.lowBps !== ruleBand.lowBps || band.highBps !== ruleBand.highBps) {
+    notes.push(
+      `the parties' offers [${offers.lowBps}, ${offers.highBps}] narrowed the rule band [${ruleBand.lowBps}, ${ruleBand.highBps}] to [${band.lowBps}, ${band.highBps}]`,
+    );
+  }
   log(
     `objective band ${band.lowBps}-${band.highBps} bps (centre ${band.center}); coverage ${
       signals.coverage === null ? 'n/a' : signals.coverage.toFixed(2)
@@ -356,7 +383,9 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     registeredArbiter,
     certified,
     money,
-    band,
+    band: ruleBand,
+    offers,
+    boundedBand: band,
     signals,
     ...(requestedBps !== undefined ? { requestedBps } : {}),
     clamped,

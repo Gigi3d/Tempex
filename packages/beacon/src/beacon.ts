@@ -88,6 +88,21 @@ export type Proof = {
   replay: string[];
 };
 
+/// A final offer in basis points, defaulted when absent and refused when it is
+/// not a whole number of bps the escrow would accept.
+function bpsParam(raw: unknown, name: string, fallback: number): number {
+  if (raw === undefined || raw === null || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+    throw new BeaconError(
+      `${name} must be an integer from 0 to 10000, got ${JSON.stringify(raw)}`,
+      400,
+      `${name} is your final offer in basis points of the job amount; the arbiter's award must land between the buyer's offer and the seller's ask.`,
+    );
+  }
+  return value;
+}
+
 export type ArbiterSummary = {
   arbiter: Address;
   active: boolean;
@@ -623,6 +638,7 @@ export class Beacon {
           jobId,
           this.hash(params['disputeHash'], params['evidence'], 'evidence'),
           disputeBond(job.amount),
+          bpsParam(params['buyerOfferBps'], 'buyerOfferBps', 0),
         );
       }
       case 'respond':
@@ -630,6 +646,7 @@ export class Beacon {
           ctx,
           big(required(params['jobId'], 'jobId')),
           this.hash(params['responseHash'], params['response'], 'response'),
+          bpsParam(params['sellerAskBps'], 'sellerAskBps', 10_000),
         );
       case 'resolve': {
         const jobId = big(required(params['jobId'], 'jobId'));

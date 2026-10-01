@@ -471,7 +471,13 @@ class DemoRun {
       `"${this.scenario.claim}"`,
       'claim',
     );
-    const receipt = await this.clients.buyer.dispute(jobId, disputeHash, this.writeOptions);
+    const buyerOfferBps = this.scenario.buyerOfferBps ?? 0;
+    const receipt = await this.clients.buyer.dispute(
+      jobId,
+      disputeHash,
+      buyerOfferBps,
+      this.writeOptions,
+    );
     this.transcript.tx('tx', receipt.transactionHash);
     this.reportFeePayer(receipt, this.clients.buyer.address);
 
@@ -514,11 +520,23 @@ class DemoRun {
     };
     writeResponse(this.options.evidenceDir, jobId, response);
     const responseHash = responseHashOf(response);
-    const answered = await this.clients.seller.respond(jobId, responseHash, this.writeOptions);
+    const sellerAskBps = this.scenario.sellerAskBps ?? 10_000;
+    const answered = await this.clients.seller.respond(
+      jobId,
+      responseHash,
+      sellerAskBps,
+      this.writeOptions,
+    );
     this.transcript.tx('response', answered.transactionHash);
     this.reportFeePayer(answered, this.clients.seller.address);
     const afterResponse = await this.clients.seller.job(jobId);
     this.expect('job responseHash', responseHash, afterResponse.responseHash);
+    this.expect('buyer offer', String(buyerOfferBps), String(afterResponse.buyerOfferBps));
+    this.expect('seller ask', String(sellerAskBps), String(afterResponse.sellerAskBps));
+    this.transcript.row(
+      'offers',
+      `buyer concedes ${buyerOfferBps} bps, seller asks ${sellerAskBps} bps — the escrow will reject any award outside that range`,
+    );
 
     this.record('dispute', {
       hash: receipt.transactionHash,

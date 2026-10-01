@@ -128,6 +128,11 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
   lines.push(`- Claim corroboration: ${signals.corroboration}`);
   lines.push('');
   lines.push('## Guardrail');
+  if (job.disputedAt > 0) {
+    lines.push(
+      `Final offers pinned on chain: the buyer concedes ${job.buyerOfferBps} bps, the seller asks ${job.respondedAt > 0 ? `${job.sellerAskBps} bps` : 'for everything (it did not respond)'}. The escrow rejects any award outside that range, and the band below already respects it.`,
+    );
+  }
   lines.push(
     `Objective band ${band.lowBps}-${band.highBps} bps (centre ${band.center} = ${formatBps(band.center)} to the seller). Any number outside the band is clamped into it before signing, and the clamp is written into the ruling you sign.`,
   );

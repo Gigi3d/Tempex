@@ -195,20 +195,34 @@ export function blueprintDispute(
   jobId: bigint,
   disputeHash: Hex,
   bond: bigint,
+  buyerOfferBps: number,
 ): Blueprint {
-  return base(ctx, `dispute job ${jobId}, posting a bond of ${bond} units, and hand it to the arbiter`, 'buyer', [
-    { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, bond] },
-    { contract: 'escrow', to: ctx.escrow, fn: 'dispute', args: [jobId, disputeHash] },
-  ]);
+  return base(
+    ctx,
+    `dispute job ${jobId}, posting a bond of ${bond} units and a final offer of ${buyerOfferBps} bps, and hand it to the arbiter`,
+    'buyer',
+    [
+      { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, bond] },
+      { contract: 'escrow', to: ctx.escrow, fn: 'dispute', args: [jobId, disputeHash, buyerOfferBps] },
+    ],
+  );
 }
 
 /// The seller's answer to a dispute: pins its evidence of proper delivery inside
 /// the 7-day response window. The arbiter will not rule before this lands or
 /// the window closes.
-export function blueprintRespond(ctx: BlueprintContext, jobId: bigint, responseHash: Hex): Blueprint {
-  return base(ctx, `respond to the dispute on job ${jobId} with the seller's evidence`, 'seller', [
-    { contract: 'escrow', to: ctx.escrow, fn: 'respond', args: [jobId, responseHash] },
-  ]);
+export function blueprintRespond(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  responseHash: Hex,
+  sellerAskBps: number,
+): Blueprint {
+  return base(
+    ctx,
+    `respond to the dispute on job ${jobId} with the seller's evidence and a final ask of ${sellerAskBps} bps`,
+    'seller',
+    [{ contract: 'escrow', to: ctx.escrow, fn: 'respond', args: [jobId, responseHash, sellerAskBps] }],
+  );
 }
 
 /// Relaying a verdict is permissionless: whoever submits it pays the fee (or has it

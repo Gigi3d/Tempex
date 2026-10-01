@@ -57,7 +57,22 @@ export type Job = {
   /// Treasury's share of the arbitration fee; the arbiter gets the rest. 10000
   /// for jobs judged by the house arbiter.
   protocolCutBps: number;
+  /// The buyer's offer pinned at dispute: the most it concedes the seller earned.
+  buyerOfferBps: number;
+  /// The seller's ask pinned in its response: the least it will accept. 10000
+  /// until it responds.
+  sellerAskBps: number;
 };
+
+/// The range an award must fall in, mirroring `TempexEscrow.awardBounds`: between
+/// the buyer's offer and the seller's ask. The full range for a job never disputed.
+export function awardBounds(job: Job): { lowBps: number; highBps: number } {
+  if (job.disputedAt === 0) return { lowBps: 0, highBps: 10_000 };
+  return {
+    lowBps: Math.min(job.buyerOfferBps, job.sellerAskBps),
+    highBps: Math.max(job.buyerOfferBps, job.sellerAskBps),
+  };
+}
 
 /// An arbiter's self-listing on the escrow.
 export type ArbiterListing = {
@@ -345,9 +360,14 @@ export class TempexClient {
 
   /// Opens a dispute. The escrow pulls a bond of 5% of the job amount, so the
   /// allowance for it rides in the same Tempo transaction, ahead of the call.
+  ///
+  /// `buyerOfferBps` is the buyer's final offer: the most it concedes the seller
+  /// has earned. The arbiter's award cannot go below the lower of this and the
+  /// seller's ask. 0 concedes nothing.
   async dispute(
     jobId: bigint,
     disputeHash: Hex,
+    buyerOfferBps = 0,
     options: WriteOptions = {},
   ): Promise<TempexReceipt> {
     const bond = await this.read<bigint>('disputeBond', [jobId]);
@@ -361,20 +381,22 @@ export class TempexClient {
             args: [this.addresses.escrow, bond],
           }),
         },
-        this.call('dispute', [jobId, disputeHash]),
+        this.call('dispute', [jobId, disputeHash, buyerOfferBps]),
       ],
       options,
     );
   }
 
   /// Seller pins its evidence that the work was done, inside the response window
-  /// a dispute opens. The arbiter will not rule until this lands or the window closes.
+  /// a dispute opens, with its final ask: the least it will accept. The arbiter
+  /// will not rule until this lands or the window closes.
   async respond(
     jobId: bigint,
     responseHash: Hex,
+    sellerAskBps = 10_000,
     options: WriteOptions = {},
   ): Promise<TempexReceipt> {
-    return this.send([this.call('respond', [jobId, responseHash])], options);
+    return this.send([this.call('respond', [jobId, responseHash, sellerAskBps])], options);
   }
 
   /// Relays a signed verdict. Permissionless on purpose: whoever holds the
@@ -603,6 +625,8 @@ function decodeJob(raw: unknown): Job {
     platformFeeBps: Number(at(15, 'platformFeeBps') ?? 0),
     arbitrationFeeBps: Number(at(16, 'arbitrationFeeBps') ?? 0),
     protocolCutBps: Number(at(17, 'protocolCutBps') ?? 0),
+    buyerOfferBps: Number(at(18, 'buyerOfferBps') ?? 0),
+    sellerAskBps: Number(at(19, 'sellerAskBps') ?? 10_000),
   };
 }
 

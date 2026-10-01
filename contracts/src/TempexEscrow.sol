@@ -39,6 +39,13 @@ import {ITIP20} from "./ITIP20.sol";
 /// seller sees that choice on chain before it delivers. A listed arbiter earns
 /// its fee minus the protocol's cut. Jobs created with `createJob` use the
 /// house arbiter, whose whole fee goes to the treasury.
+///
+/// Final-offer bounds: the buyer's dispute pins the most it thinks the seller has
+/// earned (`buyerOfferBps`) and the seller's response pins the least it will
+/// accept (`sellerAskBps`). `resolve` rejects any award outside the range the two
+/// offers span, so the arbiter can only choose between the parties' positions,
+/// never beyond them. A seller that does not respond is treated as asking for
+/// everything.
 contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     uint16 public constant BPS_DENOMINATOR = 10_000;
     uint16 public constant MAX_PLATFORM_FEE_BPS = 500;
@@ -47,12 +54,9 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// its evidence of proper delivery before the arbiter may rule.
     uint64 public constant SELLER_RESPONSE_WINDOW = 7 days;
     /// @notice How long the arbiter has to rule once the evidence record closes.
-    /// After that the dispute lapses and anyone can settle it on the default split.
+    /// After that the dispute lapses and anyone can settle it at the midpoint of the
+    /// parties' offers, with no fee.
     uint64 public constant ARBITRATION_WINDOW = 7 days;
-    /// @notice Seller share of a lapsed dispute. Even, and with no arbitration fee:
-    /// an arbiter that never rules earns nothing, and neither party is punished
-    /// for the arbiter's silence.
-    uint16 public constant LAPSED_SELLER_AWARD_BPS = 5_000;
     /// @notice Longest review window a buyer may set; past this a buyer could
     /// hold delivered work hostage while keeping the option to dispute.
     uint64 public constant MAX_REVIEW_WINDOW = 30 days;
@@ -98,6 +102,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         /// share of the arbitration fee that goes to the treasury; the rest
         /// goes to the arbiter. 10000 for the house arbiter.
         uint16 protocolCutBps;
+        /// the buyer's offer: the most it concedes the seller has earned
+        uint16 buyerOfferBps;
+        /// the seller's ask: the least it will accept; 10000 until it responds
+        uint16 sellerAskBps;
     }
 
     /// @notice A self-listed arbiter. `feeBps` applies to jobs created while it is
@@ -177,7 +185,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     event SellerResponseRequested(
         uint256 indexed jobId, address indexed seller, uint64 responseDeadline
     );
-    event SellerResponded(uint256 indexed jobId, bytes32 responseHash, uint64 respondedAt);
+    event SellerResponded(
+        uint256 indexed jobId, bytes32 responseHash, uint16 sellerAskBps, uint64 respondedAt
+    );
+    event BuyerOfferPinned(uint256 indexed jobId, uint16 buyerOfferBps);
     event VerdictResolved(
         uint256 indexed jobId,
         uint16 sellerAwardBps,
@@ -353,21 +364,28 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// hash is pinned on-chain so the arbiter's ruling references fixed evidence.
     /// @notice Buyer disputes a delivery inside the review window, posting a bond of
     /// `disputeBond(jobId)` (pulled with the job id as memo, so approve it first).
-    function dispute(uint256 jobId, bytes32 disputeHash) external nonReentrant {
+    function dispute(uint256 jobId, bytes32 disputeHash, uint16 buyerOfferBps)
+        external
+        nonReentrant
+    {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Delivered, "not delivered");
         require(msg.sender == job.buyer, "only buyer");
         require(block.timestamp <= job.deliveredAt + job.reviewWindow, "review window closed");
+        require(buyerOfferBps <= BPS_DENOMINATOR, "offer>10000");
 
         job.state = JobState.Disputed;
         job.disputeHash = disputeHash;
         job.disputedAt = uint64(block.timestamp);
+        job.buyerOfferBps = buyerOfferBps;
+        job.sellerAskBps = BPS_DENOMINATOR;
 
         uint256 bond = disputeBond(jobId);
         paymentToken.transferFromWithMemo(msg.sender, address(this), bond, bytes32(jobId));
 
         emit DisputeRaised(jobId, disputeHash, job.disputedAt);
         emit DisputeBondPosted(jobId, bond);
+        emit BuyerOfferPinned(jobId, buyerOfferBps);
         emit SellerResponseRequested(jobId, job.seller, job.disputedAt + SELLER_RESPONSE_WINDOW);
     }
 
@@ -413,11 +431,12 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// @notice Seller pins the hash of its evidence bundle (proof the work was done
     /// properly) inside the response window. One response per dispute; once it
     /// lands, the arbiter may rule without waiting for the window to close.
-    function respond(uint256 jobId, bytes32 responseHash) external {
+    function respond(uint256 jobId, bytes32 responseHash, uint16 sellerAskBps) external {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Disputed, "not disputed");
         require(msg.sender == job.seller, "only seller");
         require(responseHash != bytes32(0), "responseHash=0");
+        require(sellerAskBps <= BPS_DENOMINATOR, "ask>10000");
         require(job.respondedAt == 0, "already responded");
         require(
             block.timestamp <= job.disputedAt + SELLER_RESPONSE_WINDOW, "response window closed"
@@ -425,8 +444,18 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
 
         job.respondedAt = uint64(block.timestamp);
         job.responseHash = responseHash;
+        job.sellerAskBps = sellerAskBps;
 
-        emit SellerResponded(jobId, responseHash, job.respondedAt);
+        emit SellerResponded(jobId, responseHash, sellerAskBps, job.respondedAt);
+    }
+
+    /// @notice The range an award must fall in: between the buyer's offer and the
+    /// seller's ask, whichever way round they are.
+    function awardBounds(uint256 jobId) public view returns (uint16 low, uint16 high) {
+        Job storage job = _jobs[jobId];
+        (low, high) = job.buyerOfferBps <= job.sellerAskBps
+            ? (job.buyerOfferBps, job.sellerAskBps)
+            : (job.sellerAskBps, job.buyerOfferBps);
     }
 
     /// @notice When the evidence record for a dispute closed: the seller's response
@@ -450,6 +479,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(verdict.jobId == jobId, "jobId mismatch");
         require(verdict.evidenceHash == job.disputeHash, "evidence is not the pinned dispute");
         require(verdict.sellerAwardBps <= BPS_DENOMINATOR, "awardBps>10000");
+        _requireWithinOffers(jobId, verdict.sellerAwardBps);
         require(verdict.issuedAt <= block.timestamp, "verdict not yet valid");
         require(block.timestamp <= verdict.validUntil, "verdict expired");
         // The seller gets its say before any ruling: a verdict can only settle the
@@ -483,6 +513,13 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         );
     }
 
+    function _requireWithinOffers(uint256 jobId, uint16 sellerAwardBps) private view {
+        (uint16 low, uint16 high) = awardBounds(jobId);
+        require(
+            sellerAwardBps >= low && sellerAwardBps <= high, "award outside the parties' offers"
+        );
+    }
+
     function _requireSellerHeard(uint256 jobId, uint64 issuedAt) private view {
         uint64 closedAt = evidenceClosedAt(jobId);
         require(closedAt != 0, "seller response window open");
@@ -492,7 +529,8 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
 
     /// @notice Closes a dispute the arbiter never ruled on. Permissionless, so a
     /// silent arbiter cannot lock funds: after `ARBITRATION_WINDOW` past the close
-    /// of evidence, the job settles on `LAPSED_SELLER_AWARD_BPS` with no fee.
+    /// of evidence, the job settles at the midpoint of the parties' offers, with no
+    /// fee: an even split when the offers span everything.
     function settleLapsed(uint256 jobId) external {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Disputed, "not disputed");
@@ -502,7 +540,9 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
             "arbitration window open"
         );
 
-        uint256 sellerAmount = (job.amount * LAPSED_SELLER_AWARD_BPS) / BPS_DENOMINATOR;
+        (uint16 low, uint16 high) = awardBounds(jobId);
+        uint256 midpoint = (uint256(low) + uint256(high)) / 2;
+        uint256 sellerAmount = (job.amount * midpoint) / BPS_DENOMINATOR;
         uint256 buyerAmount = job.amount - sellerAmount;
 
         job.state = JobState.Settled;

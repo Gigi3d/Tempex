@@ -122,6 +122,8 @@ function fixture(): { terms: JobTerms; bundle: EvidenceBundle; job: Job } {
     platformFeeBps: 0,
     arbitrationFeeBps: 0,
     protocolCutBps: 0,
+    buyerOfferBps: 0,
+    sellerAskBps: 10_000,
   };
 
   return { terms, bundle, job };

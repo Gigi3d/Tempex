@@ -33,9 +33,15 @@ export type JobRecord = {
   funded?: Stamp & { amount: bigint };
   delivered?: Stamp & { deliverableHash: Hex; deliveredAt: number; reviewDeadline: number };
   accepted?: Stamp & { sellerAmount: bigint; platformFee: bigint };
-  dispute?: Stamp & { disputeHash: Hex; disputedAt: number; responseDeadline?: number };
+  dispute?: Stamp & {
+    disputeHash: Hex;
+    disputedAt: number;
+    responseDeadline?: number;
+    /// the buyer's final offer, in bps of the job amount
+    buyerOfferBps?: number;
+  };
   /// The seller's answer to the dispute, pinned inside its response window.
-  response?: Stamp & { responseHash: Hex; respondedAt: number };
+  response?: Stamp & { responseHash: Hex; respondedAt: number; sellerAskBps: number };
   verdict?: Stamp & {
     sellerAwardBps: number;
     sellerAmount: bigint;
@@ -224,6 +230,11 @@ export class EscrowLedger {
         if (job?.dispute) job.dispute.responseDeadline = num(args['responseDeadline']);
         return;
       }
+      case 'BuyerOfferPinned': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.dispute) job.dispute.buyerOfferBps = num(args['buyerOfferBps']);
+        return;
+      }
       case 'SellerResponded': {
         const job = this.mutate(big(args['jobId']));
         if (job) {
@@ -231,6 +242,7 @@ export class EscrowLedger {
             ...stamp,
             responseHash: hex(args['responseHash']),
             respondedAt: num(args['respondedAt']),
+            sellerAskBps: num(args['sellerAskBps']),
           };
         }
         return;

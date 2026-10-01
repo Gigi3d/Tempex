@@ -77,19 +77,6 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
-    "name": "LAPSED_SELLER_AWARD_BPS",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint16",
-        "internalType": "uint16"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "MAX_ARBITRATION_FEE_BPS",
     "inputs": [],
     "outputs": [
@@ -256,6 +243,30 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "awardBounds",
+    "inputs": [
+      {
+        "name": "jobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "low",
+        "type": "uint16",
+        "internalType": "uint16"
+      },
+      {
+        "name": "high",
+        "type": "uint16",
+        "internalType": "uint16"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "cancel",
     "inputs": [
       {
@@ -407,6 +418,11 @@ export const tempexEscrowAbi = [
         "name": "disputeHash",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "buyerOfferBps",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -655,6 +671,16 @@ export const tempexEscrowAbi = [
             "name": "protocolCutBps",
             "type": "uint16",
             "internalType": "uint16"
+          },
+          {
+            "name": "buyerOfferBps",
+            "type": "uint16",
+            "internalType": "uint16"
+          },
+          {
+            "name": "sellerAskBps",
+            "type": "uint16",
+            "internalType": "uint16"
           }
         ]
       }
@@ -858,6 +884,11 @@ export const tempexEscrowAbi = [
         "name": "responseHash",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "sellerAskBps",
+        "type": "uint16",
+        "internalType": "uint16"
       }
     ],
     "outputs": [],
@@ -1070,6 +1101,25 @@ export const tempexEscrowAbi = [
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "BuyerOfferPinned",
+    "inputs": [
+      {
+        "name": "jobId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "buyerOfferBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       }
     ],
     "anonymous": false
@@ -1446,6 +1496,12 @@ export const tempexEscrowAbi = [
         "type": "bytes32",
         "indexed": false,
         "internalType": "bytes32"
+      },
+      {
+        "name": "sellerAskBps",
+        "type": "uint16",
+        "indexed": false,
+        "internalType": "uint16"
       },
       {
         "name": "respondedAt",

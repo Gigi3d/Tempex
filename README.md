@@ -6,7 +6,7 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 49/49 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
+- 54/54 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
 - Live deployment: `0x7579736636dd67A8811A8A2ef95c44560fe6ec27` ([explorer](https://explore.testnet.tempo.xyz/address/0x7579736636dd67A8811A8A2ef95c44560fe6ec27)), 5 jobs funded, 3 settled by verdict
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
@@ -17,7 +17,7 @@ Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moder
 |---|---|
 | **Custody** | Funds are provably locked in one escrow contract — never held by a trusted party. |
 | **Judgement** | Qualitative delivery is scored ("4 of 8 criteria met"), not reduced to yes/no. |
-| **Boundedness** | The LLM judge has no unilateral power: its proposal is clamped to a rule-derived band, and the clamp runs on chain. |
+| **Boundedness** | The judge has no unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the arbiter clamps the model's proposal into a rule-derived band inside that range, and the receipt lets anyone re-derive the band. |
 | **Verifiability** | A stranger can reconstruct exactly why the money moved: evidence hash, verdict digest, EIP-712 signature, JSON receipt per run. |
 
 ## How a deal plays out
@@ -84,7 +84,7 @@ before you generate a single key. Keys are only ever needed to *act*.
 
 ## The guardrail, in one paragraph
 
-The rule engine scores the evidence and signs a band (e.g. center 3,250 bps, band 2,050–4,450). The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys.
+Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own: the rule engine scores the evidence and derives a band (e.g. center 3,250 bps, band 2,050–4,450), narrowed to the parties' offers. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
 
 ## The Beacon — how an agent adopts Tempex with no account and no balance
 
