@@ -12,6 +12,7 @@ import {
   blueprintDispute,
   blueprintRespond,
   blueprintRefundExpired,
+  blueprintSettleLapsed,
   blueprintResolve,
   blueprintWithdraw,
   type Blueprint,
@@ -95,6 +96,7 @@ export type BlueprintAction =
   | 'respond'
   | 'resolve'
   | 'refund-expired'
+  | 'settle-lapsed'
   | 'withdraw';
 
 /// Returned verbatim when a resolve request is malformed: the cheapest possible way
@@ -112,6 +114,7 @@ export const BLUEPRINT_ACTIONS: BlueprintAction[] = [
   'respond',
   'resolve',
   'refund-expired',
+  'settle-lapsed',
   'withdraw',
 ];
 
@@ -564,6 +567,8 @@ export class Beacon {
       }
       case 'refund-expired':
         return blueprintRefundExpired(ctx, big(required(params['jobId'], 'jobId')));
+      case 'settle-lapsed':
+        return blueprintSettleLapsed(ctx, big(required(params['jobId'], 'jobId')));
       case 'withdraw':
         return blueprintWithdraw(ctx);
     }

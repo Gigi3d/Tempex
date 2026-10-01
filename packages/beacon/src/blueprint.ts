@@ -235,6 +235,14 @@ export function blueprintResolve(
   );
 }
 
+/// Closes a dispute whose arbiter never ruled within its window, on the escrow's
+/// fixed even split with no arbitration fee. Permissionless.
+export function blueprintSettleLapsed(ctx: BlueprintContext, jobId: bigint): Blueprint {
+  return base(ctx, `settle lapsed dispute on job ${jobId} on the default split (permissionless)`, 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'settleLapsed', args: [jobId] },
+  ]);
+}
+
 export function blueprintRefundExpired(ctx: BlueprintContext, jobId: bigint): Blueprint {
   return base(ctx, `refund job ${jobId} after the delivery deadline passed undelivered`, 'either', [
     { contract: 'escrow', to: ctx.escrow, fn: 'refundExpired', args: [jobId] },

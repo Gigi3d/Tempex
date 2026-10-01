@@ -154,6 +154,13 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     if (job.state !== 'Disputed') {
       throw new RefusalError([`job ${jobIdNum} is ${job.state}, not Disputed`]);
     }
+    // Each job names its own arbiter. Spending a model call on a dispute this key
+    // cannot sign for would produce a verdict the escrow rejects.
+    if (job.arbiter.toLowerCase() !== client.address.toLowerCase()) {
+      throw new RefusalError([
+        `job ${jobIdNum} is assigned to arbiter ${job.arbiter}, not this key ${client.address}`,
+      ]);
+    }
     if (job.disputeHash !== evidenceHash) {
       throw new RefusalError([
         `bundle hashes to ${evidenceHash} but job ${jobIdNum} pinned ${job.disputeHash} at dispute time`,
@@ -298,7 +305,10 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   // ---- certify: would the deployed escrow accept this exact verdict? ----
   const { local, onChain, matches } = await client.verdictEncoding(verdict);
   const recovered = await recoverVerdictSigner(verdict, signature, domainFor(client.addresses));
-  const { arbiter: registeredArbiter, arbitrationFeeBps } = await escrowArbiterConfig(client);
+  // Certify against the arbiter and fee the job locked at creation, not the
+  // escrow's current defaults: those apply to new jobs only.
+  const registeredArbiter = job.arbiter;
+  const arbitrationFeeBps = job.arbitrationFeeBps;
 
   const signerIsArbiter = recovered.toLowerCase() === registeredArbiter.toLowerCase();
   const certified = matches && signerIsArbiter;
@@ -313,7 +323,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   log(`digest ${local} ${matches ? '== ' : '!= '} on-chain ${onChain}`);
   log(`signature recovers to ${recovered}${signerIsArbiter ? ' (registered arbiter)' : ' (NOT the arbiter)'}`);
 
-  // ---- the ruling in money, using the fee schedule the escrow holds now ----
+  // ---- the ruling in money, using the fee rate this job locked at creation ----
   const arbitrationFee = (amount * BigInt(arbitrationFeeBps)) / 10_000n;
   const remaining = amount - arbitrationFee;
   const sellerAmount = (remaining * BigInt(chosenBps)) / 10_000n;

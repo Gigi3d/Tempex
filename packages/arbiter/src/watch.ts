@@ -92,6 +92,13 @@ export async function watchDisputes(options: WatchOptions): Promise<WatchHandle>
         return;
       }
 
+      if (job.arbiter.toLowerCase() !== options.client.address.toLowerCase()) {
+        log(`job ${key}: assigned to arbiter ${job.arbiter}, not this key; skipping`);
+        pending.delete(key);
+        settled.add(key);
+        return;
+      }
+
       // The seller gets its 7 days. Until it responds or the window closes, the
       // dispute stays pending and is retried; the escrow enforces the same rule.
       const now = Math.floor(Date.now() / 1000);

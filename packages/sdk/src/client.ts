@@ -17,6 +17,7 @@ import { CHAIN_ID, RPC_URL, SPONSOR_URL, type TempexAddresses } from './config.j
 import { tempexDomain, verdictDigest, type VerdictStruct } from './verdict.js';
 
 const ZERO_BYTES32 = `0x${'0'.repeat(64)}`;
+const ZERO_ADDRESS = `0x${'0'.repeat(40)}`;
 
 export const JOB_STATES = [
   'Created',
@@ -48,11 +49,20 @@ export type Job = {
   respondedAt: number;
   /// Hash of the seller's response bundle; zero if it has not responded.
   responseHash: Hex;
+  /// The arbiter this job settles under, fixed when the job was created.
+  arbiter: Address;
+  /// Fee rates fixed when the job was created; later admin changes do not reach them.
+  platformFeeBps: number;
+  arbitrationFeeBps: number;
 };
 
 /// How long a seller has, from the dispute, to pin its evidence before the
 /// arbiter may rule. Mirrors `TempexEscrow.SELLER_RESPONSE_WINDOW`.
 export const SELLER_RESPONSE_WINDOW_SECONDS = 7 * 24 * 60 * 60;
+
+/// How long the arbiter has to rule once evidence closes, after which anyone can
+/// settle the dispute on an even split. Mirrors `TempexEscrow.ARBITRATION_WINDOW`.
+export const ARBITRATION_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 
 /// When the seller's response deadline falls, or null if the job was never disputed.
 export function responseDeadline(job: Job): number | null {
@@ -298,6 +308,12 @@ export class TempexClient {
     );
   }
 
+  /// Closes a dispute the arbiter never ruled on, on the contract's even split.
+  /// Permissionless, like the other liveness escapes.
+  async settleLapsed(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('settleLapsed', [jobId])], options);
+  }
+
   async refundExpired(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
     return this.send([this.call('refundExpired', [jobId])], options);
   }
@@ -478,6 +494,9 @@ function decodeJob(raw: unknown): Job {
     disputedAt: Number(at(11, 'disputedAt') ?? 0),
     respondedAt: Number(at(12, 'respondedAt') ?? 0),
     responseHash: (at(13, 'responseHash') ?? ZERO_BYTES32) as Hex,
+    arbiter: (at(14, 'arbiter') ?? ZERO_ADDRESS) as Address,
+    platformFeeBps: Number(at(15, 'platformFeeBps') ?? 0),
+    arbitrationFeeBps: Number(at(16, 'arbitrationFeeBps') ?? 0),
   };
 }
 

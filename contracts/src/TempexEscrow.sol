@@ -4,6 +4,7 @@ pragma solidity 0.8.28;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import {ITIP20} from "./ITIP20.sol";
@@ -15,6 +16,7 @@ import {ITIP20} from "./ITIP20.sol";
 ///   Created --fund--> Funded --deliver--> Delivered --accept/autoAccept--> Settled
 ///                                          |--dispute--> Disputed --respond (seller, <= 7 days)
 ///                                                                --resolve(verdict)--> Settled
+///                                                                --settleLapsed (no verdict in time)--> Settled
 ///   Funded --refundExpired (delivery deadline missed)--> Refunded
 ///   Created --cancel--> Cancelled
 ///
@@ -26,13 +28,28 @@ import {ITIP20} from "./ITIP20.sol";
 /// `SELLER_RESPONSE_WINDOW` to pin its own evidence that the work was done, and
 /// no verdict can settle the job until the seller has responded or the window
 /// has closed.
-contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
+///
+/// Every job locks its arbiter and fee rates at creation. Later admin changes
+/// apply to new jobs only, so nobody can swap the judge or raise the fee on a
+/// deal already in flight. If the arbiter never rules, `settleLapsed` lets
+/// anyone close the dispute on a fixed default split with no arbitration fee.
+contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     uint16 public constant BPS_DENOMINATOR = 10_000;
     uint16 public constant MAX_PLATFORM_FEE_BPS = 500;
     uint16 public constant MAX_ARBITRATION_FEE_BPS = 1_000;
     /// @notice How long a seller has, from the moment a dispute is raised, to pin
     /// its evidence of proper delivery before the arbiter may rule.
     uint64 public constant SELLER_RESPONSE_WINDOW = 7 days;
+    /// @notice How long the arbiter has to rule once the evidence record closes.
+    /// After that the dispute lapses and anyone can settle it on the default split.
+    uint64 public constant ARBITRATION_WINDOW = 7 days;
+    /// @notice Seller share of a lapsed dispute. Even, and with no arbitration fee:
+    /// an arbiter that never rules earns nothing, and neither party is punished
+    /// for the arbiter's silence.
+    uint16 public constant LAPSED_SELLER_AWARD_BPS = 5_000;
+    /// @notice Longest review window a buyer may set; past this a buyer could
+    /// hold delivered work hostage while keeping the option to dispute.
+    uint64 public constant MAX_REVIEW_WINDOW = 30 days;
 
     /// @dev Memo tag on settlement withdrawals. Funding memos carry the job id itself,
     /// so an indexer can reconcile a transfer to a job without reading contract logs.
@@ -63,6 +80,9 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         uint64 disputedAt;
         uint64 respondedAt;
         bytes32 responseHash;
+        address arbiter;
+        uint16 platformFeeBps;
+        uint16 arbitrationFeeBps;
     }
 
     /// @notice Arbiter ruling over a disputed job.
@@ -104,6 +124,11 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         uint64 deliveryDeadline,
         uint64 reviewWindow
     );
+    /// @notice The arbiter and fee rates this job settles under, fixed at creation.
+    event JobTermsLocked(
+        uint256 indexed jobId, address indexed arbiter, uint16 platformFeeBps, uint16 arbitrationFeeBps
+    );
+    event DisputeLapsed(uint256 indexed jobId, uint256 sellerAmount, uint256 buyerAmount);
     event JobFunded(uint256 indexed jobId, uint256 amount);
     event JobCancelled(uint256 indexed jobId);
     event JobDelivered(
@@ -165,6 +190,7 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         require(amount > 0, "amount=0");
         require(deliveryDeadline > block.timestamp, "deadline in past");
         require(reviewWindow > 0, "reviewWindow=0");
+        require(reviewWindow <= MAX_REVIEW_WINDOW, "reviewWindow too long");
 
         jobId = ++jobCount;
         Job storage job = _jobs[jobId];
@@ -175,10 +201,14 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         job.reviewWindow = reviewWindow;
         job.state = JobState.Created;
         job.termsHash = termsHash;
+        job.arbiter = arbiter;
+        job.platformFeeBps = platformFeeBps;
+        job.arbitrationFeeBps = arbitrationFeeBps;
 
         emit JobCreated(
             jobId, msg.sender, seller, amount, termsHash, deliveryDeadline, reviewWindow
         );
+        emit JobTermsLocked(jobId, arbiter, platformFeeBps, arbitrationFeeBps);
     }
 
     function fund(uint256 jobId) external nonReentrant {
@@ -236,7 +266,7 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
     }
 
     function _settleAccepted(uint256 jobId, Job storage job) private {
-        uint256 fee = (job.amount * platformFeeBps) / BPS_DENOMINATOR;
+        uint256 fee = (job.amount * job.platformFeeBps) / BPS_DENOMINATOR;
         uint256 sellerAmount = job.amount - fee;
 
         job.state = JobState.Settled;
@@ -300,6 +330,7 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Disputed, "not disputed");
         require(verdict.jobId == jobId, "jobId mismatch");
+        require(verdict.evidenceHash == job.disputeHash, "evidence is not the pinned dispute");
         require(verdict.sellerAwardBps <= BPS_DENOMINATOR, "awardBps>10000");
         require(verdict.issuedAt <= block.timestamp, "verdict not yet valid");
         require(block.timestamp <= verdict.validUntil, "verdict expired");
@@ -309,9 +340,9 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         _requireSellerHeard(jobId, verdict.issuedAt);
 
         bytes32 digest = verdictDigest(verdict);
-        require(ECDSA.recover(digest, signature) == arbiter, "bad verdict signature");
+        require(ECDSA.recover(digest, signature) == job.arbiter, "bad verdict signature");
 
-        uint256 fee = (job.amount * arbitrationFeeBps) / BPS_DENOMINATOR;
+        uint256 fee = (job.amount * job.arbitrationFeeBps) / BPS_DENOMINATOR;
         uint256 remaining = job.amount - fee;
         uint256 sellerAmount = (remaining * verdict.sellerAwardBps) / BPS_DENOMINATOR;
         uint256 buyerAmount = remaining - sellerAmount;
@@ -338,6 +369,29 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         uint64 closedAt = evidenceClosedAt(jobId);
         require(closedAt != 0, "seller response window open");
         require(issuedAt >= closedAt, "verdict predates seller evidence");
+        require(block.timestamp <= closedAt + ARBITRATION_WINDOW, "arbitration window lapsed");
+    }
+
+    /// @notice Closes a dispute the arbiter never ruled on. Permissionless, so a
+    /// silent arbiter cannot lock funds: after `ARBITRATION_WINDOW` past the close
+    /// of evidence, the job settles on `LAPSED_SELLER_AWARD_BPS` with no fee.
+    function settleLapsed(uint256 jobId) external {
+        Job storage job = _jobs[jobId];
+        require(job.state == JobState.Disputed, "not disputed");
+        uint64 closedAt = evidenceClosedAt(jobId);
+        require(
+            closedAt != 0 && block.timestamp > closedAt + ARBITRATION_WINDOW,
+            "arbitration window open"
+        );
+
+        uint256 sellerAmount = (job.amount * LAPSED_SELLER_AWARD_BPS) / BPS_DENOMINATOR;
+        uint256 buyerAmount = job.amount - sellerAmount;
+
+        job.state = JobState.Settled;
+        credits[job.seller] += sellerAmount;
+        credits[job.buyer] += buyerAmount;
+
+        emit DisputeLapsed(jobId, sellerAmount, buyerAmount);
     }
 
     /// @notice Refunds the buyer when the seller misses the delivery deadline.
@@ -396,6 +450,7 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
 
     // --------------------------------------------------------------- admin
 
+    /// @notice Arbiter for jobs created after this call. Existing jobs keep theirs.
     function setArbiter(address arbiter_) external onlyOwner {
         require(arbiter_ != address(0), "arbiter=0");
         arbiter = arbiter_;
@@ -408,7 +463,8 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         emit TreasuryUpdated(treasury_);
     }
 
-    /// @notice Fees apply to jobs settled after this call; open jobs are unaffected.
+    /// @notice Fees apply to jobs created after this call; every existing job keeps
+    /// the rates it locked at creation.
     function setFees(uint16 platformFeeBps_, uint16 arbitrationFeeBps_) external onlyOwner {
         require(platformFeeBps_ <= MAX_PLATFORM_FEE_BPS, "platformFee too high");
         require(arbitrationFeeBps_ <= MAX_ARBITRATION_FEE_BPS, "arbitrationFee too high");

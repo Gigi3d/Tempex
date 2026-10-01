@@ -94,6 +94,7 @@ export {
   blueprintDispute,
   blueprintRespond,
   blueprintRefundExpired,
+  blueprintSettleLapsed,
   blueprintResolve,
   blueprintWithdraw,
 } from './blueprint.js';

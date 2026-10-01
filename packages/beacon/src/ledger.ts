@@ -15,6 +15,7 @@ export type JobStage =
   | 'disputed'
   | 'resolved'
   | 'refunded'
+  | 'lapsed'
   | 'cancelled';
 
 type Stamp = { block: number; tx: Hex };
@@ -45,6 +46,10 @@ export type JobRecord = {
     verdictDigest: Hex;
   };
   refund?: Stamp & { amount: bigint };
+  /// The arbiter and fee rates the job locked at creation.
+  terms?: Stamp & { arbiter: Address; platformFeeBps: number; arbitrationFeeBps: number };
+  /// The arbiter never ruled in time; anyone settled it on the default split.
+  lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
 };
 
 export type WithdrawalRecord = { account: Address; amount: bigint } & Stamp;
@@ -226,6 +231,30 @@ export class EscrowLedger {
             verdictDigest: hex(args['verdictDigest']),
           };
           job.stage = 'resolved';
+        }
+        return;
+      }
+      case 'JobTermsLocked': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.terms = {
+            ...stamp,
+            arbiter: String(args['arbiter']) as Address,
+            platformFeeBps: num(args['platformFeeBps']),
+            arbitrationFeeBps: num(args['arbitrationFeeBps']),
+          };
+        }
+        return;
+      }
+      case 'DisputeLapsed': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.lapsed = {
+            ...stamp,
+            sellerAmount: big(args['sellerAmount']),
+            buyerAmount: big(args['buyerAmount']),
+          };
+          job.stage = 'lapsed';
         }
         return;
       }
