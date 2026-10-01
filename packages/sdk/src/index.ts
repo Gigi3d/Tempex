@@ -29,7 +29,9 @@ export {
   hashText,
   jobMemo,
   readCase,
+  responseHashOf,
   writeCase,
+  writeResponse,
 } from './evidence.js';
 export type {
   EvidenceArtifact,
@@ -37,6 +39,7 @@ export type {
   EvidenceCase,
   JobTerms,
   Ruling,
+  SellerResponse,
 } from './evidence.js';
 
 export {
@@ -52,12 +55,15 @@ export type { VerdictStruct } from './verdict.js';
 
 export {
   JOB_STATES,
+  SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
   accountFor,
   domainFor,
+  evidenceClosedAt,
   feePaid,
   jobStateIndex,
   memoTransfers,
+  responseDeadline,
 } from './client.js';
 export type {
   FeePayment,

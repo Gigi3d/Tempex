@@ -32,7 +32,9 @@ export type JobRecord = {
   funded?: Stamp & { amount: bigint };
   delivered?: Stamp & { deliverableHash: Hex; deliveredAt: number; reviewDeadline: number };
   accepted?: Stamp & { sellerAmount: bigint; platformFee: bigint };
-  dispute?: Stamp & { disputeHash: Hex; disputedAt: number };
+  dispute?: Stamp & { disputeHash: Hex; disputedAt: number; responseDeadline?: number };
+  /// The seller's answer to the dispute, pinned inside its response window.
+  response?: Stamp & { responseHash: Hex; respondedAt: number };
   verdict?: Stamp & {
     sellerAwardBps: number;
     sellerAmount: bigint;
@@ -191,6 +193,22 @@ export class EscrowLedger {
             disputedAt: num(args['disputedAt']),
           };
           job.stage = 'disputed';
+        }
+        return;
+      }
+      case 'SellerResponseRequested': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.dispute) job.dispute.responseDeadline = num(args['responseDeadline']);
+        return;
+      }
+      case 'SellerResponded': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.response = {
+            ...stamp,
+            responseHash: hex(args['responseHash']),
+            respondedAt: num(args['respondedAt']),
+          };
         }
         return;
       }

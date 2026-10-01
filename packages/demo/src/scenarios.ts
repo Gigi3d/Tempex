@@ -50,6 +50,9 @@ export type Scenario = {
   deliverable: string;
   artifacts: EvidenceArtifact[];
   claim: string;
+  /// What the seller says in its response to the dispute. Defaults to a plain
+  /// statement that the attached deliverable is the work as delivered.
+  sellerStatement?: string;
   expect: ScenarioExpectation;
   /// Only scenarios marked live are run against the chain; the rest are analysed
   /// offline, which needs no keys and costs nothing.
@@ -334,5 +337,9 @@ export function jobFor(
     deliverableHash: hashText(scenario.deliverable),
     disputeHash: disputeHashOf(input.evidenceCase),
     verdictHash: ZERO_HASH,
+
+    disputedAt: 0,
+    respondedAt: 0,
+    responseHash: ZERO_HASH,
   };
 }

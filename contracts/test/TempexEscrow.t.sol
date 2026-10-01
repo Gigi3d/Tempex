@@ -83,6 +83,11 @@ contract TempexEscrowTest is Test {
         escrow.fund(jobId);
     }
 
+    function _respond(uint256 jobId) internal {
+        vm.prank(seller);
+        escrow.respond(jobId, keccak256("seller:evidence"));
+    }
+
     function _verdict(uint256 jobId, uint16 sellerAwardBps, bytes32 evidenceHash)
         internal
         view
@@ -241,6 +246,7 @@ contract TempexEscrowTest is Test {
 
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("claim:only-40pct-valid"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 6_000, keccak256("evidence:bundle"));
         bytes memory signature = _sign(ARBITER_PK, verdict);
@@ -270,6 +276,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("deliverable:junk"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("claim:junk"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 0, keccak256("evidence"));
         vm.prank(keeper);
@@ -286,6 +293,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("d"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 6_000, keccak256("e"));
         bytes memory forged = _sign(0xB0B, verdict); // not the arbiter
@@ -300,6 +308,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("d"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory signed = _verdict(jobId, 6_000, keccak256("e"));
         bytes memory signature = _sign(ARBITER_PK, signed);
@@ -317,6 +326,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("d"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory expired = _verdict(jobId, 6_000, keccak256("e"));
         expired.validUntil = uint64(block.timestamp - 1);
@@ -338,6 +348,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("d"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 10_001, keccak256("e"));
         bytes memory signature = _sign(ARBITER_PK, verdict);
@@ -351,6 +362,7 @@ contract TempexEscrowTest is Test {
         escrow.deliver(jobId, keccak256("d"));
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"));
+        _respond(jobId);
 
         TempexEscrow.Verdict memory verdict = _verdict(jobId, 6_000, keccak256("e"));
         bytes memory signature = _sign(ARBITER_PK, verdict);
@@ -378,6 +390,122 @@ contract TempexEscrowTest is Test {
             token, owner, arbiter, treasury, PLATFORM_FEE_BPS, ARBITRATION_FEE_BPS
         );
         assertTrue(digestHere != other.verdictDigest(verdict));
+    }
+
+    // ------------------------------------------------- seller response window
+
+    function _deliveredAndDisputed() internal returns (uint256 jobId) {
+        jobId = _createFundedJob();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+        vm.prank(buyer);
+        escrow.dispute(jobId, keccak256("c"));
+    }
+
+    function test_DisputeNotifiesSellerWithSevenDayDeadline() public {
+        uint256 jobId = _createFundedJob();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+
+        vm.expectEmit(true, true, false, true, address(escrow));
+        emit TempexEscrow.SellerResponseRequested(jobId, seller, uint64(block.timestamp + 7 days));
+        vm.prank(buyer);
+        escrow.dispute(jobId, keccak256("c"));
+
+        TempexEscrow.Job memory job = escrow.getJob(jobId);
+        assertEq(job.disputedAt, block.timestamp);
+        assertEq(escrow.SELLER_RESPONSE_WINDOW(), 7 days);
+        assertEq(escrow.evidenceClosedAt(jobId), 0, "window open, no response yet");
+    }
+
+    function test_ResolveBlockedWhileSellerWindowOpen() public {
+        uint256 jobId = _deliveredAndDisputed();
+        TempexEscrow.Verdict memory verdict = _verdict(jobId, 0, keccak256("e"));
+        verdict.validUntil = uint64(block.timestamp + 30 days);
+        bytes memory signature = _sign(ARBITER_PK, verdict);
+
+        vm.expectRevert("seller response window open");
+        escrow.resolve(jobId, verdict, signature);
+
+        vm.warp(block.timestamp + 7 days); // last second of the window
+        vm.expectRevert("seller response window open");
+        escrow.resolve(jobId, verdict, signature);
+    }
+
+    function test_SellerRespondsThenArbiterRules() public {
+        uint256 jobId = _deliveredAndDisputed();
+        vm.warp(block.timestamp + 2 days);
+
+        vm.expectEmit(true, false, false, true, address(escrow));
+        emit TempexEscrow.SellerResponded(jobId, keccak256("proof"), uint64(block.timestamp));
+        vm.prank(seller);
+        escrow.respond(jobId, keccak256("proof"));
+
+        TempexEscrow.Job memory job = escrow.getJob(jobId);
+        assertEq(job.responseHash, keccak256("proof"));
+        assertEq(job.respondedAt, block.timestamp);
+        assertEq(escrow.evidenceClosedAt(jobId), block.timestamp);
+
+        TempexEscrow.Verdict memory verdict = _verdict(jobId, 8_000, keccak256("e"));
+        escrow.resolve(jobId, verdict, _sign(ARBITER_PK, verdict));
+        assertEq(uint8(escrow.getJob(jobId).state), uint8(TempexEscrow.JobState.Settled));
+    }
+
+    function test_SilentSellerLetsArbiterRuleAfterWindow() public {
+        uint256 jobId = _deliveredAndDisputed();
+        uint64 deadline = uint64(block.timestamp + 7 days);
+        vm.warp(deadline + 1);
+        assertEq(escrow.evidenceClosedAt(jobId), deadline);
+
+        vm.prank(seller);
+        vm.expectRevert("response window closed");
+        escrow.respond(jobId, keccak256("too late"));
+
+        TempexEscrow.Verdict memory verdict = _verdict(jobId, 0, keccak256("e"));
+        escrow.resolve(jobId, verdict, _sign(ARBITER_PK, verdict));
+        assertEq(escrow.credits(buyer), AMOUNT - (AMOUNT * ARBITRATION_FEE_BPS) / 10_000);
+    }
+
+    function test_VerdictSignedBeforeSellerEvidenceIsRejected() public {
+        uint256 jobId = _deliveredAndDisputed();
+        // arbiter pre-signs a ruling before the seller has been heard
+        TempexEscrow.Verdict memory early = _verdict(jobId, 0, keccak256("e"));
+        early.validUntil = uint64(block.timestamp + 30 days);
+        bytes memory earlySig = _sign(ARBITER_PK, early);
+
+        vm.warp(block.timestamp + 1 days);
+        vm.prank(seller);
+        escrow.respond(jobId, keccak256("proof"));
+
+        vm.expectRevert("verdict predates seller evidence");
+        escrow.resolve(jobId, early, earlySig);
+    }
+
+    function test_RespondGuards() public {
+        uint256 jobId = _createFundedJob();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("d"));
+
+        vm.prank(seller);
+        vm.expectRevert("not disputed");
+        escrow.respond(jobId, keccak256("proof"));
+
+        vm.prank(buyer);
+        escrow.dispute(jobId, keccak256("c"));
+
+        vm.prank(buyer);
+        vm.expectRevert("only seller");
+        escrow.respond(jobId, keccak256("proof"));
+
+        vm.prank(seller);
+        vm.expectRevert("responseHash=0");
+        escrow.respond(jobId, bytes32(0));
+
+        vm.prank(seller);
+        escrow.respond(jobId, keccak256("proof"));
+        vm.prank(seller);
+        vm.expectRevert("already responded");
+        escrow.respond(jobId, keccak256("proof v2"));
     }
 
     // --------------------------------------------------------- state guards

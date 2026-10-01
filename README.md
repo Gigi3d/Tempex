@@ -41,6 +41,8 @@ buyer                TempexEscrow                seller                arbiter
   |<----- refund / payout --|                       |                     |
 ```
 
+**The seller is heard before any verdict.** Once work is delivered, the buyer either pays (`accept`, or `autoAccept` after the review window) or opens a dispute. A dispute emits `SellerResponseRequested` to the seller with a deadline 7 days out (`SELLER_RESPONSE_WINDOW`). Inside that window the seller calls `respond(jobId, responseHash)`, pinning its own evidence bundle: its copy of the deliverable and its account of why the work meets the terms. `resolve` reverts until the seller has responded or the window has closed, and it rejects any verdict issued before that moment. The arbiter scores whichever copy of the deliverable actually hashes to the on-chain delivery, so neither side can win by describing work the other never saw.
+
 `resolve`, `refundExpired`, and `autoAccept` are permissionless — no stuck money, no admin god-mode over funds.
 
 ## Repository layout

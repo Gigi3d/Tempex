@@ -13,17 +13,26 @@ import {ITIP20} from "./ITIP20.sol";
 ///
 /// Lifecycle:
 ///   Created --fund--> Funded --deliver--> Delivered --accept/autoAccept--> Settled
-///                                          |--dispute--> Disputed --resolve(verdict)--> Settled
+///                                          |--dispute--> Disputed --respond (seller, <= 7 days)
+///                                                                --resolve(verdict)--> Settled
 ///   Funded --refundExpired (delivery deadline missed)--> Refunded
 ///   Created --cancel--> Cancelled
 ///
 /// Settlement is a pull pattern: rulings and acceptances credit balances, parties
 /// withdraw stablecoins themselves. Disputes are settled by an arbiter whose
 /// EIP-712 verdict is bound to the exact evidence bundle it evaluated.
+///
+/// A dispute opens a seller response window: the seller has
+/// `SELLER_RESPONSE_WINDOW` to pin its own evidence that the work was done, and
+/// no verdict can settle the job until the seller has responded or the window
+/// has closed.
 contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
     uint16 public constant BPS_DENOMINATOR = 10_000;
     uint16 public constant MAX_PLATFORM_FEE_BPS = 500;
     uint16 public constant MAX_ARBITRATION_FEE_BPS = 1_000;
+    /// @notice How long a seller has, from the moment a dispute is raised, to pin
+    /// its evidence of proper delivery before the arbiter may rule.
+    uint64 public constant SELLER_RESPONSE_WINDOW = 7 days;
 
     /// @dev Memo tag on settlement withdrawals. Funding memos carry the job id itself,
     /// so an indexer can reconcile a transfer to a job without reading contract logs.
@@ -51,6 +60,9 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         bytes32 deliverableHash;
         bytes32 disputeHash;
         bytes32 verdictHash;
+        uint64 disputedAt;
+        uint64 respondedAt;
+        bytes32 responseHash;
     }
 
     /// @notice Arbiter ruling over a disputed job.
@@ -99,6 +111,11 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
     );
     event JobAccepted(uint256 indexed jobId, uint256 sellerAmount, uint256 platformFee);
     event DisputeRaised(uint256 indexed jobId, bytes32 disputeHash, uint64 disputedAt);
+    /// @notice Tells the seller a dispute needs its answer, and by when.
+    event SellerResponseRequested(
+        uint256 indexed jobId, address indexed seller, uint64 responseDeadline
+    );
+    event SellerResponded(uint256 indexed jobId, bytes32 responseHash, uint64 respondedAt);
     event VerdictResolved(
         uint256 indexed jobId,
         uint16 sellerAwardBps,
@@ -239,8 +256,39 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
 
         job.state = JobState.Disputed;
         job.disputeHash = disputeHash;
+        job.disputedAt = uint64(block.timestamp);
 
-        emit DisputeRaised(jobId, disputeHash, uint64(block.timestamp));
+        emit DisputeRaised(jobId, disputeHash, job.disputedAt);
+        emit SellerResponseRequested(jobId, job.seller, job.disputedAt + SELLER_RESPONSE_WINDOW);
+    }
+
+    /// @notice Seller pins the hash of its evidence bundle (proof the work was done
+    /// properly) inside the response window. One response per dispute; once it
+    /// lands, the arbiter may rule without waiting for the window to close.
+    function respond(uint256 jobId, bytes32 responseHash) external {
+        Job storage job = _jobs[jobId];
+        require(job.state == JobState.Disputed, "not disputed");
+        require(msg.sender == job.seller, "only seller");
+        require(responseHash != bytes32(0), "responseHash=0");
+        require(job.respondedAt == 0, "already responded");
+        require(
+            block.timestamp <= job.disputedAt + SELLER_RESPONSE_WINDOW, "response window closed"
+        );
+
+        job.respondedAt = uint64(block.timestamp);
+        job.responseHash = responseHash;
+
+        emit SellerResponded(jobId, responseHash, job.respondedAt);
+    }
+
+    /// @notice When the evidence record for a dispute closed: the seller's response
+    /// time, or the end of the response window if the seller stayed silent. Zero
+    /// while the window is still open and the seller has not responded.
+    function evidenceClosedAt(uint256 jobId) public view returns (uint64) {
+        Job storage job = _jobs[jobId];
+        if (job.respondedAt != 0) return job.respondedAt;
+        uint64 deadline = job.disputedAt + SELLER_RESPONSE_WINDOW;
+        return block.timestamp > deadline ? deadline : 0;
     }
 
     /// @notice Executes a signed arbiter verdict. Permissionless: either party (or a
@@ -255,6 +303,10 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
         require(verdict.sellerAwardBps <= BPS_DENOMINATOR, "awardBps>10000");
         require(verdict.issuedAt <= block.timestamp, "verdict not yet valid");
         require(block.timestamp <= verdict.validUntil, "verdict expired");
+        // The seller gets its say before any ruling: a verdict can only settle the
+        // job once the evidence record is closed, and only if it was issued after
+        // that, so it cannot have been decided without the seller's evidence.
+        _requireSellerHeard(jobId, verdict.issuedAt);
 
         bytes32 digest = verdictDigest(verdict);
         require(ECDSA.recover(digest, signature) == arbiter, "bad verdict signature");
@@ -280,6 +332,12 @@ contract TempexEscrow is EIP712, Ownable, ReentrancyGuard {
             verdict.rationaleHash,
             digest
         );
+    }
+
+    function _requireSellerHeard(uint256 jobId, uint64 issuedAt) private view {
+        uint64 closedAt = evidenceClosedAt(jobId);
+        require(closedAt != 0, "seller response window open");
+        require(issuedAt >= closedAt, "verdict predates seller evidence");
     }
 
     /// @notice Refunds the buyer when the seller misses the delivery deadline.

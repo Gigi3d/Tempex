@@ -16,6 +16,8 @@ import { tip20Abi } from './abi/TIP20.js';
 import { CHAIN_ID, RPC_URL, SPONSOR_URL, type TempexAddresses } from './config.js';
 import { tempexDomain, verdictDigest, type VerdictStruct } from './verdict.js';
 
+const ZERO_BYTES32 = `0x${'0'.repeat(64)}`;
+
 export const JOB_STATES = [
   'Created',
   'Funded',
@@ -40,7 +42,30 @@ export type Job = {
   deliverableHash: Hex;
   disputeHash: Hex;
   verdictHash: Hex;
+  /// Unix seconds the buyer opened the dispute; 0 if never disputed.
+  disputedAt: number;
+  /// Unix seconds the seller pinned its response; 0 if it has not responded.
+  respondedAt: number;
+  /// Hash of the seller's response bundle; zero if it has not responded.
+  responseHash: Hex;
 };
+
+/// How long a seller has, from the dispute, to pin its evidence before the
+/// arbiter may rule. Mirrors `TempexEscrow.SELLER_RESPONSE_WINDOW`.
+export const SELLER_RESPONSE_WINDOW_SECONDS = 7 * 24 * 60 * 60;
+
+/// When the seller's response deadline falls, or null if the job was never disputed.
+export function responseDeadline(job: Job): number | null {
+  return job.disputedAt === 0 ? null : job.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS;
+}
+
+/// When the evidence record closed (the seller responded, or its window ran
+/// out), mirroring `TempexEscrow.evidenceClosedAt`. Null while still open.
+export function evidenceClosedAt(job: Job, now: number): number | null {
+  if (job.respondedAt !== 0) return job.respondedAt;
+  const deadline = responseDeadline(job);
+  return deadline !== null && now > deadline ? deadline : null;
+}
 
 /// Tempo-only knobs, surfaced rather than hidden because they change what the
 /// transaction means: which lane it occupies, how long it stays valid, who pays.
@@ -249,6 +274,16 @@ export class TempexClient {
     return this.send([this.call('dispute', [jobId, disputeHash])], options);
   }
 
+  /// Seller pins its evidence that the work was done, inside the response window
+  /// a dispute opens. The arbiter will not rule until this lands or the window closes.
+  async respond(
+    jobId: bigint,
+    responseHash: Hex,
+    options: WriteOptions = {},
+  ): Promise<TempexReceipt> {
+    return this.send([this.call('respond', [jobId, responseHash])], options);
+  }
+
   /// Relays a signed verdict. Permissionless on purpose: whoever holds the
   /// signature can settle, but only the registered arbiter's signature recovers.
   async resolve(
@@ -287,6 +322,12 @@ export class TempexClient {
 
   async nextJobId(): Promise<bigint> {
     return this.read<bigint>('nextJobId');
+  }
+
+  /// The escrow's own answer to "is the seller's say over?": its response time,
+  /// or the end of the window. 0 while the seller can still respond.
+  async evidenceClosedAt(jobId: bigint): Promise<number> {
+    return Number(await this.read<bigint>('evidenceClosedAt', [jobId]));
   }
 
   async credits(account: Address = this.address): Promise<bigint> {
@@ -434,6 +475,9 @@ function decodeJob(raw: unknown): Job {
     deliverableHash: at(8, 'deliverableHash') as Hex,
     disputeHash: at(9, 'disputeHash') as Hex,
     verdictHash: at(10, 'verdictHash') as Hex,
+    disputedAt: Number(at(11, 'disputedAt') ?? 0),
+    respondedAt: Number(at(12, 'respondedAt') ?? 0),
+    responseHash: (at(13, 'responseHash') ?? ZERO_BYTES32) as Hex,
   };
 }
 

@@ -92,6 +92,7 @@ export {
   blueprintCreateAndFund,
   blueprintDeliver,
   blueprintDispute,
+  blueprintRespond,
   blueprintRefundExpired,
   blueprintResolve,
   blueprintWithdraw,

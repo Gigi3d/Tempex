@@ -192,6 +192,15 @@ export function blueprintDispute(ctx: BlueprintContext, jobId: bigint, disputeHa
   ]);
 }
 
+/// The seller's answer to a dispute: pins its evidence of proper delivery inside
+/// the 7-day response window. The arbiter will not rule before this lands or
+/// the window closes.
+export function blueprintRespond(ctx: BlueprintContext, jobId: bigint, responseHash: Hex): Blueprint {
+  return base(ctx, `respond to the dispute on job ${jobId} with the seller's evidence`, 'seller', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'respond', args: [jobId, responseHash] },
+  ]);
+}
+
 /// Relaying a verdict is permissionless: whoever submits it pays the fee (or has it
 /// sponsored), but only a verdict signed by the registered arbiter recovers.
 export function blueprintResolve(

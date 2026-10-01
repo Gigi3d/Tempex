@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { keccak256, stringToHex, type Hex } from 'viem';
 
@@ -71,6 +71,28 @@ export type EvidenceBundle = {
   submittedAt: string;
 };
 
+/// What the seller hands the arbiter after a dispute: its own copy of the
+/// delivered work and its account of why it meets the terms. Pinned on chain by
+/// `respond(jobId, hashCanonical(response))` inside the response window.
+///
+/// The seller's copy of the deliverable matters: the chain holds only its hash,
+/// and the buyer's bundle is not trusted to reproduce it faithfully. Whichever
+/// copy hashes to the on-chain commitment is the one the arbiter scores.
+export type SellerResponse = {
+  version: 1;
+  jobId: number;
+  /// the dispute this answers, so a response cannot be replayed onto another
+  disputeHash: Hex;
+  statement: string;
+  deliverable: {
+    content?: string;
+    uri?: string;
+    contentHash: Hex;
+  };
+  artifacts: EvidenceArtifact[];
+  submittedAt: string;
+};
+
 /// What the arbiter produces. `rationaleHash` commits the model to its reasoning:
 /// the full text lives in the receipt, the hash lives in the signature.
 export type Ruling = {
@@ -97,16 +119,19 @@ export type Ruling = {
 export type EvidenceCase = {
   terms: JobTerms;
   bundle: EvidenceBundle;
+  /// The seller's answer, when it responded. Absent if it stayed silent.
+  response?: SellerResponse;
 };
 
 export function casePaths(
   dir: string,
   jobId: number | bigint,
-): { terms: string; bundle: string } {
+): { terms: string; bundle: string; response: string } {
   const stem = `job-${jobId}`;
   return {
     terms: resolve(dir, `${stem}.terms.json`),
     bundle: resolve(dir, `${stem}.evidence.json`),
+    response: resolve(dir, `${stem}.response.json`),
   };
 }
 
@@ -117,20 +142,37 @@ export function writeCase(
   dir: string,
   jobId: number | bigint,
   evidenceCase: EvidenceCase,
-): { terms: string; bundle: string } {
+): { terms: string; bundle: string; response: string } {
   const paths = casePaths(dir, jobId);
   mkdirSync(dir, { recursive: true });
   writeFileSync(paths.terms, `${canonicalize(evidenceCase.terms)}\n`);
   writeFileSync(paths.bundle, `${canonicalize(evidenceCase.bundle)}\n`);
+  if (evidenceCase.response !== undefined) writeResponse(dir, jobId, evidenceCase.response);
   return paths;
+}
+
+/// Writes the seller's response in canonical form, next to the buyer's bundle.
+export function writeResponse(
+  dir: string,
+  jobId: number | bigint,
+  response: SellerResponse,
+): string {
+  const path = casePaths(dir, jobId).response;
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(path, `${canonicalize(response)}\n`);
+  return path;
 }
 
 export function readCase(dir: string, jobId: number | bigint): EvidenceCase {
   const paths = casePaths(dir, jobId);
-  return {
+  const evidenceCase: EvidenceCase = {
     terms: JSON.parse(readFileSync(paths.terms, 'utf8')) as JobTerms,
     bundle: JSON.parse(readFileSync(paths.bundle, 'utf8')) as EvidenceBundle,
   };
+  if (existsSync(paths.response)) {
+    evidenceCase.response = JSON.parse(readFileSync(paths.response, 'utf8')) as SellerResponse;
+  }
+  return evidenceCase;
 }
 
 /// The bundle's own integrity: the terms document must be the one the bundle
@@ -159,6 +201,18 @@ export function caseIntegrity(evidenceCase: EvidenceCase): string[] {
   if (terms.acceptanceCriteria.length === 0) {
     problems.push('terms carry no acceptance criteria to rule on');
   }
+  const { response } = evidenceCase;
+  if (response !== undefined) {
+    if (response.version !== 1) {
+      problems.push(`unsupported response version ${String(response.version)}`);
+    }
+    if (response.jobId !== bundle.jobId) {
+      problems.push(`response is for job ${response.jobId}, not job ${bundle.jobId}`);
+    }
+    if (response.disputeHash !== hashCanonical(bundle)) {
+      problems.push('response answers a different dispute than the bundle on file');
+    }
+  }
   return problems;
 }
 
@@ -166,4 +220,9 @@ export function caseIntegrity(evidenceCase: EvidenceCase): string[] {
 /// chain. Recomputed here so both sides of the comparison come from one place.
 export function disputeHashOf(evidenceCase: EvidenceCase): Hex {
   return hashCanonical(evidenceCase.bundle);
+}
+
+/// What the seller pins with `respond`: the canonical hash of its response.
+export function responseHashOf(response: SellerResponse): Hex {
+  return hashCanonical(response);
 }

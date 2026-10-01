@@ -10,6 +10,7 @@ import {
   blueprintCreateAndFund,
   blueprintDeliver,
   blueprintDispute,
+  blueprintRespond,
   blueprintRefundExpired,
   blueprintResolve,
   blueprintWithdraw,
@@ -91,6 +92,7 @@ export type BlueprintAction =
   | 'accept'
   | 'auto-accept'
   | 'dispute'
+  | 'respond'
   | 'resolve'
   | 'refund-expired'
   | 'withdraw';
@@ -107,6 +109,7 @@ export const BLUEPRINT_ACTIONS: BlueprintAction[] = [
   'accept',
   'auto-accept',
   'dispute',
+  'respond',
   'resolve',
   'refund-expired',
   'withdraw',
@@ -525,6 +528,12 @@ export class Beacon {
           ctx,
           big(required(params['jobId'], 'jobId')),
           this.hash(params['disputeHash'], params['evidence'], 'evidence'),
+        );
+      case 'respond':
+        return blueprintRespond(
+          ctx,
+          big(required(params['jobId'], 'jobId')),
+          this.hash(params['responseHash'], params['response'], 'response'),
         );
       case 'resolve': {
         const jobId = big(required(params['jobId'], 'jobId'));

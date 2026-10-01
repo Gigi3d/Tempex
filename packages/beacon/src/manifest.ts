@@ -170,7 +170,7 @@ export const TOOLS: ToolDescriptor[] = [
       properties: {
         action: {
           type: 'string',
-          enum: ['create-and-fund', 'approve', 'deliver', 'accept', 'auto-accept', 'dispute', 'resolve', 'refund-expired', 'withdraw'],
+          enum: ['create-and-fund', 'approve', 'deliver', 'accept', 'auto-accept', 'dispute', 'respond', 'resolve', 'refund-expired', 'withdraw'],
         },
         params: { type: 'object', description: 'Action-specific arguments; see the decoded call in the response.' },
         sponsored: { type: 'boolean', description: 'Default true: route the fee to Tempo’s hosted fee payer.' },

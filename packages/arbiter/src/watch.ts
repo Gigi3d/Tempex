@@ -1,7 +1,9 @@
 import {
   caseIntegrity,
   disputeHashOf,
+  evidenceClosedAt,
   readCase,
+  responseDeadline,
   tempexEscrowAbi,
   WS_URL,
   type EvidenceCase,
@@ -90,11 +92,26 @@ export async function watchDisputes(options: WatchOptions): Promise<WatchHandle>
         return;
       }
 
+      // The seller gets its 7 days. Until it responds or the window closes, the
+      // dispute stays pending and is retried; the escrow enforces the same rule.
+      const now = Math.floor(Date.now() / 1000);
+      if (evidenceClosedAt(job, now) === null) {
+        log(
+          `job ${key}: waiting for the seller's response (window closes ${new Date((responseDeadline(job) ?? now) * 1000).toISOString()})`,
+        );
+        return;
+      }
+
       let evidenceCase: EvidenceCase;
       try {
         evidenceCase = readCase(options.evidenceDir, jobId);
       } catch {
         log(`job ${key}: disputed, waiting for the buyer's evidence bundle in ${options.evidenceDir}`);
+        return;
+      }
+
+      if (job.respondedAt !== 0 && evidenceCase.response === undefined) {
+        log(`job ${key}: seller responded on chain, waiting for its response file in ${options.evidenceDir}`);
         return;
       }
 

@@ -3,6 +3,7 @@ import {
   hashCanonical,
   hashText,
   recoverVerdictSigner,
+  responseHashOf,
   signVerdict,
   verdictFromRuling,
   type EvidenceCase,
@@ -10,6 +11,7 @@ import {
   type TempexClient,
   type VerdictStruct,
   type WriteOptions,
+  SELLER_RESPONSE_WINDOW_SECONDS,
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
@@ -27,6 +29,7 @@ const VERDICT_RESOLVED = parseAbiItem(
 /// what it means.
 const ISSUED_AT_SKEW_SECONDS = 30;
 const DEFAULT_TTL_SECONDS = 86_400;
+const ZERO_HASH = `0x${'0'.repeat(64)}`;
 
 /// The name that shows up in receipts when no model was in the loop.
 export const RULE_ENGINE_MODEL = 'tempex-rules/1';
@@ -138,6 +141,8 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
 
   const job = await client.job(jobId);
   const amount = job.amount;
+  let response = evidenceCase.response;
+  let evidenceClosedAt = 0;
 
   // ---- the evidence must be the evidence the buyer pinned on chain ----
   const evidenceHash = hashCanonical(evidenceCase.bundle);
@@ -154,6 +159,31 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
         `bundle hashes to ${evidenceHash} but job ${jobIdNum} pinned ${job.disputeHash} at dispute time`,
       ]);
     }
+
+    // ---- the seller is heard before anyone rules ----
+    evidenceClosedAt = await client.evidenceClosedAt(jobId);
+    if (evidenceClosedAt === 0) {
+      throw new RefusalError([
+        `job ${jobIdNum}: the seller can respond until ${new Date((job.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS) * 1000).toISOString()}; no ruling before then unless it responds`,
+      ]);
+    }
+    const responded = job.responseHash !== ZERO_HASH;
+    if (responded) {
+      if (response === undefined) {
+        throw new RefusalError([
+          `job ${jobIdNum}: the seller pinned response ${job.responseHash} but its response file is not on hand`,
+        ]);
+      }
+      const responseHash = responseHashOf(response);
+      if (responseHash !== job.responseHash) {
+        throw new RefusalError([
+          `seller response hashes to ${responseHash} but job ${jobIdNum} pinned ${job.responseHash}`,
+        ]);
+      }
+    } else if (response !== undefined) {
+      notes.push('a seller response file is on hand but was never pinned on chain; it was not considered');
+      response = undefined;
+    }
   }
 
   // ---- objective signals and the band they imply ----
@@ -162,6 +192,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     job,
     terms: evidenceCase.terms,
     bundle: evidenceCase.bundle,
+    ...(response !== undefined ? { response } : {}),
   });
   if (analysis.blocking.length > 0) throw new RefusalError(analysis.blocking);
   const { signals, band, flags } = analysis;
@@ -205,6 +236,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
           job,
           terms: evidenceCase.terms,
           bundle: evidenceCase.bundle,
+          ...(response !== undefined ? { response } : {}),
           signals,
           band,
         }),
@@ -252,7 +284,9 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     evidenceHash,
     rationaleHash: hashText(rationale),
     rationale,
-    issuedAt: now - ISSUED_AT_SKEW_SECONDS,
+    // Never earlier than the moment the seller's say closed: the escrow rejects a
+    // verdict that predates the evidence it was supposed to weigh.
+    issuedAt: Math.max(now - ISSUED_AT_SKEW_SECONDS, evidenceClosedAt),
     validUntil: now + (params.ttlSeconds ?? DEFAULT_TTL_SECONDS),
     model,
     ...(confidence !== undefined ? { confidence } : {}),

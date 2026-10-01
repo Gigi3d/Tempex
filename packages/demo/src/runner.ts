@@ -17,6 +17,7 @@ import {
 import {
   CHAIN_ID,
   SPONSOR_URL,
+  SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
   accountFor,
   addressesFromEnv,
@@ -26,15 +27,19 @@ import {
   feePaid,
   formatToken,
   hashCanonical,
+  hashText,
   loadEnv,
   memoTransfers,
   privateKeyFor,
   readCase,
+  responseHashOf,
   tempexEscrowAbi,
   tokenAmount,
   writeCase,
+  writeResponse,
   type EvidenceCase,
   type Role,
+  type SellerResponse,
   type TempexAddresses,
   type VerdictStruct,
   type WriteOptions,
@@ -483,7 +488,43 @@ class DemoRun {
       `${onChain.disputeHash} — re-derived from the files on disk, so the arbiter cannot rule on anything else`,
     );
 
-    this.record('dispute', { hash: receipt.transactionHash, disputeHash, rederived });
+    // The dispute notifies the seller, which has 7 days to pin its own evidence.
+    // The demo seller answers at once with its copy of the deliverable, so the
+    // arbiter can rule without waiting out the window.
+    const responseDeadline = onChain.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS;
+    this.transcript.row(
+      'notified',
+      `seller ${onChain.seller} has until ${new Date(responseDeadline * 1000).toISOString()} to respond`,
+    );
+    const response: SellerResponse = {
+      version: 1,
+      jobId: Number(jobId),
+      disputeHash,
+      statement:
+        this.scenario.sellerStatement ??
+        'The attached deliverable is the work committed on chain at delivery; it is submitted as delivered.',
+      deliverable: {
+        content: this.scenario.deliverable,
+        contentHash: hashText(this.scenario.deliverable),
+      },
+      artifacts: [],
+      submittedAt: this.session.submittedAt,
+    };
+    writeResponse(this.options.evidenceDir, jobId, response);
+    const responseHash = responseHashOf(response);
+    const answered = await this.clients.seller.respond(jobId, responseHash, this.writeOptions);
+    this.transcript.tx('response', answered.transactionHash);
+    this.reportFeePayer(answered, this.clients.seller.address);
+    const afterResponse = await this.clients.seller.job(jobId);
+    this.expect('job responseHash', responseHash, afterResponse.responseHash);
+
+    this.record('dispute', {
+      hash: receipt.transactionHash,
+      disputeHash,
+      rederived,
+      response: answered.transactionHash,
+      responseHash,
+    });
   }
 
   private async stageRule(): Promise<void> {
@@ -508,10 +549,13 @@ class DemoRun {
       `${config.arbitrationFeeBps} bps arbitration fee, read from the escrow (the corpus assumes ${ARBITRATION_FEE_BPS})`,
     );
 
+    // The seller's response lives on disk next to the buyer's bundle, exactly
+    // where the arbiter's watcher would read it.
+    const response = readCase(this.options.evidenceDir, jobId).response;
     const result = await adjudicate({
       client: this.clients.arbiter,
       jobId,
-      evidenceCase,
+      evidenceCase: response === undefined ? evidenceCase : { ...evidenceCase, response },
       engine: this.options.engine,
       dryRun: false,
       relay: false,
