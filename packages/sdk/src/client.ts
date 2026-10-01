@@ -342,12 +342,20 @@ export class TempexClient {
     return this.send([this.call('fund', [jobId])], options);
   }
 
+  /// Commits to the delivered work by hash and, when `uri` is given, records
+  /// where it can be fetched so the arbiter can read the real work itself.
   async deliver(
     jobId: bigint,
     deliverableHash: Hex,
+    uri = '',
     options: WriteOptions = {},
   ): Promise<TempexReceipt> {
-    return this.send([this.call('deliver', [jobId, deliverableHash])], options);
+    return this.send([this.call('deliver', [jobId, deliverableHash, uri])], options);
+  }
+
+  /// Where the seller said the delivered work lives; empty if it did not say.
+  async deliverableURI(jobId: bigint): Promise<string> {
+    return this.read<string>('deliverableURI', [jobId]);
   }
 
   async accept(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {

@@ -27,6 +27,7 @@ import {
   feePaid,
   formatToken,
   hashCanonical,
+  dataUriFor,
   hashText,
   loadEnv,
   memoTransfers,
@@ -444,8 +445,13 @@ class DemoRun {
     const evidenceCase = await this.case();
     const deliverableHash = evidenceCase.bundle.deliverableHash;
 
-    const receipt = await this.clients.seller.deliver(jobId, deliverableHash, this.writeOptions);
+    // The work rides in the delivery itself as a data: URI, so the arbiter can
+    // read it without trusting either party's copy and nothing has to be hosted.
+    const uri = dataUriFor(this.scenario.deliverable);
+    const receipt = await this.clients.seller.deliver(jobId, deliverableHash, uri, this.writeOptions);
     this.transcript.tx('tx', receipt.transactionHash);
+    this.expect('deliverable URI', uri, await this.clients.seller.deliverableURI(jobId));
+    this.transcript.row('located', `${uri.slice(0, 48)}… — the arbiter reads the work from here`);
     this.reportFeePayer(receipt, this.clients.seller.address);
 
     const onChain = await this.clients.seller.job(jobId);

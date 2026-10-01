@@ -144,6 +144,12 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     /// @notice Share of a listed arbiter's fee the treasury keeps, for new jobs.
     uint16 public protocolCutBps = 2_000;
     mapping(address arbiter => ArbiterListing) public arbiterListings;
+    /// @notice Where the delivered work can be fetched (ipfs://, ar://, https://,
+    /// or data:). Its bytes must hash to the job's deliverableHash, so anyone,
+    /// the arbiter included, can check it without trusting either party's copy.
+    mapping(uint256 jobId => string uri) public deliverableURI;
+    /// @notice Longest location a seller may record, so delivery stays cheap.
+    uint256 public constant MAX_DELIVERABLE_URI_BYTES = 2_048;
 
     uint256 public jobCount;
     mapping(uint256 jobId => Job) private _jobs;
@@ -179,6 +185,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     event JobDelivered(
         uint256 indexed jobId, bytes32 deliverableHash, uint64 deliveredAt, uint64 reviewDeadline
     );
+    event DeliverableLocated(uint256 indexed jobId, string uri);
     event JobAccepted(uint256 indexed jobId, uint256 sellerAmount, uint256 platformFee);
     event DisputeRaised(uint256 indexed jobId, bytes32 disputeHash, uint64 disputedAt);
     /// @notice Tells the seller a dispute needs its answer, and by when.
@@ -317,11 +324,14 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         emit JobCancelled(jobId);
     }
 
-    function deliver(uint256 jobId, bytes32 deliverableHash) external {
+    /// @notice Seller commits to the delivered work by hash and, optionally, says
+    /// where it lives. An empty `uri` records nothing; the hash alone still binds.
+    function deliver(uint256 jobId, bytes32 deliverableHash, string calldata uri) external {
         Job storage job = _jobs[jobId];
         require(job.state == JobState.Funded, "not funded");
         require(msg.sender == job.seller, "only seller");
         require(block.timestamp <= job.deliveryDeadline, "delivery deadline passed");
+        require(bytes(uri).length <= MAX_DELIVERABLE_URI_BYTES, "uri too long");
 
         job.state = JobState.Delivered;
         job.deliverableHash = deliverableHash;
@@ -330,6 +340,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         emit JobDelivered(
             jobId, deliverableHash, job.deliveredAt, job.deliveredAt + job.reviewWindow
         );
+        if (bytes(uri).length > 0) {
+            deliverableURI[jobId] = uri;
+            emit DeliverableLocated(jobId, uri);
+        }
     }
 
     /// @notice Buyer accepts the delivery; seller is paid minus the platform fee.

@@ -618,6 +618,7 @@ export class Beacon {
           ctx,
           big(required(params['jobId'], 'jobId')),
           this.hash(params['deliverableHash'], params['deliverable'], 'deliverable'),
+          String(params['uri'] ?? ''),
         );
       case 'accept':
         return blueprintAccept(ctx, big(required(params['jobId'], 'jobId')));

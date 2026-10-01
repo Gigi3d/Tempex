@@ -31,6 +31,7 @@ export type JudgePromptInput = {
   terms: JobTerms;
   bundle: EvidenceBundle;
   response?: SellerResponse;
+  fetched?: { uri: string; text: string };
   signals: RuleSignals;
   band: { lowBps: number; highBps: number; center: number };
 };
@@ -39,7 +40,7 @@ export type JudgePromptInput = {
 /// rule layer derived from them. Nothing else is sent — the arbiter has no other
 /// inputs, so a reviewer can reproduce this message byte for byte.
 export function buildJudgePrompt(input: JudgePromptInput): string {
-  const { jobId, job, terms, bundle, response, signals, band } = input;
+  const { jobId, job, terms, bundle, response, fetched, signals, band } = input;
   const lines: string[] = [];
 
   lines.push(`# Job ${jobId}: ${terms.title}`);
@@ -71,11 +72,17 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
   lines.push('');
   lines.push('## What was delivered');
   const scored =
-    signals.scoredCopy === 'seller' ? response?.deliverable : bundle.deliverable;
+    signals.scoredCopy === 'uri' && fetched !== undefined
+      ? { uri: fetched.uri, content: fetched.text }
+      : signals.scoredCopy === 'seller'
+        ? response?.deliverable
+        : bundle.deliverable;
   lines.push(
     signals.scoredCopy === 'unverified'
       ? "Copy supplied by the buyer. It does NOT hash to the on-chain delivery commitment, so it may not be what the seller delivered."
-      : `Copy supplied by the ${signals.scoredCopy}; its content hashes to the on-chain delivery commitment.`,
+      : signals.scoredCopy === 'uri'
+        ? 'Fetched by the arbiter from the URI the seller recorded at delivery; its bytes hash to the on-chain delivery commitment.'
+        : `Copy supplied by the ${signals.scoredCopy}; its content hashes to the on-chain delivery commitment.`,
   );
   if (scored?.uri !== undefined) lines.push(`Source URI: ${scored.uri}`);
   lines.push('```');

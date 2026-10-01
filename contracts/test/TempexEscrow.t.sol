@@ -119,7 +119,7 @@ contract TempexEscrowTest is Test {
         assertEq(token.balanceOf(address(escrow)), AMOUNT);
 
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("deliverable:v1"));
+        escrow.deliver(jobId, keccak256("deliverable:v1"), "");
 
         vm.prank(buyer);
         escrow.accept(jobId);
@@ -139,7 +139,7 @@ contract TempexEscrowTest is Test {
     function test_AutoAcceptAfterReviewWindow() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("deliverable:v1"));
+        escrow.deliver(jobId, keccak256("deliverable:v1"), "");
 
         vm.warp(block.timestamp + REVIEW_WINDOW + 1);
         vm.prank(keeper);
@@ -162,7 +162,7 @@ contract TempexEscrowTest is Test {
     function test_WithdrawMemoIsNamespaced() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("deliverable:v1"));
+        escrow.deliver(jobId, keccak256("deliverable:v1"), "");
         vm.prank(buyer);
         escrow.accept(jobId);
 
@@ -242,7 +242,7 @@ contract TempexEscrowTest is Test {
     function test_DisputeThenResolveSplitsAward() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("deliverable:partial"));
+        escrow.deliver(jobId, keccak256("deliverable:partial"), "");
 
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("claim:only-40pct-valid"), 0);
@@ -277,7 +277,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveWithZeroAwardRefundsBuyer() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("deliverable:junk"));
+        escrow.deliver(jobId, keccak256("deliverable:junk"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("claim:junk"), 0);
         _respond(jobId);
@@ -296,7 +296,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveRevertsForNonArbiterSignature() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -311,7 +311,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveRevertsOnTamperedVerdict() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -329,7 +329,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveRevertsWhenVerdictExpiredOrPremature() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -351,7 +351,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveRevertsOnAwardBpsTooHigh() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -365,7 +365,7 @@ contract TempexEscrowTest is Test {
     function test_ResolveCannotRunTwice() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -403,7 +403,7 @@ contract TempexEscrowTest is Test {
     function _deliveredAndDisputed() internal returns (uint256 jobId) {
         jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
     }
@@ -411,7 +411,7 @@ contract TempexEscrowTest is Test {
     function test_DisputeNotifiesSellerWithSevenDayDeadline() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
 
         vm.expectEmit(true, true, false, true, address(escrow));
         emit TempexEscrow.SellerResponseRequested(jobId, seller, uint64(block.timestamp + 7 days));
@@ -493,7 +493,7 @@ contract TempexEscrowTest is Test {
     function test_RespondGuards() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
 
         vm.prank(seller);
         vm.expectRevert("not disputed");
@@ -522,7 +522,7 @@ contract TempexEscrowTest is Test {
     function test_DisputePullsBondWithJobMemo() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         uint256 before = token.balanceOf(buyer);
 
         vm.prank(buyer);
@@ -537,7 +537,7 @@ contract TempexEscrowTest is Test {
     function test_DisputeRevertsWithoutBondAllowance() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         token.approve(address(escrow), 0);
 
@@ -591,12 +591,39 @@ contract TempexEscrowTest is Test {
         assertLe(sellerAmount, (amount * awardBps) / 10_000 + bondToSeller);
     }
 
+    // ------------------------------------------------------ deliverable URI
+
+    function test_DeliveryRecordsWhereTheWorkLives() public {
+        uint256 jobId = _createFundedJob();
+        vm.expectEmit(true, false, false, true, address(escrow));
+        emit TempexEscrow.DeliverableLocated(jobId, "ipfs://bafybeigdyrzt5example");
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("work"), "ipfs://bafybeigdyrzt5example");
+        assertEq(escrow.deliverableURI(jobId), "ipfs://bafybeigdyrzt5example");
+    }
+
+    function test_EmptyUriRecordsNothing() public {
+        uint256 jobId = _createFundedJob();
+        vm.recordLogs();
+        vm.prank(seller);
+        escrow.deliver(jobId, keccak256("work"), "");
+        assertEq(bytes(escrow.deliverableURI(jobId)).length, 0);
+        assertEq(vm.getRecordedLogs().length, 1, "only JobDelivered");
+    }
+
+    function test_OverlongUriIsRejected() public {
+        uint256 jobId = _createFundedJob();
+        vm.prank(seller);
+        vm.expectRevert("uri too long");
+        escrow.deliver(jobId, keccak256("work"), string(new bytes(2_049)));
+    }
+
     // ---------------------------------------------------- final-offer bounds
 
     function _offers(uint16 buyerOffer, uint16 sellerAsk) internal returns (uint256 jobId) {
         jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), buyerOffer);
         vm.prank(seller);
@@ -634,7 +661,7 @@ contract TempexEscrowTest is Test {
     function test_SilentSellerAsksForEverything() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 3_000);
         (uint16 low, uint16 high) = escrow.awardBounds(jobId);
@@ -654,7 +681,7 @@ contract TempexEscrowTest is Test {
     function test_OffersAreBoundedBps() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         vm.expectRevert("offer>10000");
         escrow.dispute(jobId, keccak256("c"), 10_001);
@@ -701,7 +728,7 @@ contract TempexEscrowTest is Test {
         _respond(disputed);
         uint256 delivered = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(delivered, keccak256("d"));
+        escrow.deliver(delivered, keccak256("d"), "");
 
         vm.prank(owner);
         escrow.setFees(500, 1_000);
@@ -742,7 +769,7 @@ contract TempexEscrowTest is Test {
         vm.prank(buyer);
         escrow.fund(jobId);
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
         vm.prank(buyer);
         escrow.dispute(jobId, keccak256("c"), 0);
         _respond(jobId);
@@ -883,7 +910,7 @@ contract TempexEscrowTest is Test {
     function test_DisputeOnlyByBuyerInsideWindow() public {
         uint256 jobId = _createFundedJob();
         vm.prank(seller);
-        escrow.deliver(jobId, keccak256("d"));
+        escrow.deliver(jobId, keccak256("d"), "");
 
         vm.prank(seller);
         vm.expectRevert("only buyer");
@@ -900,7 +927,7 @@ contract TempexEscrowTest is Test {
         vm.warp(deliveryDeadline + 1);
         vm.prank(seller);
         vm.expectRevert("delivery deadline passed");
-        escrow.deliver(jobId, keccak256("late"));
+        escrow.deliver(jobId, keccak256("late"), "");
     }
 
     function test_RefundUnavailableBeforeDeadline() public {

@@ -14,6 +14,7 @@ import {
   SELLER_RESPONSE_WINDOW_SECONDS,
   awardBounds,
   disputeSettlement,
+  fetchDeliverable,
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
@@ -218,6 +219,26 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     }
   }
 
+  // ---- the work itself, from where the seller said it lives ----
+  // Fetched rather than taken from either party, and trusted only if its bytes
+  // reproduce the on-chain deliverableHash. A failed or mismatched fetch is noted
+  // and the analysis falls back to the parties' copies.
+  let fetched: { uri: string; text: string } | undefined;
+  const uri = await client.deliverableURI(jobId).catch(() => '');
+  if (uri !== '') {
+    try {
+      const got = await fetchDeliverable(uri);
+      if (got.hash === job.deliverableHash) {
+        fetched = { uri, text: got.text };
+        log(`read the delivered work from ${uri.slice(0, 64)} (${got.bytes} bytes, hash matches)`);
+      } else {
+        notes.push(`the content at the delivery URI hashes to ${got.hash}, not the delivered ${job.deliverableHash}; it was not used`);
+      }
+    } catch (error) {
+      notes.push(`could not read the delivery URI: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
   // ---- objective signals and the band they imply ----
   const analysis = analyze({
     jobId: jobIdNum,
@@ -225,6 +246,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     terms: evidenceCase.terms,
     bundle: evidenceCase.bundle,
     ...(response !== undefined ? { response } : {}),
+    ...(fetched !== undefined ? { fetched } : {}),
   });
   if (analysis.blocking.length > 0) throw new RefusalError(analysis.blocking);
   const { signals, band: ruleBand, flags } = analysis;
@@ -278,6 +300,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
           terms: evidenceCase.terms,
           bundle: evidenceCase.bundle,
           ...(response !== undefined ? { response } : {}),
+          ...(fetched !== undefined ? { fetched } : {}),
           signals,
           band,
         }),

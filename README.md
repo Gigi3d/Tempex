@@ -6,7 +6,7 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 54/54 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
+- 57/57 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
 - Live deployment: `0x7579736636dd67A8811A8A2ef95c44560fe6ec27` ([explorer](https://explore.testnet.tempo.xyz/address/0x7579736636dd67A8811A8A2ef95c44560fe6ec27)), 5 jobs funded, 3 settled by verdict
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
@@ -44,6 +44,8 @@ buyer                TempexEscrow                seller                arbiter
 **The seller is heard before any verdict.** Once work is delivered, the buyer either pays (`accept`, or `autoAccept` after the review window) or opens a dispute. A dispute emits `SellerResponseRequested` to the seller with a deadline 7 days out (`SELLER_RESPONSE_WINDOW`). Inside that window the seller calls `respond(jobId, responseHash)`, pinning its own evidence bundle: its copy of the deliverable and its account of why the work meets the terms. `resolve` reverts until the seller has responded or the window has closed, and it rejects any verdict issued before that moment. The arbiter scores whichever copy of the deliverable actually hashes to the on-chain delivery, so neither side can win by describing work the other never saw.
 
 **Each job locks its referee and its fees.** `createJob` uses the house arbiter; `createJobWithArbiter` names any arbiter that listed itself with `listArbiter(feeBps, metadataURI)`. Either way the job records its arbiter, its platform and arbitration fee rates, and the protocol's cut of the arbitration fee (`JobTermsLocked`). Later calls to `setArbiter`, `setFees`, `setProtocolCut`, or an arbiter re-pricing or delisting itself, reach new jobs only. A listed arbiter earns its fee minus the protocol cut (20% by default, capped at 50%); the house arbiter's fee goes to the treasury. `GET /arbiters` on the beacon lists the market with each arbiter's track record, and `pnpm arbiter list --fee <bps>` puts a key on it.
+
+**The arbiter reads the real work.** `deliver(jobId, hash, uri)` can record where the delivered work lives (`ipfs://`, `ar://`, `https://` or a `data:` URI for small text). When a dispute is ruled, the arbiter fetches it and uses it only if its bytes hash to the on-chain deliverable hash; that copy outranks both parties' copies, so neither side can win by describing work the other never saw. Gateways are configurable (`TEMPEX_IPFS_GATEWAY`, `TEMPEX_ARWEAVE_GATEWAY`) and untrusted, since the hash check decides.
 
 **Disputing costs the buyer a bond, and the loser pays.** Opening a dispute pulls a bond of 5% of the job amount (`DISPUTE_BOND_BPS`). Each side bears the arbitration fee in proportion to the share it lost; the buyer's part comes out of its bond first, and the rest of the bond follows the award. A buyer who disputes work that was delivered pays the fee and forfeits the rest of its bond to the seller; a buyer who was right gets its bond back. `disputeSettlement(amount, bond, fee, awardBps)` is public, so anyone can compute a ruling's payout before it lands. If the arbiter never rules, the bond goes back in full.
 

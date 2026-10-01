@@ -170,9 +170,16 @@ export function blueprintApprove(ctx: BlueprintContext, amount: bigint): Bluepri
   ]);
 }
 
-export function blueprintDeliver(ctx: BlueprintContext, jobId: bigint, deliverableHash: Hex): Blueprint {
-  return base(ctx, `deliver job ${jobId}`, 'seller', [
-    { contract: 'escrow', to: ctx.escrow, fn: 'deliver', args: [jobId, deliverableHash] },
+/// `uri` says where the delivered work lives (ipfs://, ar://, https://, data:) so
+/// the arbiter can fetch it and check it against the hash; empty records nothing.
+export function blueprintDeliver(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  deliverableHash: Hex,
+  uri: string,
+): Blueprint {
+  return base(ctx, `deliver job ${jobId}${uri ? ` (located at ${uri.slice(0, 48)})` : ''}`, 'seller', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'deliver', args: [jobId, deliverableHash, uri] },
   ]);
 }
 

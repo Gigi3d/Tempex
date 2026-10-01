@@ -31,7 +31,13 @@ export type JobRecord = {
   stage: JobStage;
   created: Stamp;
   funded?: Stamp & { amount: bigint };
-  delivered?: Stamp & { deliverableHash: Hex; deliveredAt: number; reviewDeadline: number };
+  delivered?: Stamp & {
+    deliverableHash: Hex;
+    deliveredAt: number;
+    reviewDeadline: number;
+    /// where the seller said the work lives, if it said
+    uri?: string;
+  };
   accepted?: Stamp & { sellerAmount: bigint; platformFee: bigint };
   dispute?: Stamp & {
     disputeHash: Hex;
@@ -199,6 +205,11 @@ export class EscrowLedger {
           };
           if (job.stage === 'funded') job.stage = 'delivered';
         }
+        return;
+      }
+      case 'DeliverableLocated': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.delivered) job.delivered.uri = String(args['uri'] ?? '');
         return;
       }
       case 'JobAccepted': {

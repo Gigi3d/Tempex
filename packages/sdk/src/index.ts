@@ -79,3 +79,11 @@ export type {
   TempexClientParams,
   WriteOptions,
 } from './client.js';
+
+export {
+  MAX_DELIVERABLE_BYTES,
+  dataUriFor,
+  fetchDeliverable,
+  resolveDeliverableUri,
+} from './fetch.js';
+export type { FetchedDeliverable } from './fetch.js';

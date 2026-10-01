@@ -147,7 +147,7 @@ export type RuleSignals = {
   };
   /// Whose copy of the deliverable was scored. Only a copy whose content hashes to
   /// the on-chain commitment counts as verified; the buyer's is preferred when both do.
-  scoredCopy: 'buyer' | 'seller' | 'unverified';
+  scoredCopy: 'uri' | 'buyer' | 'seller' | 'unverified';
   /// The seller pinned a response to the dispute.
   sellerResponded: boolean;
   /// Does the claim point at a gap the artifact actually has?
@@ -192,8 +192,10 @@ export function analyze(input: {
   terms: JobTerms;
   bundle: EvidenceBundle;
   response?: SellerResponse;
+  /// The work as fetched from the URI the seller recorded at delivery, if any.
+  fetched?: { uri: string; text: string };
 }): RuleAnalysis {
-  const { jobId, job, terms, bundle, response } = input;
+  const { jobId, job, terms, bundle, response, fetched } = input;
   const blocking: string[] = [];
   const flags: string[] = [];
 
@@ -232,7 +234,17 @@ export function analyze(input: {
   const sellerCopy = response?.deliverable.content;
   let scoredCopy: RuleSignals['scoredCopy'] = 'unverified';
   let deliverableText = buyerCopy;
-  if (verifies(buyerCopy)) {
+  if (verifies(fetched?.text)) {
+    // The work itself, read from where the seller said it lives. Neither party
+    // supplied this copy, so it outranks both.
+    scoredCopy = 'uri';
+    deliverableText = fetched.text;
+    if (buyerCopy !== undefined && !verifies(buyerCopy)) {
+      flags.push(
+        "the buyer's copy of the deliverable does not match the work at the delivery URI; scored the work itself",
+      );
+    }
+  } else if (verifies(buyerCopy)) {
     scoredCopy = 'buyer';
   } else if (verifies(sellerCopy)) {
     scoredCopy = 'seller';

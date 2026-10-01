@@ -90,6 +90,19 @@ export const tempexEscrowAbi = [
   },
   {
     "type": "function",
+    "name": "MAX_DELIVERABLE_URI_BYTES",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
     "name": "MAX_PLATFORM_FEE_BPS",
     "inputs": [],
     "outputs": [
@@ -400,10 +413,34 @@ export const tempexEscrowAbi = [
         "name": "deliverableHash",
         "type": "bytes32",
         "internalType": "bytes32"
+      },
+      {
+        "name": "uri",
+        "type": "string",
+        "internalType": "string"
       }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "deliverableURI",
+    "inputs": [
+      {
+        "name": "jobId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "uri",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -1120,6 +1157,25 @@ export const tempexEscrowAbi = [
         "type": "uint16",
         "indexed": false,
         "internalType": "uint16"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "DeliverableLocated",
+    "inputs": [
+      {
+        "name": "jobId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "uri",
+        "type": "string",
+        "indexed": false,
+        "internalType": "string"
       }
     ],
     "anonymous": false
