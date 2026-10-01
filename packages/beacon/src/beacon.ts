@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import type { Address, Hex } from 'viem';
 
-import { disputeBond, hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
+import { disputeBond, milestoneArgs, planProblems, type MilestonePlan, hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
 
 import {
   blueprintAccept,
@@ -14,6 +14,7 @@ import {
   blueprintRefundExpired,
   blueprintSettleLapsed,
   blueprintListArbiter,
+  blueprintCreateMilestones,
   blueprintDelistArbiter,
   blueprintResolve,
   blueprintWithdraw,
@@ -129,6 +130,7 @@ export type BlueprintAction =
   | 'resolve'
   | 'refund-expired'
   | 'settle-lapsed'
+  | 'create-milestones'
   | 'list-arbiter'
   | 'delist-arbiter'
   | 'withdraw';
@@ -149,6 +151,7 @@ export const BLUEPRINT_ACTIONS: BlueprintAction[] = [
   'resolve',
   'refund-expired',
   'settle-lapsed',
+  'create-milestones',
   'list-arbiter',
   'delist-arbiter',
   'withdraw',
@@ -680,6 +683,36 @@ export class Beacon {
         return blueprintRefundExpired(ctx, big(required(params['jobId'], 'jobId')));
       case 'settle-lapsed':
         return blueprintSettleLapsed(ctx, big(required(params['jobId'], 'jobId')));
+      case 'create-milestones': {
+        const plan = params['plan'] as MilestonePlan | undefined;
+        if (!plan || !Array.isArray(plan.milestones)) {
+          throw new BeaconError(
+            'create-milestones needs a "plan"',
+            400,
+            'POST {"plan":{"version":1,"title":"…","deliverableSpec":"…","buyer":"0x…","seller":"0x…","milestones":[{"title":"…","acceptanceCriteria":["…"],"amount":"100.00","deliveryDeadline":1730000000},…]}}. Each milestone becomes its own job.',
+          );
+        }
+        const problems = planProblems(plan, Math.floor(Date.now() / 1000));
+        if (problems.length > 0) {
+          throw new BeaconError(`the plan would revert: ${problems.join('; ')}`, 400, 'Fix each listed problem; deadlines must strictly increase.');
+        }
+        const policy = policyById(String(params['policy'] ?? 'standard'));
+        const nextJobId = (await this.reader.readContract({
+          address: this.config.escrow,
+          abi: tempexEscrowAbi,
+          functionName: 'nextJobId',
+        })) as bigint;
+        return blueprintCreateMilestones(ctx, {
+          ...milestoneArgs(plan),
+          seller: address(plan.seller, 'plan.seller'),
+          reviewWindow: seconds(params['reviewWindow'], policy.reviewWindowSeconds),
+          arbiter:
+            params['arbiter'] !== undefined
+              ? this.listedArbiter(String(params['arbiter']))
+              : (`0x${'0'.repeat(40)}` as Address),
+          nextJobId,
+        });
+      }
       case 'list-arbiter': {
         const feeBps = Number(required(params['feeBps'], 'feeBps'));
         if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > this.escrowState.maxArbitrationFeeBps) {

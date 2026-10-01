@@ -40,6 +40,11 @@ import {ITIP20} from "./ITIP20.sol";
 /// its fee minus the protocol's cut. Jobs created with `createJob` use the
 /// house arbiter, whose whole fee goes to the treasury.
 ///
+/// Milestones: `createMilestones` opens one job per tranche of a larger deal, each
+/// with its own terms, amount and deadline, linked on chain by a plan hash. Every
+/// tranche is a full job with its own deliver, accept and dispute, so a dispute
+/// only ever puts one tranche at stake.
+///
 /// Final-offer bounds: the buyer's dispute pins the most it thinks the seller has
 /// earned (`buyerOfferBps`) and the seller's response pins the least it will
 /// accept (`sellerAskBps`). `resolve` rejects any award outside the range the two
@@ -150,6 +155,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     mapping(uint256 jobId => string uri) public deliverableURI;
     /// @notice Longest location a seller may record, so delivery stays cheap.
     uint256 public constant MAX_DELIVERABLE_URI_BYTES = 2_048;
+    /// @notice Most tranches one milestone plan may open.
+    uint256 public constant MAX_MILESTONES = 20;
+    /// @notice The plan a milestone job belongs to (zero for a standalone job).
+    mapping(uint256 jobId => bytes32 planHash) public milestonePlanOf;
 
     uint256 public jobCount;
     mapping(uint256 jobId => Job) private _jobs;
@@ -184,6 +193,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     event JobCancelled(uint256 indexed jobId);
     event JobDelivered(
         uint256 indexed jobId, bytes32 deliverableHash, uint64 deliveredAt, uint64 reviewDeadline
+    );
+    /// @notice One plan's tranches are jobs firstJobId .. firstJobId + count - 1.
+    event MilestonePlanCreated(
+        bytes32 indexed planHash, uint256 indexed firstJobId, uint256 count, uint256 total
     );
     event DeliverableLocated(uint256 indexed jobId, string uri);
     event JobAccepted(uint256 indexed jobId, uint256 sellerAmount, uint256 platformFee);
@@ -261,6 +274,51 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(chosenArbiter != msg.sender && chosenArbiter != seller, "party cannot judge");
         jobId = _createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow);
         _lockTerms(jobId, chosenArbiter, listing.feeBps, protocolCutBps);
+    }
+
+    /// @notice One milestone of a plan: its own terms document, amount and deadline.
+    struct Milestone {
+        bytes32 termsHash;
+        uint256 amount;
+        uint64 deliveryDeadline;
+    }
+
+    /// @notice Opens one job per milestone, in order, all for the same seller and
+    /// judged by the same arbiter (`address(0)` for the house arbiter). Deadlines
+    /// must strictly increase. Fund each job afterwards, or batch `fund` calls for
+    /// `firstJobId .. firstJobId + count - 1` into the same Tempo transaction.
+    function createMilestones(
+        address seller,
+        bytes32 planHash,
+        Milestone[] calldata milestones,
+        uint64 reviewWindow,
+        address chosenArbiter
+    ) external returns (uint256 firstJobId) {
+        require(planHash != bytes32(0), "planHash=0");
+        require(milestones.length > 1 && milestones.length <= MAX_MILESTONES, "2-20 milestones");
+        uint16 arbitrationFee = arbitrationFeeBps;
+        uint16 cut = BPS_DENOMINATOR;
+        address judge = arbiter;
+        if (chosenArbiter != address(0)) {
+            ArbiterListing storage listing = arbiterListings[chosenArbiter];
+            require(listing.active, "arbiter not listed");
+            require(chosenArbiter != msg.sender && chosenArbiter != seller, "party cannot judge");
+            (judge, arbitrationFee, cut) = (chosenArbiter, listing.feeBps, protocolCutBps);
+        }
+
+        firstJobId = jobCount + 1;
+        uint256 total;
+        for (uint256 i = 0; i < milestones.length; i++) {
+            Milestone calldata m = milestones[i];
+            if (i > 0) {
+                require(m.deliveryDeadline > milestones[i - 1].deliveryDeadline, "deadlines must increase");
+            }
+            uint256 jobId = _createJob(seller, m.amount, m.termsHash, m.deliveryDeadline, reviewWindow);
+            _lockTerms(jobId, judge, arbitrationFee, cut);
+            milestonePlanOf[jobId] = planHash;
+            total += m.amount;
+        }
+        emit MilestonePlanCreated(planHash, firstJobId, milestones.length, total);
     }
 
     function _createJob(

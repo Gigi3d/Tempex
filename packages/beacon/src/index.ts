@@ -96,6 +96,7 @@ export {
   blueprintRefundExpired,
   blueprintSettleLapsed,
   blueprintListArbiter,
+  blueprintCreateMilestones,
   blueprintDelistArbiter,
   blueprintResolve,
   blueprintWithdraw,

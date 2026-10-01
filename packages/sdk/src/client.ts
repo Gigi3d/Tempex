@@ -15,6 +15,12 @@ import { tempexEscrowAbi } from './abi/TempexEscrow.js';
 import { tip20Abi } from './abi/TIP20.js';
 import { CHAIN_ID, RPC_URL, SPONSOR_URL, type TempexAddresses } from './config.js';
 import { tempexDomain, verdictDigest, type VerdictStruct } from './verdict.js';
+import {
+  milestoneArgs,
+  planProblems,
+  type MilestoneJobs,
+  type MilestonePlan,
+} from './milestones.js';
 
 const ZERO_BYTES32 = `0x${'0'.repeat(64)}`;
 const ZERO_ADDRESS = `0x${'0'.repeat(40)}`;
@@ -336,6 +342,55 @@ export class TempexClient {
       options,
     );
     return { jobId: this.createdJobId(receipt, predicted), hash: receipt.transactionHash };
+  }
+
+  /// Opens and funds every tranche of a milestone plan in one atomic Tempo
+  /// transaction: approve the total, `createMilestones`, then one `fund` per
+  /// tranche, each carrying its own job id as the memo. All or nothing.
+  async createAndFundMilestones(
+    plan: MilestonePlan,
+    params: { reviewWindow: number; arbiter?: Address },
+    options: WriteOptions = {},
+  ): Promise<MilestoneJobs & { hash: Hex }> {
+    const problems = planProblems(plan, Math.floor(Date.now() / 1000));
+    if (problems.length > 0) throw new Error(`milestone plan rejected: ${problems.join('; ')}`);
+    const { planHash, milestones, total } = milestoneArgs(plan);
+    const first = await this.nextJobId();
+    const jobIds = milestones.map((_, index) => first + BigInt(index));
+    const receipt = await this.send(
+      [
+        {
+          to: this.addresses.token,
+          data: encodeFunctionData({
+            abi: tip20Abi,
+            functionName: 'approve',
+            args: [this.addresses.escrow, total],
+          }),
+        },
+        this.call('createMilestones', [
+          plan.seller as Address,
+          planHash,
+          milestones,
+          params.reviewWindow,
+          params.arbiter ?? ZERO_ADDRESS,
+        ]),
+        ...jobIds.map((jobId) => this.call('fund', [jobId])),
+      ],
+      options,
+    );
+    const firstJobId = this.createdJobId(receipt, first);
+    return {
+      planHash,
+      firstJobId,
+      jobIds: milestones.map((_, index) => firstJobId + BigInt(index)),
+      ...(params.arbiter !== undefined ? { arbiter: params.arbiter } : {}),
+      hash: receipt.transactionHash,
+    };
+  }
+
+  /// The milestone plan a job belongs to; zero for a standalone job.
+  async milestonePlanOf(jobId: bigint): Promise<Hex> {
+    return this.read<Hex>('milestonePlanOf', [jobId]);
   }
 
   async fund(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {

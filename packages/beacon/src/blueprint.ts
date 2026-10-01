@@ -164,6 +164,38 @@ export function blueprintCreateAndFund(
   );
 }
 
+/// Every tranche of a milestone plan, opened and funded in one atomic batch:
+/// approve the total, create the tranches, then fund each under its own job id.
+export function blueprintCreateMilestones(
+  ctx: BlueprintContext,
+  params: {
+    seller: Address;
+    planHash: Hex;
+    milestones: { termsHash: Hex; amount: bigint; deliveryDeadline: bigint }[];
+    total: bigint;
+    reviewWindow: number;
+    arbiter: Address;
+    nextJobId: bigint;
+  },
+): Blueprint {
+  const ids = params.milestones.map((_, index) => params.nextJobId + BigInt(index));
+  return base(
+    ctx,
+    `open and fund ${ids.length} milestones (jobs ${ids[0]}-${ids[ids.length - 1]}) with ${params.seller}, ${params.total} units in all`,
+    'buyer',
+    [
+      { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, params.total] },
+      {
+        contract: 'escrow',
+        to: ctx.escrow,
+        fn: 'createMilestones',
+        args: [params.seller, params.planHash, params.milestones, params.reviewWindow, params.arbiter],
+      },
+      ...ids.map((jobId) => ({ contract: 'escrow' as const, to: ctx.escrow, fn: 'fund', args: [jobId] })),
+    ],
+  );
+}
+
 export function blueprintApprove(ctx: BlueprintContext, amount: bigint): Blueprint {
   return base(ctx, `allow the escrow to pull ${amount} units of the payment token`, 'buyer', [
     { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, amount] },

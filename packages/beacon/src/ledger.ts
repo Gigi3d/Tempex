@@ -67,6 +67,8 @@ export type JobRecord = {
   };
   /// The arbiter never ruled in time; anyone settled it on the default split.
   lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
+  /// Set when the job is one tranche of a milestone plan.
+  milestone?: { planHash: Hex; index: number; count: number };
 };
 
 /// An arbiter that listed itself on the escrow, as folded from its events.
@@ -184,6 +186,17 @@ export class EscrowLedger {
           stage: 'created',
           created: stamp,
         });
+        return;
+      }
+      case 'MilestonePlanCreated': {
+        // Emitted after the plan's JobCreated events in the same transaction, so
+        // every tranche is already in the index when its plan is folded.
+        const first = big(args['firstJobId']);
+        const count = num(args['count']);
+        for (let index = 0; index < count; index++) {
+          const job = this.mutate(first + BigInt(index));
+          if (job) job.milestone = { planHash: hex(args['planHash']), index, count };
+        }
         return;
       }
       case 'JobFunded': {

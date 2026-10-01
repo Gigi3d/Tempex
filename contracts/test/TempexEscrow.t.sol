@@ -591,6 +591,95 @@ contract TempexEscrowTest is Test {
         assertLe(sellerAmount, (amount * awardBps) / 10_000 + bondToSeller);
     }
 
+    // ----------------------------------------------------------- milestones
+
+    function _plan(uint256 n) internal view returns (TempexEscrow.Milestone[] memory plan) {
+        plan = new TempexEscrow.Milestone[](n);
+        for (uint256 i = 0; i < n; i++) {
+            plan[i] = TempexEscrow.Milestone({
+                termsHash: keccak256(abi.encode("milestone", i)),
+                amount: (i + 1) * 100e6,
+                deliveryDeadline: uint64(block.timestamp + (i + 1) * 7 days)
+            });
+        }
+    }
+
+    function test_MilestonesOpenOneJobPerTranche() public {
+        TempexEscrow.Milestone[] memory plan = _plan(3);
+        vm.expectEmit(true, true, false, true, address(escrow));
+        emit TempexEscrow.MilestonePlanCreated(keccak256("plan"), 1, 3, 600e6);
+        vm.prank(buyer);
+        uint256 first = escrow.createMilestones(seller, keccak256("plan"), plan, REVIEW_WINDOW, address(0));
+
+        assertEq(first, 1);
+        assertEq(escrow.jobCount(), 3);
+        for (uint256 i = 0; i < 3; i++) {
+            TempexEscrow.Job memory job = escrow.getJob(first + i);
+            assertEq(job.buyer, buyer);
+            assertEq(job.seller, seller);
+            assertEq(job.amount, plan[i].amount);
+            assertEq(job.termsHash, plan[i].termsHash);
+            assertEq(job.deliveryDeadline, plan[i].deliveryDeadline);
+            assertEq(job.arbiter, arbiter);
+            assertEq(escrow.milestonePlanOf(first + i), keccak256("plan"));
+        }
+        assertEq(escrow.milestonePlanOf(4), bytes32(0));
+    }
+
+    function test_EachTrancheSettlesOnItsOwn() public {
+        vm.prank(buyer);
+        uint256 first = escrow.createMilestones(seller, keccak256("plan"), _plan(2), REVIEW_WINDOW, address(0));
+        vm.startPrank(buyer);
+        escrow.fund(first);
+        escrow.fund(first + 1);
+        vm.stopPrank();
+
+        // tranche one is accepted, tranche two is disputed: only its 200e6 is at stake
+        vm.prank(seller);
+        escrow.deliver(first, keccak256("m1"), "");
+        vm.prank(buyer);
+        escrow.accept(first);
+        assertEq(escrow.credits(seller), 100e6 - (uint256(100e6) * PLATFORM_FEE_BPS) / 10_000);
+
+        vm.prank(seller);
+        escrow.deliver(first + 1, keccak256("m2"), "");
+        vm.prank(buyer);
+        escrow.dispute(first + 1, keccak256("c"), 0);
+        assertEq(escrow.disputeBond(first + 1), 10e6, "the bond is 5% of the tranche, not the plan");
+        assertEq(uint8(escrow.getJob(first).state), uint8(TempexEscrow.JobState.Settled));
+    }
+
+    function test_MilestonesWithListedArbiter() public {
+        address judge = vm.addr(MARKET_ARBITER_PK);
+        vm.prank(judge);
+        escrow.listArbiter(300, "");
+        vm.prank(buyer);
+        uint256 first = escrow.createMilestones(seller, keccak256("plan"), _plan(2), REVIEW_WINDOW, judge);
+        assertEq(escrow.getJob(first).arbiter, judge);
+        assertEq(escrow.getJob(first + 1).arbitrationFeeBps, 300);
+        assertEq(escrow.getJob(first + 1).protocolCutBps, 2_000);
+    }
+
+    function test_MilestoneGuards() public {
+        vm.startPrank(buyer);
+        vm.expectRevert("2-20 milestones");
+        escrow.createMilestones(seller, keccak256("plan"), _plan(1), REVIEW_WINDOW, address(0));
+        vm.expectRevert("2-20 milestones");
+        escrow.createMilestones(seller, keccak256("plan"), _plan(21), REVIEW_WINDOW, address(0));
+        vm.expectRevert("planHash=0");
+        escrow.createMilestones(seller, bytes32(0), _plan(2), REVIEW_WINDOW, address(0));
+
+        TempexEscrow.Milestone[] memory backwards = _plan(2);
+        backwards[1].deliveryDeadline = backwards[0].deliveryDeadline;
+        vm.expectRevert("deadlines must increase");
+        escrow.createMilestones(seller, keccak256("plan"), backwards, REVIEW_WINDOW, address(0));
+
+        vm.expectRevert("arbiter not listed");
+        escrow.createMilestones(seller, keccak256("plan"), _plan(2), REVIEW_WINDOW, keeper);
+        vm.stopPrank();
+        assertEq(escrow.jobCount(), 0, "a rejected plan opens nothing");
+    }
+
     // ------------------------------------------------------ deliverable URI
 
     function test_DeliveryRecordsWhereTheWorkLives() public {

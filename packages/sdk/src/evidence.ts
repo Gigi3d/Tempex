@@ -45,6 +45,8 @@ export type JobTerms = {
   currency?: string;
   buyer: string;
   seller: string;
+  /// Present when the job is one tranche of a milestone plan.
+  plan?: { hash: Hex; index: number; count: number };
 };
 
 export type EvidenceArtifact = {
