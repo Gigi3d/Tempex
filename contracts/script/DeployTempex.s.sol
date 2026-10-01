@@ -2,7 +2,7 @@
 pragma solidity 0.8.28;
 
 import {Script, console} from "forge-std/Script.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {ITIP20} from "../src/ITIP20.sol";
 import {TempexEscrow} from "../src/TempexEscrow.sol";
 
 /// @notice Deploys TempexEscrow. Requires TEMPEX_TOKEN, TEMPEX_ARBITER,
@@ -17,7 +17,7 @@ contract DeployTempex is Script {
 
         vm.startBroadcast();
         escrow = new TempexEscrow(
-            IERC20(token), msg.sender, arbiter, treasury, platformFeeBps, arbitrationFeeBps
+            ITIP20(token), msg.sender, arbiter, treasury, platformFeeBps, arbitrationFeeBps
         );
         vm.stopBroadcast();
 
