@@ -14,10 +14,13 @@
     "start": "tsx src/cli.ts",
     "adjudicate": "tsx src/cli.ts adjudicate",
     "watch": "tsx src/cli.ts watch",
-    "verify": "tsx src/cli.ts verify"
+    "verify": "tsx src/cli.ts verify",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@tempex/sdk": "workspace:*",
+    "ajv": "^8.20.0",
+    "franc": "^6.2.0",
     "viem": "^2.38.5"
   },
   "devDependencies": {

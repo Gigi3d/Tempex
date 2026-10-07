@@ -18,7 +18,7 @@ import {
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
-import { judgeWithLlm, llmConfigFromEnv, type LlmConfig } from './llm.js';
+import { complete, judgePanel, llmConfigFromEnv, type LlmConfig, type PanelVerdict } from './llm.js';
 import { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
 import { analyze, composeRuleRationale, type RuleBand, type RuleSignals } from './rules.js';
 
@@ -102,6 +102,9 @@ export type AdjudicationResult = {
   band: RuleBand;
   signals: RuleSignals;
   requestedBps?: number;
+  /// The judge panel's scores on the open criteria, member by member, with the
+  /// quotes that were verified and the scores that were discarded.
+  panel?: PanelVerdict;
   clamped: boolean;
   flags: string[];
   notes: string[];
@@ -122,7 +125,50 @@ export type AdjudicateParams = {
   /// whether a sponsor pays the fee.
   writeOptions?: WriteOptions;
   log?: (line: string) => void;
+  /// The model call, injectable so the panel can be exercised without a network.
+  completeFn?: typeof complete;
 };
+
+/// The award a panel's scores imply: verified credit plus each open criterion's
+/// weight times its panel score, over the total weight. Inside the rule band by
+/// construction, since every open score is between 0 and 1.
+export function panelAward(signals: RuleSignals, panel: PanelVerdict): number {
+  if (signals.totalWeight <= 0) return 0;
+  const scores = new Map(panel.criteria.map((c) => [c.id, c.score]));
+  const judged = signals.criteria
+    .filter((c) => c.kind !== 'check')
+    .reduce((sum, c) => sum + c.weight * (scores.get(c.id) ?? 0.5), 0);
+  return clamp(Math.round((10_000 * (signals.earnedWeight + judged)) / signals.totalWeight), 0, 10_000);
+}
+
+/// Deterministic prose for a panel ruling: what code decided, what each open
+/// criterion scored and on what evidence, and what the panel discarded.
+function composePanelRationale(input: {
+  signals: RuleSignals;
+  panel: PanelVerdict;
+  proposalBps: number;
+}): string {
+  const { signals, panel, proposalBps } = input;
+  const lines: string[] = [`Ruled by a ${panel.label}, scoring only the criteria code could not decide.`];
+  for (const c of signals.criteria.filter((criterion) => criterion.kind === 'check')) {
+    lines.push(`${c.id}: decided by its ${c.check} check, earned ${c.credit!.toFixed(2)} of weight ${c.weight}; ${c.evidence}.`);
+  }
+  for (const c of panel.criteria) {
+    const quotes = panel.members
+      .flatMap((m) => m.scores?.find((s) => s.id === c.id)?.verifiedQuotes ?? [])
+      .slice(0, 2)
+      .map((q) => JSON.stringify(q.slice(0, 80)));
+    lines.push(
+      `${c.id}: panel median ${c.score.toFixed(2)} from ${c.accepted} accepted score(s)${c.discarded > 0 ? `, ${c.discarded} discarded for claiming credit without a verifiable quote` : ''}${c.neutral ? '; no judge supported it, so it stands at the neutral 0.50' : ''}${quotes.length > 0 ? `; evidence ${quotes.join(', ')}` : ''}.`,
+    );
+  }
+  const failed = panel.members.filter((m) => m.scores === null).length;
+  if (failed > 0) lines.push(`${failed} of ${panel.members.length} judges failed and were not counted.`);
+  const voice = panel.members.find((m) => m.scores !== null && m.rationale !== '')?.rationale;
+  if (voice) lines.push(`A judge's reasoning: ${voice}`);
+  lines.push(`Weighted award ${proposalBps} bps.`);
+  return lines.join(' ');
+}
 
 const clamp = (value: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, value));
@@ -260,38 +306,35 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     );
   }
   log(
-    `objective band ${band.lowBps}-${band.highBps} bps (centre ${band.center}); coverage ${
-      signals.coverage === null ? 'n/a' : signals.coverage.toFixed(2)
-    }, evidence strength ${signals.evidenceStrength.toFixed(2)}, claim ${signals.corroboration}`,
+    `band ${band.lowBps}-${band.highBps} bps (centre ${band.center}): checks earned ${signals.earnedWeight.toFixed(2)} of ${signals.checkedWeight} checked weight, ${signals.openWeight} of ${signals.totalWeight} left to judgement`,
   );
 
-  // ---- judgement: the model when configured, the rule engine otherwise ----
+  // ---- judgement: a panel scores the open criteria, the rule engine otherwise ----
+  // When every criterion was decided by a check there is nothing to judge, and
+  // no model is asked: the band is a single point.
   const llmConfig = params.llm === undefined ? llmConfigFromEnv() : params.llm;
   const engineWanted = params.engine ?? 'auto';
+  const openIds = signals.criteria.filter((c) => c.kind !== 'check').map((c) => c.id);
   let engine: 'llm' | 'rules' = 'rules';
   let model = RULE_ENGINE_MODEL;
   let requestedBps: number | undefined;
-  let confidence: number | undefined;
-  let factors: string[] = [];
-  let rationale: string;
+  let panel: PanelVerdict | undefined;
+  let rationale: string | undefined;
+  const ruleRationale = (): string =>
+    composeRuleRationale({ jobId: jobIdNum, terms: evidenceCase.terms, signals, band, chosenBps: band.center });
 
-  if (engineWanted === 'rules' || llmConfig === null) {
-    if (engineWanted === 'llm' && llmConfig === null) {
-      throw new RefusalError(['engine "llm" was requested but no OPENAI_API_KEY is configured']);
-    }
-    rationale = composeRuleRationale({
-      jobId: jobIdNum,
-      terms: evidenceCase.terms,
-      signals,
-      band,
-      chosenBps: band.center,
-    });
+  if (engineWanted === 'llm' && llmConfig === null) {
+    throw new RefusalError(['engine "llm" was requested but no OPENAI_API_KEY is configured']);
+  }
+  if (openIds.length === 0) {
+    notes.push('every criterion was decided by its check; no judgement was needed');
+  } else if (engineWanted === 'rules' || llmConfig === null) {
     if (llmConfig === null && engineWanted === 'auto') {
-      notes.push('no OPENAI_API_KEY configured; ruled by the deterministic rule engine');
+      notes.push('no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint');
     }
   } else {
     try {
-      const outcome = await judgeWithLlm({
+      panel = await judgePanel({
         config: llmConfig,
         system: SYSTEM_PROMPT,
         user: buildJudgePrompt({
@@ -304,31 +347,28 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
           signals,
           band,
         }),
+        openIds,
+        deliverable: signals.deliverableText,
+        ...(params.completeFn !== undefined ? { completeFn: params.completeFn } : {}),
       });
       engine = 'llm';
-      model = outcome.model;
-      requestedBps = outcome.ruling.sellerAwardBps;
-      confidence = outcome.ruling.confidence;
-      factors = outcome.ruling.factors;
-      rationale = outcome.ruling.rationale;
-      if (outcome.unconstrainedFormat) {
-        notes.push('judge endpoint rejected JSON mode; fell back to a plain completion');
+      model = panel.label;
+      requestedBps = panelAward(signals, panel);
+      rationale = composePanelRationale({ signals, panel, proposalBps: requestedBps });
+      for (const c of panel.criteria) {
+        log(`${c.id}: median ${c.score.toFixed(2)} (${c.accepted} accepted, ${c.discarded} discarded)`);
       }
-      log(`judge ${model} proposed ${requestedBps} bps`);
+      const failed = panel.members.filter((m) => m.scores === null);
+      for (const member of failed) notes.push(`judge ${member.seat + 1} (${member.model}) failed: ${member.error}`);
+      log(`${panel.label} proposed ${requestedBps} bps`);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       if (engineWanted === 'llm') throw error;
-      notes.push(`judge unavailable (${reason}); ruled by the deterministic rule engine`);
-      log(`judge unavailable: ${reason}`);
-      rationale = composeRuleRationale({
-        jobId: jobIdNum,
-        terms: evidenceCase.terms,
-        signals,
-        band,
-        chosenBps: band.center,
-      });
+      notes.push(`judge panel unavailable (${reason}); open criteria stand at the neutral midpoint`);
+      log(`judge panel unavailable: ${reason}`);
     }
   }
+  rationale ??= ruleRationale();
 
   // ---- clamp the judge into the band derived from facts ----
   const candidate = requestedBps ?? band.center;
@@ -353,8 +393,6 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     issuedAt: Math.max(now - ISSUED_AT_SKEW_SECONDS, evidenceClosedAt),
     validUntil: now + (params.ttlSeconds ?? DEFAULT_TTL_SECONDS),
     model,
-    ...(confidence !== undefined ? { confidence } : {}),
-    ...(factors.length > 0 ? { factors } : {}),
   };
   const verdict = verdictFromRuling(ruling);
   const signature = await signVerdict(client.account, verdict, domainFor(client.addresses));
@@ -411,6 +449,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     boundedBand: band,
     signals,
     ...(requestedBps !== undefined ? { requestedBps } : {}),
+    ...(panel !== undefined ? { panel } : {}),
     clamped,
     flags,
     notes,

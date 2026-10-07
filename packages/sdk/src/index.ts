@@ -28,12 +28,16 @@ export {
   hashCanonical,
   hashText,
   jobMemo,
+  normalizeCriteria,
   readCase,
   responseHashOf,
   writeCase,
   writeResponse,
 } from './evidence.js';
 export type {
+  Criterion,
+  CriterionCheck,
+  NormalizedCriterion,
   EvidenceArtifact,
   EvidenceBundle,
   EvidenceCase,

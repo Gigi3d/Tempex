@@ -6,7 +6,7 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 61/61 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
+- 61/61 Forge tests (one fuzzed) and 45 arbiter tests (`pnpm test:ts`), including the audit's failure cases as regressions, 10,362 hand-written lines, one Solidity contract, no proxies
 - Live deployment: `0x001c8C3391E591C9CBDFdFE4227e585b86041157` ([explorer](https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157)), block 38,497,375, deployed and verified by `pnpm deploy:escrow`. It supersedes `0x7579…ec27`, whose 5 jobs and 3 verdicts remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
@@ -72,8 +72,10 @@ ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not count
 ```bash
 pnpm install
 cp .env.example .env        # fill in testnet keys: cast wallet new
-pnpm test                   # forge test — 25/25
+pnpm test                   # forge test — 61/61
 pnpm typecheck
+pnpm test:ts                # arbiter: checks, band properties, judge panel, audit regressions
+pnpm check                  # all of the above, plus demo predict and drill
 
 pnpm demo drill             # offline: push scripted judge proposals through the band guardrail
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
@@ -88,7 +90,7 @@ before you generate a single key. Keys are only ever needed to *act*.
 
 ## The guardrail, in one paragraph
 
-Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own: the rule engine scores the evidence and derives a band (e.g. center 3,250 bps, band 2,050–4,450), narrowed to the parties' offers. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
+Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own, and it decides only what code can verify. Each acceptance criterion in the terms is either a **check** (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`), a pure function of the delivered bytes that anyone can re-run, or a **judgement** (a plain-text criterion no code can decide). Checks earn their weight in proportion to what they verified; judgement weight is left open. So the band is `verified credit` to `verified credit + open weight`, out of the total: a single point when everything is checkable, the full range when nothing is, and always narrowed to the parties' offers. There is no keyword scoring: it measured vocabulary, not delivery, and gave pasted-back criteria full marks. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
 
 ## The Beacon — how an agent adopts Tempex with no account and no balance
 

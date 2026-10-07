@@ -52,9 +52,19 @@ const FIXTURE_TERMS: JobTerms = {
   title: 'Localize the marketing site to French',
   deliverableSpec: 'The full landing page copy in French, with fr-FR formats.',
   acceptanceCriteria: [
-    'French translation of the marketing site copy',
-    'Localized currency and date formats',
-    'Glossary terms preserved as supplied',
+    {
+      id: 'french',
+      text: 'The site copy is in French',
+      weight: 2,
+      check: { type: 'language', at: '/copy', is: 'fr' },
+    },
+    {
+      id: 'prices',
+      text: 'Prices use the fr-FR format',
+      weight: 2,
+      check: { type: 'regex', at: '/prices', pattern: '^\\d+,\\d{2} €$' },
+    },
+    { id: 'glossary', text: 'Glossary terms preserved as supplied', weight: 1 },
   ],
   amount: '25.00',
   currency: 'AlphaUSD',
@@ -62,10 +72,14 @@ const FIXTURE_TERMS: JobTerms = {
   seller: FIXTURE_SELLER,
 };
 
-const FIXTURE_DELIVERABLE =
-  'Landing page copy translated into French: the hero, pricing and testimonials ' +
-  'sections are now in French, and the translation covers the marketing site ' +
-  'throughout. The checkout still shows $ and MM/DD/YYYY.';
+const FIXTURE_DELIVERABLE = JSON.stringify({
+  copy: {
+    hero: 'Votre boutique, enfin en français.',
+    pricing: 'Des tarifs simples, sans surprise, pour chaque équipe.',
+    testimonials: 'Nos clients adorent la nouvelle expérience de paiement.',
+  },
+  prices: { starter: '$9.00', pro: '$29.00' },
+});
 
 const FIXTURE_ARTIFACT =
   'translation memory export: 412 segments, 388 confirmed, 24 fuzzy matches pending review';
@@ -73,7 +87,9 @@ const FIXTURE_ARTIFACT =
 const FIXTURE_CLAIM = 'The glossary terms are missing from the delivery.';
 
 /// A dispute that never happened, shaped exactly like one that did: a partial
-/// delivery (one of three criteria met) against three agreed criteria.
+/// delivery against three agreed criteria. The copy is French (check met), the
+/// prices kept US formatting (check failed), and the glossary is a judgement left
+/// open, so the band is 4000-6000 bps.
 ///
 /// `analyze` is a pure function, so a fabricated job proves the band without
 /// needing a real dispute. A live job cannot be used for this: the integrity
