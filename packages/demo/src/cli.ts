@@ -102,6 +102,7 @@ function help(): void {
   out('  --from <stage>    first stage to run (default case)');
   out('  --upto <stage>    last stage to run (default settle)');
   out('  --sponsored       route every write through the hosted fee payer');
+  out('  --listed-arbiter  judge with the arbiter key as a listed market arbiter, not the house arbiter');
   out('  --engine <e>      auto | rules | llm (default auto)');
   out('  --force           re-run stages this session already recorded');
   out('  --fresh           discard the recorded session and start over');
@@ -238,6 +239,7 @@ async function main(argv: string[]): Promise<number> {
       sponsored: boolFlag(flags, 'sponsored'),
       force: boolFlag(flags, 'force'),
       fresh: boolFlag(flags, 'fresh'),
+      listedArbiter: boolFlag(flags, 'listed-arbiter'),
       session: stringFlag(flags, 'session'),
       engine: engineFlag(flags),
       ...(asJson ? {} : { write: (line) => trace(line) }),

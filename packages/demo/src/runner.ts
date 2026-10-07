@@ -110,6 +110,10 @@ export type DemoOptions = {
   force?: boolean;
   /// Discard the recorded session and start over.
   fresh?: boolean;
+  /// Judge the job by the arbiter key as a listed market arbiter, named with
+  /// createJobWithArbiter, instead of the escrow's house arbiter. Lets anyone run
+  /// the full lifecycle with keys of their own, and exercises the arbiter market.
+  listedArbiter?: boolean;
   /// Session name; `runs/demo-<session>.json`. Defaults to the scenario id.
   session?: string;
   engine?: AdjudicationEngine;
@@ -146,6 +150,7 @@ type ResolvedOptions = {
   sponsored: boolean;
   force: boolean;
   fresh: boolean;
+  listedArbiter: boolean;
   engine: AdjudicationEngine;
   session: string;
   evidenceDir: string;
@@ -393,6 +398,26 @@ class DemoRun {
     const evidenceCase = await this.case();
     const now = Math.floor(Date.now() / 1000);
 
+    // A listed arbiter must be on the market before a job can name it. It lists
+    // at the fee the corpus prices money at, so the predicted split still holds.
+    let arbiter: Address | undefined;
+    if (this.options.listedArbiter) {
+      arbiter = this.clients.arbiter.address;
+      const listing = await this.clients.arbiter.arbiterListing(arbiter);
+      if (!listing.active || listing.feeBps !== ARBITRATION_FEE_BPS) {
+        const listed = await this.clients.arbiter.listArbiter(
+          ARBITRATION_FEE_BPS,
+          'tempex-demo: the rule engine in packages/arbiter',
+          this.writeOptions,
+        );
+        this.transcript.tx('listed', listed.transactionHash);
+      }
+      this.transcript.row(
+        'arbiter',
+        `${arbiter} — listed on the market at ${ARBITRATION_FEE_BPS} bps, named for this job by the buyer`,
+      );
+    }
+
     const created = await this.clients.buyer.createAndFundJob(
       {
         seller: this.clients.seller.address,
@@ -400,6 +425,7 @@ class DemoRun {
         termsHash: hashCanonical(evidenceCase.terms),
         deliveryDeadline: now + this.scenario.deliveryDeadlineSeconds,
         reviewWindow: this.scenario.reviewWindowSeconds,
+        ...(arbiter !== undefined ? { arbiter } : {}),
       },
       this.writeOptions,
     );
@@ -418,6 +444,7 @@ class DemoRun {
     }
     this.expect('job amount', amount.toString(), onChain.amount.toString());
     this.expect('job termsHash', hashCanonical(evidenceCase.terms), onChain.termsHash);
+    if (arbiter !== undefined) this.expect('job arbiter', arbiter, onChain.arbiter);
     this.transcript.row('job', `${jobId} — ${onChain.state}, ${formatToken(onChain.amount)} escrowed`);
 
     const funding = memoTransfers(receipt.logs).find((entry) => entry.jobId === jobId);
@@ -558,21 +585,23 @@ class DemoRun {
     const jobId = this.jobId();
     const evidenceCase = await this.case();
 
-    const config = await escrowArbiterConfig(this.clients.arbiter);
+    // Each job locks its arbiter and fee at creation, so those are what count,
+    // not the escrow's current defaults for new jobs.
+    const job = await this.clients.arbiter.job(jobId);
     this.transcript.row('signer', `${this.clients.arbiter.address} — the arbiter's own key`);
-    if (config.arbiter.toLowerCase() !== this.clients.arbiter.address.toLowerCase()) {
+    if (job.arbiter.toLowerCase() !== this.clients.arbiter.address.toLowerCase()) {
       this.failures.push(
-        `the signing key ${this.clients.arbiter.address} is not the escrow's arbiter ${config.arbiter}`,
+        `the signing key ${this.clients.arbiter.address} is not job ${jobId}'s arbiter ${job.arbiter}`,
       );
     }
-    if (config.arbitrationFeeBps !== ARBITRATION_FEE_BPS) {
+    if (job.arbitrationFeeBps !== ARBITRATION_FEE_BPS) {
       this.failures.push(
-        `the escrow charges ${config.arbitrationFeeBps} bps arbitration fee; the corpus predicts money at ${ARBITRATION_FEE_BPS} bps`,
+        `job ${jobId} locked a ${job.arbitrationFeeBps} bps arbitration fee; the corpus predicts money at ${ARBITRATION_FEE_BPS} bps`,
       );
     }
     this.transcript.row(
       'fee schedule',
-      `${config.arbitrationFeeBps} bps arbitration fee, read from the escrow (the corpus assumes ${ARBITRATION_FEE_BPS})`,
+      `${job.arbitrationFeeBps} bps arbitration fee locked by job ${jobId} at creation (the corpus assumes ${ARBITRATION_FEE_BPS}); ${job.protocolCutBps / 100}% of it to the treasury`,
     );
 
     // The seller's response lives on disk next to the buyer's bundle, exactly
@@ -747,6 +776,11 @@ class DemoRun {
       (client) => client.address.toLowerCase() === treasury.toLowerCase(),
     );
     await this.withdrawCredit('buyer', this.clients.buyer);
+    // A listed arbiter earns its fee minus the protocol's cut; the house arbiter
+    // earns nothing directly, its whole fee goes to the treasury.
+    if (this.clients.arbiter.address.toLowerCase() !== treasury.toLowerCase()) {
+      await this.withdrawCredit('arbiter', this.clients.arbiter);
+    }
     if (holder === undefined) {
       this.transcript.row(
         'treasury',
@@ -1010,6 +1044,7 @@ export async function runDemo(options: DemoOptions): Promise<DemoResult> {
     sponsored: options.sponsored ?? false,
     force: options.force ?? false,
     fresh: options.fresh ?? false,
+    listedArbiter: options.listedArbiter ?? false,
     engine: options.engine ?? 'auto',
     session: name,
     evidenceDir,
