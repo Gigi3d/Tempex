@@ -304,16 +304,49 @@ async function cmdVerify(flags: Record<string, FlagValue>): Promise<number> {
   return report.passed ? 0 : 3;
 }
 
+/// Puts this arbiter on the market: buyers can then name it for a job with
+/// createJobWithArbiter, and it earns its fee minus the protocol's cut.
+async function cmdList(flags: Record<string, FlagValue>): Promise<number> {
+  const sponsored = flags['sponsored'] === true;
+  const client = arbiterClient(sponsored);
+  row('arbiter', client.address);
+  row('escrow', client.addresses.escrow);
+
+  if (flags['delist'] === true) {
+    const receipt = await client.delistArbiter({ sponsored });
+    row('delisted', explorerTx(receipt.transactionHash));
+    out('new jobs can no longer name this arbiter; jobs it already judges are unaffected');
+    return 0;
+  }
+
+  const feeBps = numberFlag(flags, 'fee');
+  if (feeBps === undefined || !Number.isInteger(feeBps) || feeBps < 0 || feeBps > 1_000) {
+    out('list needs --fee <bps>, an integer from 0 to 1000 (the escrow\'s arbitration fee cap)');
+    return 1;
+  }
+  const metadataURI = stringFlag(flags, 'uri') ?? '';
+  const receipt = await client.listArbiter(feeBps, metadataURI, { sponsored });
+  const listing = await client.arbiterListing(client.address);
+  row('listed', explorerTx(receipt.transactionHash));
+  row('fee', `${listing.feeBps} bps of each disputed job it rules, minus the protocol cut`);
+  row('profile', listing.metadataURI || '(none — set --uri so buyers can see your model and rules)');
+  out('');
+  out('run `watch` with this key to rule on the jobs that name it');
+  return 0;
+}
+
 function usage(): void {
   out('Tempex arbiter — evidence in, signed verdict out.');
   out('');
   out('  adjudicate --job <id> [--dry] [--relay] [--engine auto|rules|llm] [--ttl <s>] [--sponsored] [--json] [--no-receipt]');
   out('  watch [--once] [--poll] [--from <block>] [--engine auto|rules|llm] [--ttl <s>] [--no-relay] [--sponsored]');
   out('  verify [--json]');
+  out('  list --fee <bps> [--uri <url>] [--sponsored] | list --delist');
   out('');
   out('  adjudicate   rule on one dispute; --dry skips the on-chain state gate, --relay settles it');
   out('  watch        rule on every dispute as it is raised; --once scans history and exits');
   out('  verify       prove this key\'s verdicts against the deployed escrow — no dispute needed');
+  out('  list         offer this key as an arbiter buyers can choose, at its own fee');
   out('');
   out('OPENAI_API_KEY activates the LLM judge; without one the deterministic rule engine rules.');
 }
@@ -327,6 +360,8 @@ async function main(argv: string[]): Promise<number> {
       return cmdWatch(flags);
     case 'verify':
       return cmdVerify(flags);
+    case 'list':
+      return cmdList(flags);
     case '':
     case 'help':
       usage();

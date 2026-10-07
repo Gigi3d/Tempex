@@ -114,6 +114,16 @@ function fixture(): { terms: JobTerms; bundle: EvidenceBundle; job: Job } {
     deliverableHash: hashText(FIXTURE_DELIVERABLE),
     disputeHash: hashCanonical(bundle),
     verdictHash: ZERO_HASH,
+
+    disputedAt: 0,
+    respondedAt: 0,
+    responseHash: ZERO_HASH,
+    arbiter: `0x${'0'.repeat(40)}`,
+    platformFeeBps: 0,
+    arbitrationFeeBps: 0,
+    protocolCutBps: 0,
+    buyerOfferBps: 0,
+    sellerAskBps: 10_000,
   };
 
   return { terms, bundle, job };

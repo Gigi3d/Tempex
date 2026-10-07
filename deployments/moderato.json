@@ -2,19 +2,22 @@
   "network": "tempo-moderato-testnet",
   "chainId": 42431,
   "rpc": "https://rpc.moderato.tempo.xyz",
-  "ws": "wss://rpc.moderato.tempo.xyz",
   "explorer": "https://explore.testnet.tempo.xyz",
-  "node": "tempo/v1.15.0",
   "contracts": {
     "TempexEscrow": {
-      "address": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
-      "txHash": "0xd27c7cd8b08411fc46be8bbe40c616b3c5f8547ef77c4c70cbf4533b72b84a56",
-      "blockNumber": 37010916,
-      "deployer": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
-      "gasUsed": 11036281,
-      "gasPriceWei": 10225000000,
+      "address": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+      "txHash": "0xc76868bb813523a389c29c79d74fb46154640ecfada018bdbc9811b965c7231d",
+      "blockNumber": 38497375,
+      "deployer": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
+      "gasUsed": 19617183,
+      "feePaid": "11771",
+      "feePaidFormatted": "0.011771 AlphaUSD",
       "feeToken": "0x20C0000000000000000000000000000000000001",
-      "feeTokenSymbol": "AlphaUSD"
+      "feeTokenSymbol": "AlphaUSD",
+      "initcodeBytes": 19272,
+      "runtimeBytes": 17519,
+      "runtimeKeccak": "0xf123d2ffca16587225fe0fddc9d64e07b51f3706b3e6e6bf1741254797b3486e",
+      "verifiedBy": "packages/sdk/scripts/deploy.ts: eth_getCode equals the forge build outside immutable slots, and every constructor setting read back"
     }
   },
   "config": {
@@ -24,43 +27,99 @@
     "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
     "platformFeeBps": 50,
     "arbitrationFeeBps": 200,
+    "protocolCutBps": 2000,
     "maxPlatformFeeBps": 500,
-    "maxArbitrationFeeBps": 1000
+    "maxArbitrationFeeBps": 1000,
+    "sellerResponseWindowSeconds": 604800,
+    "arbitrationWindowSeconds": 604800,
+    "disputeBondBps": 500
   },
-  "tempoFeatures": {
-    "tip20MemoOnFund": {
-      "event": "TransferWithMemo(address indexed from, address indexed to, uint256 amount, bytes32 indexed memo)",
-      "topic0": "0x57bc7354aa85aed339e000bccffabbc529466af35f0772c8f8ee1145927de7f0",
-      "proofTx": "0xe9f54f3a6f20ea09961b4427aa5535f4f27cd251fe9e9f6114281b6b2edb690f",
-      "blockNumber": 37010976,
-      "decoded": {
-        "from": "0xD4744c3dA5f43545C1090C0DE2114f12CDd6C9B3",
-        "to": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
-        "amount": "50000000",
-        "memo": "0x0000000000000000000000000000000000000000000000000000000000000001"
+  "supersedes": {
+    "address": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+    "blockNumber": 37010916,
+    "record": {
+      "network": "tempo-moderato-testnet",
+      "chainId": 42431,
+      "rpc": "https://rpc.moderato.tempo.xyz",
+      "ws": "wss://rpc.moderato.tempo.xyz",
+      "explorer": "https://explore.testnet.tempo.xyz",
+      "node": "tempo/v1.15.0",
+      "contracts": {
+        "TempexEscrow": {
+          "address": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+          "txHash": "0xd27c7cd8b08411fc46be8bbe40c616b3c5f8547ef77c4c70cbf4533b72b84a56",
+          "blockNumber": 37010916,
+          "deployer": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+          "gasUsed": 11036281,
+          "gasPriceWei": 10225000000,
+          "feeToken": "0x20C0000000000000000000000000000000000001",
+          "feeTokenSymbol": "AlphaUSD"
+        }
       },
-      "note": "memo is bytes32(jobId): the stablecoin transfer itself carries the reconciliation key, no log-join required"
-    },
-    "withdrawMemoTag": {
-      "value": "0x74656d7065782e77697468647261770000000000000000000000000000000000",
-      "ascii": "tempex.withdraw"
-    },
-    "feeToken": "transactions paid in AlphaUSD (TIP-20), not a volatile gas token",
-    "batchedCalls": {
-      "jobId": 2,
-      "txHash": "0x6f499bdd0db9729420a370eefcc9ef8011fdac2cd3269adcc908dd689514bb6c",
-      "blockNumber": 37017807,
-      "calls": 2,
-      "gasUsed": 1320324,
-      "note": "createJob + fund in a single Tempo transaction (type 0x76, calls array of length 2). The job id cannot come from createJob's return value inside a batch, so the client reads nextJobId() first and passes it to fund; the emitted JobCreated id matched the prediction."
+      "config": {
+        "paymentToken": "0x20C0000000000000000000000000000000000001",
+        "owner": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "platformFeeBps": 50,
+        "arbitrationFeeBps": 200,
+        "maxPlatformFeeBps": 500,
+        "maxArbitrationFeeBps": 1000
+      },
+      "tempoFeatures": {
+        "tip20MemoOnFund": {
+          "event": "TransferWithMemo(address indexed from, address indexed to, uint256 amount, bytes32 indexed memo)",
+          "topic0": "0x57bc7354aa85aed339e000bccffabbc529466af35f0772c8f8ee1145927de7f0",
+          "proofTx": "0xe9f54f3a6f20ea09961b4427aa5535f4f27cd251fe9e9f6114281b6b2edb690f",
+          "blockNumber": 37010976,
+          "decoded": {
+            "from": "0xD4744c3dA5f43545C1090C0DE2114f12CDd6C9B3",
+            "to": "0x7579736636dd67A8811A8A2ef95c44560fe6ec27",
+            "amount": "50000000",
+            "memo": "0x0000000000000000000000000000000000000000000000000000000000000001"
+          },
+          "note": "memo is bytes32(jobId): the stablecoin transfer itself carries the reconciliation key, no log-join required"
+        },
+        "withdrawMemoTag": {
+          "value": "0x74656d7065782e77697468647261770000000000000000000000000000000000",
+          "ascii": "tempex.withdraw"
+        },
+        "feeToken": "transactions paid in AlphaUSD (TIP-20), not a volatile gas token",
+        "batchedCalls": {
+          "jobId": 2,
+          "txHash": "0x6f499bdd0db9729420a370eefcc9ef8011fdac2cd3269adcc908dd689514bb6c",
+          "blockNumber": 37017807,
+          "calls": 2,
+          "gasUsed": 1320324,
+          "note": "createJob + fund in a single Tempo transaction (type 0x76, calls array of length 2). The job id cannot come from createJob's return value inside a batch, so the client reads nextJobId() first and passes it to fund; the emitted JobCreated id matched the prediction."
+        }
+      },
+      "notes": [
+        "Tempo contract creation is priced far above vanilla EVM: 11,036,281 gas for this deployment, whose runtime is 9,324 bytes (confirmed by eth_getCode at contracts.TempexEscrow.address) and whose creation payload was 11,217 bytes (11,025 initcode + 192 constructor args, in calls[0].input of the type-0x76 tx). Storing the same 9,324 bytes on a standard EVM chain costs 1,864,800 gas at 200 gas/byte, so this deployment is 5.92x that - an all-in effective 1,183.6 gas per runtime byte.",
+        "forge script cannot deploy this: it ignores --gas-limit and broadcasts with its own estimate (2,845,784), which reverts out of gas. Use scripts/deploy-escrow.sh (forge create --gas-limit 20000000).",
+        "Failed attempts (left as evidence in the record, none of which created code): forge script 0x57546be5 (gas 2845784), forge script 0x947a0739 (gas 2845784), forge create 0xabcf76c8 (gas 6000000), cast send nonce-3 (gas 3000000).",
+        "Supersedes 0x1D3F259A2693361E58fC7237c66ACB8304D1A6a4 (pre-memo build, block 37010034).",
+        "Live smoke test consumed job id 1: approve + createJob + fund executed on-chain, escrow holds 50.000000 AlphaUSD, job state Funded.",
+        "Explorer host matters: https://explore.tempo.xyz/tx/<hash> returns 404 for Moderato transactions; https://explore.testnet.tempo.xyz/tx/<hash> resolves (verified against the deploy tx)."
+      ]
     }
   },
-  "notes": [
-    "Tempo contract creation is priced far above vanilla EVM: 11,036,281 gas for this deployment, whose runtime is 9,324 bytes (confirmed by eth_getCode at contracts.TempexEscrow.address) and whose creation payload was 11,217 bytes (11,025 initcode + 192 constructor args, in calls[0].input of the type-0x76 tx). Storing the same 9,324 bytes on a standard EVM chain costs 1,864,800 gas at 200 gas/byte, so this deployment is 5.92x that - an all-in effective 1,183.6 gas per runtime byte.",
-    "forge script cannot deploy this: it ignores --gas-limit and broadcasts with its own estimate (2,845,784), which reverts out of gas. Use scripts/deploy-escrow.sh (forge create --gas-limit 20000000).",
-    "Failed attempts (left as evidence in the record, none of which created code): forge script 0x57546be5 (gas 2845784), forge script 0x947a0739 (gas 2845784), forge create 0xabcf76c8 (gas 6000000), cast send nonce-3 (gas 3000000).",
-    "Supersedes 0x1D3F259A2693361E58fC7237c66ACB8304D1A6a4 (pre-memo build, block 37010034).",
-    "Live smoke test consumed job id 1: approve + createJob + fund executed on-chain, escrow holds 50.000000 AlphaUSD, job state Funded.",
-    "Explorer host matters: https://explore.tempo.xyz/tx/<hash> returns 404 for Moderato transactions; https://explore.testnet.tempo.xyz/tx/<hash> resolves (verified against the deploy tx)."
-  ]
+  "liveProof": {
+    "run": "pnpm demo run --fresh --listed-arbiter (scenario underdelivered)",
+    "receipt": "runs/demo-underdelivered-2026-10-07T01-31-43-924Z.json",
+    "result": "8/8 stages, 28/28 corpus expectations held against the live chain",
+    "jobId": 1,
+    "steps": {
+      "listArbiter": "0x30c8756787b1611cf02afa11b26f6faba7240368832dab447cb73ba6c0e99d1d",
+      "createJobWithArbiter+fund": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+      "deliver (data: uri)": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+      "dispute (bond + offer 2500)": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+      "respond (ask 5000)": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+      "resolve (relayed by a non-arbiter key)": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
+    },
+    "outcome": "3250 bps inside offers [2500, 5000] and band [2500, 4450]; seller 8.140937, buyer 17.609063 (bond 1.25 settled, 0.353437 forfeited to the seller), arbitration fee 0.5: 0.4 to the listed arbiter, 0.1 credited to the treasury",
+    "beaconSmoke": "runs/beacon-smoke-2026-10-07T01-32-06-689Z.json: 189 assertions, 0 units spent",
+    "sdkSmoke": "job 2: createJob + fund batched in one transaction, memo bytes32(2), EIP-712 digest agrees with the contract; left Funded and refundable by anyone after its deadline",
+    "keys": "the proof run used throwaway testnet keys funded by the faucet; none of them hold a role in the escrow"
+  }
 }

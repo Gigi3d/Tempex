@@ -29,7 +29,9 @@ export {
   hashText,
   jobMemo,
   readCase,
+  responseHashOf,
   writeCase,
+  writeResponse,
 } from './evidence.js';
 export type {
   EvidenceArtifact,
@@ -37,6 +39,7 @@ export type {
   EvidenceCase,
   JobTerms,
   Ruling,
+  SellerResponse,
 } from './evidence.js';
 
 export {
@@ -51,15 +54,24 @@ export {
 export type { VerdictStruct } from './verdict.js';
 
 export {
+  ARBITRATION_WINDOW_SECONDS,
+  DISPUTE_BOND_BPS,
+  awardBounds,
+  disputeBond,
+  disputeSettlement,
   JOB_STATES,
+  SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
   accountFor,
   domainFor,
+  evidenceClosedAt,
   feePaid,
   jobStateIndex,
   memoTransfers,
+  responseDeadline,
 } from './client.js';
 export type {
+  ArbiterListing,
   FeePayment,
   Job,
   JobState,
@@ -67,3 +79,19 @@ export type {
   TempexClientParams,
   WriteOptions,
 } from './client.js';
+
+export {
+  MAX_DELIVERABLE_BYTES,
+  dataUriFor,
+  fetchDeliverable,
+  resolveDeliverableUri,
+} from './fetch.js';
+export type { FetchedDeliverable } from './fetch.js';
+
+export {
+  milestoneArgs,
+  milestoneTerms,
+  planHashOf,
+  planProblems,
+} from './milestones.js';
+export type { MilestoneJobs, MilestonePlan } from './milestones.js';

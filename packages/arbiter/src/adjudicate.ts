@@ -3,6 +3,7 @@ import {
   hashCanonical,
   hashText,
   recoverVerdictSigner,
+  responseHashOf,
   signVerdict,
   verdictFromRuling,
   type EvidenceCase,
@@ -10,6 +11,10 @@ import {
   type TempexClient,
   type VerdictStruct,
   type WriteOptions,
+  SELLER_RESPONSE_WINDOW_SECONDS,
+  awardBounds,
+  disputeSettlement,
+  fetchDeliverable,
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
@@ -27,6 +32,7 @@ const VERDICT_RESOLVED = parseAbiItem(
 /// what it means.
 const ISSUED_AT_SKEW_SECONDS = 30;
 const DEFAULT_TTL_SECONDS = 86_400;
+const ZERO_HASH = `0x${'0'.repeat(64)}`;
 
 /// The name that shows up in receipts when no model was in the loop.
 export const RULE_ENGINE_MODEL = 'tempex-rules/1';
@@ -61,9 +67,15 @@ export type RelayReceipt = {
 /// arithmetic against a fee schedule that may since have changed.
 export type VerdictMoney = {
   amount: bigint;
+  /// the buyer's dispute bond, settled with the ruling
+  bond: bigint;
+  /// the part of the bond forfeited to the seller
+  bondToSeller: bigint;
   arbitrationFee: bigint;
   arbitrationFeeBps: number;
+  /// everything credited to the seller, forfeited bond included
   sellerAmount: bigint;
+  /// everything credited to the buyer, bond refund included
   buyerAmount: bigint;
 };
 
@@ -79,6 +91,10 @@ export type AdjudicationResult = {
   digest: Hex;
   recovered: Address;
   registeredArbiter: Address;
+  /// The range the parties' final offers allow, as the escrow enforces it.
+  offers: { lowBps: number; highBps: number };
+  /// The rule band narrowed to the offers: the range the judge was clamped into.
+  boundedBand: RuleBand;
   /// signature recovers to the registered arbiter AND the contract agrees with
   /// our digest. False here means the verdict would be rejected on chain.
   certified: boolean;
@@ -122,6 +138,19 @@ export function clampToBand(
   return { bps, clamped: bps !== requestedBps };
 }
 
+/// Narrows the rule band to the range the parties' final offers allow. The escrow
+/// rejects any award outside the offers, so a band reaching past them would only
+/// let the judge propose something that cannot settle. When the two ranges do
+/// not meet, the band collapses to the offer edge nearest the evidence.
+export function withinOffers(
+  band: RuleBand,
+  offers: { lowBps: number; highBps: number },
+): RuleBand {
+  const lowBps = clamp(band.lowBps, offers.lowBps, offers.highBps);
+  const highBps = clamp(band.highBps, offers.lowBps, offers.highBps);
+  return { lowBps, highBps, center: clamp(band.center, lowBps, highBps) };
+}
+
 /// Evidence bundle in, signed verdict out.
 ///
 /// The order matters and is the point of the design: pin the evidence, derive the
@@ -138,6 +167,8 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
 
   const job = await client.job(jobId);
   const amount = job.amount;
+  let response = evidenceCase.response;
+  let evidenceClosedAt = 0;
 
   // ---- the evidence must be the evidence the buyer pinned on chain ----
   const evidenceHash = hashCanonical(evidenceCase.bundle);
@@ -149,10 +180,62 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     if (job.state !== 'Disputed') {
       throw new RefusalError([`job ${jobIdNum} is ${job.state}, not Disputed`]);
     }
+    // Each job names its own arbiter. Spending a model call on a dispute this key
+    // cannot sign for would produce a verdict the escrow rejects.
+    if (job.arbiter.toLowerCase() !== client.address.toLowerCase()) {
+      throw new RefusalError([
+        `job ${jobIdNum} is assigned to arbiter ${job.arbiter}, not this key ${client.address}`,
+      ]);
+    }
     if (job.disputeHash !== evidenceHash) {
       throw new RefusalError([
         `bundle hashes to ${evidenceHash} but job ${jobIdNum} pinned ${job.disputeHash} at dispute time`,
       ]);
+    }
+
+    // ---- the seller is heard before anyone rules ----
+    evidenceClosedAt = await client.evidenceClosedAt(jobId);
+    if (evidenceClosedAt === 0) {
+      throw new RefusalError([
+        `job ${jobIdNum}: the seller can respond until ${new Date((job.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS) * 1000).toISOString()}; no ruling before then unless it responds`,
+      ]);
+    }
+    const responded = job.responseHash !== ZERO_HASH;
+    if (responded) {
+      if (response === undefined) {
+        throw new RefusalError([
+          `job ${jobIdNum}: the seller pinned response ${job.responseHash} but its response file is not on hand`,
+        ]);
+      }
+      const responseHash = responseHashOf(response);
+      if (responseHash !== job.responseHash) {
+        throw new RefusalError([
+          `seller response hashes to ${responseHash} but job ${jobIdNum} pinned ${job.responseHash}`,
+        ]);
+      }
+    } else if (response !== undefined) {
+      notes.push('a seller response file is on hand but was never pinned on chain; it was not considered');
+      response = undefined;
+    }
+  }
+
+  // ---- the work itself, from where the seller said it lives ----
+  // Fetched rather than taken from either party, and trusted only if its bytes
+  // reproduce the on-chain deliverableHash. A failed or mismatched fetch is noted
+  // and the analysis falls back to the parties' copies.
+  let fetched: { uri: string; text: string } | undefined;
+  const uri = await client.deliverableURI(jobId).catch(() => '');
+  if (uri !== '') {
+    try {
+      const got = await fetchDeliverable(uri);
+      if (got.hash === job.deliverableHash) {
+        fetched = { uri, text: got.text };
+        log(`read the delivered work from ${uri.slice(0, 64)} (${got.bytes} bytes, hash matches)`);
+      } else {
+        notes.push(`the content at the delivery URI hashes to ${got.hash}, not the delivered ${job.deliverableHash}; it was not used`);
+      }
+    } catch (error) {
+      notes.push(`could not read the delivery URI: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -162,9 +245,20 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     job,
     terms: evidenceCase.terms,
     bundle: evidenceCase.bundle,
+    ...(response !== undefined ? { response } : {}),
+    ...(fetched !== undefined ? { fetched } : {}),
   });
   if (analysis.blocking.length > 0) throw new RefusalError(analysis.blocking);
-  const { signals, band, flags } = analysis;
+  const { signals, band: ruleBand, flags } = analysis;
+
+  // ---- the parties' final offers bound the band, as the escrow will ----
+  const offers = awardBounds(job);
+  const band = withinOffers(ruleBand, offers);
+  if (band.lowBps !== ruleBand.lowBps || band.highBps !== ruleBand.highBps) {
+    notes.push(
+      `the parties' offers [${offers.lowBps}, ${offers.highBps}] narrowed the rule band [${ruleBand.lowBps}, ${ruleBand.highBps}] to [${band.lowBps}, ${band.highBps}]`,
+    );
+  }
   log(
     `objective band ${band.lowBps}-${band.highBps} bps (centre ${band.center}); coverage ${
       signals.coverage === null ? 'n/a' : signals.coverage.toFixed(2)
@@ -205,6 +299,8 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
           job,
           terms: evidenceCase.terms,
           bundle: evidenceCase.bundle,
+          ...(response !== undefined ? { response } : {}),
+          ...(fetched !== undefined ? { fetched } : {}),
           signals,
           band,
         }),
@@ -252,7 +348,9 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     evidenceHash,
     rationaleHash: hashText(rationale),
     rationale,
-    issuedAt: now - ISSUED_AT_SKEW_SECONDS,
+    // Never earlier than the moment the seller's say closed: the escrow rejects a
+    // verdict that predates the evidence it was supposed to weigh.
+    issuedAt: Math.max(now - ISSUED_AT_SKEW_SECONDS, evidenceClosedAt),
     validUntil: now + (params.ttlSeconds ?? DEFAULT_TTL_SECONDS),
     model,
     ...(confidence !== undefined ? { confidence } : {}),
@@ -264,7 +362,10 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   // ---- certify: would the deployed escrow accept this exact verdict? ----
   const { local, onChain, matches } = await client.verdictEncoding(verdict);
   const recovered = await recoverVerdictSigner(verdict, signature, domainFor(client.addresses));
-  const { arbiter: registeredArbiter, arbitrationFeeBps } = await escrowArbiterConfig(client);
+  // Certify against the arbiter and fee the job locked at creation, not the
+  // escrow's current defaults: those apply to new jobs only.
+  const registeredArbiter = job.arbiter;
+  const arbitrationFeeBps = job.arbitrationFeeBps;
 
   const signerIsArbiter = recovered.toLowerCase() === registeredArbiter.toLowerCase();
   const certified = matches && signerIsArbiter;
@@ -279,16 +380,16 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   log(`digest ${local} ${matches ? '== ' : '!= '} on-chain ${onChain}`);
   log(`signature recovers to ${recovered}${signerIsArbiter ? ' (registered arbiter)' : ' (NOT the arbiter)'}`);
 
-  // ---- the ruling in money, using the fee schedule the escrow holds now ----
-  const arbitrationFee = (amount * BigInt(arbitrationFeeBps)) / 10_000n;
-  const remaining = amount - arbitrationFee;
-  const sellerAmount = (remaining * BigInt(chosenBps)) / 10_000n;
+  // ---- the ruling in money, using the fee rate this job locked at creation ----
+  const settlement = disputeSettlement({ amount, arbitrationFeeBps, sellerAwardBps: chosenBps });
   const money: VerdictMoney = {
     amount,
-    arbitrationFee,
+    bond: settlement.bond,
+    bondToSeller: settlement.bondToSeller,
+    arbitrationFee: settlement.arbitrationFee,
     arbitrationFeeBps,
-    sellerAmount,
-    buyerAmount: remaining - sellerAmount,
+    sellerAmount: settlement.sellerAmount,
+    buyerAmount: settlement.buyerAmount,
   };
 
   const result: AdjudicationResult = {
@@ -305,7 +406,9 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     registeredArbiter,
     certified,
     money,
-    band,
+    band: ruleBand,
+    offers,
+    boundedBand: band,
     signals,
     ...(requestedBps !== undefined ? { requestedBps } : {}),
     clamped,

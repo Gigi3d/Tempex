@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import type { Address, Hex } from 'viem';
 
-import { hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
+import { disputeBond, milestoneArgs, planProblems, type MilestonePlan, hashCanonical, hashText, tempexEscrowAbi, tip20Abi, tokenAmount } from '@tempex/sdk';
 
 import {
   blueprintAccept,
@@ -10,7 +10,12 @@ import {
   blueprintCreateAndFund,
   blueprintDeliver,
   blueprintDispute,
+  blueprintRespond,
   blueprintRefundExpired,
+  blueprintSettleLapsed,
+  blueprintListArbiter,
+  blueprintCreateMilestones,
+  blueprintDelistArbiter,
   blueprintResolve,
   blueprintWithdraw,
   type Blueprint,
@@ -84,6 +89,36 @@ export type Proof = {
   replay: string[];
 };
 
+/// A final offer in basis points, defaulted when absent and refused when it is
+/// not a whole number of bps the escrow would accept.
+function bpsParam(raw: unknown, name: string, fallback: number): number {
+  if (raw === undefined || raw === null || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value < 0 || value > 10_000) {
+    throw new BeaconError(
+      `${name} must be an integer from 0 to 10000, got ${JSON.stringify(raw)}`,
+      400,
+      `${name} is your final offer in basis points of the job amount; the arbiter's award must land between the buyer's offer and the seller's ask.`,
+    );
+  }
+  return value;
+}
+
+export type ArbiterSummary = {
+  arbiter: Address;
+  active: boolean;
+  feeBps: number;
+  metadataURI: string | null;
+  record: {
+    jobs: number;
+    disputes: number;
+    ruled: number;
+    lapsed: number;
+    openDisputes: number;
+    averageSellerAwardBps: number | null;
+  };
+};
+
 export type BlueprintAction =
   | 'create-and-fund'
   | 'approve'
@@ -91,8 +126,13 @@ export type BlueprintAction =
   | 'accept'
   | 'auto-accept'
   | 'dispute'
+  | 'respond'
   | 'resolve'
   | 'refund-expired'
+  | 'settle-lapsed'
+  | 'create-milestones'
+  | 'list-arbiter'
+  | 'delist-arbiter'
   | 'withdraw';
 
 /// Returned verbatim when a resolve request is malformed: the cheapest possible way
@@ -107,8 +147,13 @@ export const BLUEPRINT_ACTIONS: BlueprintAction[] = [
   'accept',
   'auto-accept',
   'dispute',
+  'respond',
   'resolve',
   'refund-expired',
+  'settle-lapsed',
+  'create-milestones',
+  'list-arbiter',
+  'delist-arbiter',
   'withdraw',
 ];
 
@@ -402,6 +447,64 @@ export class Beacon {
     };
   }
 
+  /// The arbiter market: the house arbiter plus every self-listed one, each with
+  /// a track record folded from the jobs that locked it in. Buyers pick from this
+  /// list with `create-and-fund {arbiter}`; sellers see the pick before delivering.
+  arbiters(): { house: ArbiterSummary; listed: ArbiterSummary[]; note: string } {
+    const { jobs, arbiters } = this.view;
+    const summarize = (
+      arbiter: Address,
+      listing: { active: boolean; feeBps: number; metadataURI: string } | null,
+    ): ArbiterSummary => {
+      const mine = jobs.filter(
+        (job) => job.terms?.arbiter.toLowerCase() === arbiter.toLowerCase(),
+      );
+      const ruled = mine.filter((job) => job.verdict !== undefined);
+      const awards = ruled.map((job) => job.verdict!.sellerAwardBps);
+      return {
+        arbiter,
+        active: listing?.active ?? true,
+        feeBps: listing?.feeBps ?? this.escrowState.arbitrationFeeBps,
+        metadataURI: listing?.metadataURI ?? null,
+        record: {
+          jobs: mine.length,
+          disputes: mine.filter((job) => job.dispute !== undefined).length,
+          ruled: ruled.length,
+          lapsed: mine.filter((job) => job.lapsed !== undefined).length,
+          openDisputes: mine.filter((job) => job.stage === 'disputed').length,
+          averageSellerAwardBps:
+            awards.length === 0
+              ? null
+              : Math.round(awards.reduce((sum, bps) => sum + bps, 0) / awards.length),
+        },
+      };
+    };
+    return {
+      house: summarize(this.escrowState.arbiter, null),
+      listed: arbiters
+        .map((record) => summarize(record.arbiter, record))
+        .sort((a, b) => Number(b.active) - Number(a.active) || b.record.ruled - a.record.ruled),
+      note: 'Every figure is folded from escrow events: JobTermsLocked says which arbiter a job locked, VerdictResolved and DisputeLapsed say how it ended. A lapsed dispute is one the arbiter never ruled on in time.',
+    };
+  }
+
+  /// A buyer may only name an arbiter that is listed right now; checking here turns
+  /// a revert the agent would pay for into an error that says what to do instead.
+  private listedArbiter(raw: string): Address {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(raw)) {
+      throw new BeaconError(`arbiter must be an address, got "${raw}"`, 400, 'GET /arbiters lists who you can choose.');
+    }
+    const listing = this.view.arbiters.find((record) => record.arbiter.toLowerCase() === raw.toLowerCase());
+    if (!listing?.active) {
+      throw new BeaconError(
+        `${raw} is not a listed arbiter`,
+        400,
+        'GET /arbiters lists who you can choose; omit "arbiter" to use the house arbiter.',
+      );
+    }
+    return listing.arbiter;
+  }
+
   reputation(address: Address): Reputation {
     return reputationFor(this.view, address, this.decimals);
   }
@@ -504,6 +607,9 @@ export class Beacon {
           termsHash: this.hash(params['termsHash'], params['terms'], 'terms'),
           deliveryDeadline: seconds(params['deliveryDeadline'], now + policy.deliveryDeadlineSeconds),
           reviewWindow: seconds(params['reviewWindow'], policy.reviewWindowSeconds),
+          ...(params['arbiter'] !== undefined
+            ? { arbiter: this.listedArbiter(String(params['arbiter'])) }
+            : {}),
           nextJobId,
           allowance,
         });
@@ -515,16 +621,36 @@ export class Beacon {
           ctx,
           big(required(params['jobId'], 'jobId')),
           this.hash(params['deliverableHash'], params['deliverable'], 'deliverable'),
+          String(params['uri'] ?? ''),
         );
       case 'accept':
         return blueprintAccept(ctx, big(required(params['jobId'], 'jobId')));
       case 'auto-accept':
         return blueprintAutoAccept(ctx, big(required(params['jobId'], 'jobId')));
-      case 'dispute':
+      case 'dispute': {
+        const jobId = big(required(params['jobId'], 'jobId'));
+        const job = this.ledger.job(jobId);
+        if (!job) {
+          throw new BeaconError(
+            `job ${jobId} is not in this beacon's index`,
+            404,
+            'GET /jobs lists the jobs this beacon has seen; the bond is 5% of the job amount, so the job must exist.',
+          );
+        }
         return blueprintDispute(
           ctx,
-          big(required(params['jobId'], 'jobId')),
+          jobId,
           this.hash(params['disputeHash'], params['evidence'], 'evidence'),
+          disputeBond(job.amount),
+          bpsParam(params['buyerOfferBps'], 'buyerOfferBps', 0),
+        );
+      }
+      case 'respond':
+        return blueprintRespond(
+          ctx,
+          big(required(params['jobId'], 'jobId')),
+          this.hash(params['responseHash'], params['response'], 'response'),
+          bpsParam(params['sellerAskBps'], 'sellerAskBps', 10_000),
         );
       case 'resolve': {
         const jobId = big(required(params['jobId'], 'jobId'));
@@ -555,6 +681,51 @@ export class Beacon {
       }
       case 'refund-expired':
         return blueprintRefundExpired(ctx, big(required(params['jobId'], 'jobId')));
+      case 'settle-lapsed':
+        return blueprintSettleLapsed(ctx, big(required(params['jobId'], 'jobId')));
+      case 'create-milestones': {
+        const plan = params['plan'] as MilestonePlan | undefined;
+        if (!plan || !Array.isArray(plan.milestones)) {
+          throw new BeaconError(
+            'create-milestones needs a "plan"',
+            400,
+            'POST {"plan":{"version":1,"title":"…","deliverableSpec":"…","buyer":"0x…","seller":"0x…","milestones":[{"title":"…","acceptanceCriteria":["…"],"amount":"100.00","deliveryDeadline":1730000000},…]}}. Each milestone becomes its own job.',
+          );
+        }
+        const problems = planProblems(plan, Math.floor(Date.now() / 1000));
+        if (problems.length > 0) {
+          throw new BeaconError(`the plan would revert: ${problems.join('; ')}`, 400, 'Fix each listed problem; deadlines must strictly increase.');
+        }
+        const policy = policyById(String(params['policy'] ?? 'standard'));
+        const nextJobId = (await this.reader.readContract({
+          address: this.config.escrow,
+          abi: tempexEscrowAbi,
+          functionName: 'nextJobId',
+        })) as bigint;
+        return blueprintCreateMilestones(ctx, {
+          ...milestoneArgs(plan),
+          seller: address(plan.seller, 'plan.seller'),
+          reviewWindow: seconds(params['reviewWindow'], policy.reviewWindowSeconds),
+          arbiter:
+            params['arbiter'] !== undefined
+              ? this.listedArbiter(String(params['arbiter']))
+              : (`0x${'0'.repeat(40)}` as Address),
+          nextJobId,
+        });
+      }
+      case 'list-arbiter': {
+        const feeBps = Number(required(params['feeBps'], 'feeBps'));
+        if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > this.escrowState.maxArbitrationFeeBps) {
+          throw new BeaconError(
+            `feeBps must be an integer from 0 to ${this.escrowState.maxArbitrationFeeBps}`,
+            400,
+            'POST {"feeBps":250,"metadataURI":"https://you.example/arbiter.json"}; the URI should describe your model, rules and contact.',
+          );
+        }
+        return blueprintListArbiter(ctx, feeBps, String(params['metadataURI'] ?? ''));
+      }
+      case 'delist-arbiter':
+        return blueprintDelistArbiter(ctx);
       case 'withdraw':
         return blueprintWithdraw(ctx);
     }

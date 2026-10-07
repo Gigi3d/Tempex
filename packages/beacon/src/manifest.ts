@@ -37,6 +37,7 @@ export const ROUTES: Route[] = [
   { path: '/jobs/:jobId', method: 'GET', summary: 'One job, with the block and transaction behind each of its state changes.', paid: false },
   { path: '/proof/:jobId', method: 'GET', summary: 'The receipts for one job plus the exact calls needed to re-derive them.', paid: false },
   { path: '/reputation/:address', method: 'GET', summary: 'An itemised, recomputable reputation score for any address.', paid: false },
+  { path: '/arbiters', method: 'GET', summary: 'The arbiter market: the house arbiter and every listed one, with fees and a track record folded from escrow events.', paid: false },
   { path: '/policy', method: 'GET', summary: 'Deal-policy templates: deadlines, review windows, evidence requirements, expected verdict bands.', paid: false },
   { path: '/onboard', method: 'GET', summary: 'What it takes to start trading, per role, with the zero-balance claim stated and justified.', paid: false },
   { path: '/ready', method: 'GET', summary: 'Can this address trade right now? Reads nonce, balance, allowance, and escrow credit.', paid: false },
@@ -170,7 +171,7 @@ export const TOOLS: ToolDescriptor[] = [
       properties: {
         action: {
           type: 'string',
-          enum: ['create-and-fund', 'approve', 'deliver', 'accept', 'auto-accept', 'dispute', 'resolve', 'refund-expired', 'withdraw'],
+          enum: ['create-and-fund', 'approve', 'deliver', 'accept', 'auto-accept', 'dispute', 'respond', 'resolve', 'refund-expired', 'settle-lapsed', 'create-milestones', 'list-arbiter', 'delist-arbiter', 'withdraw'],
         },
         params: { type: 'object', description: 'Action-specific arguments; see the decoded call in the response.' },
         sponsored: { type: 'boolean', description: 'Default true: route the fee to Tempo’s hosted fee payer.' },
@@ -391,10 +392,10 @@ export function buildManifest(params: ManifestParams): Manifest {
         escrowIsUpgradeable: false,
         ownerCanTakeJobPrincipal: false,
         ownerPowers: [
-          'setArbiter(address) — replace the referee; already-signed verdicts from the old arbiter stop resolving',
+          'setArbiter(address) — choose the default referee for jobs created afterwards; every existing job keeps the arbiter it locked at creation',
           'setTreasury(address) — redirect future platform fees',
-          'setFees(uint16,uint16) — within the on-chain caps only',
-          'transferOwnership(address) / renounceOwnership()',
+          'setFees(uint16,uint16) — within the on-chain caps, for jobs created afterwards only',
+          'transferOwnership(address) + acceptOwnership() (two-step) / renounceOwnership()',
         ],
         withdrawalMemo: escrow.withdrawMemo,
       },
@@ -436,7 +437,7 @@ export function buildManifest(params: ManifestParams): Manifest {
       },
       {
         claim: 'The referee cannot be forged, and cannot rule outside 0-10000 bps.',
-        check: `resolve() recovers the EIP-712 signer and requires it to equal arbiter(); call ${selectors['arbiter']} and compare against every VerdictResolved event's verdictDigest.`,
+        check: `resolve() recovers the EIP-712 signer and requires it to equal the arbiter the job locked at creation; read it from getJob(jobId) or the job's JobTermsLocked event and compare against its VerdictResolved verdictDigest.`,
       },
       {
         claim: 'The owner cannot take job principal.',

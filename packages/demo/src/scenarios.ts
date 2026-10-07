@@ -50,6 +50,13 @@ export type Scenario = {
   deliverable: string;
   artifacts: EvidenceArtifact[];
   claim: string;
+  /// What the seller says in its response to the dispute. Defaults to a plain
+  /// statement that the attached deliverable is the work as delivered.
+  sellerStatement?: string;
+  /// Final offers pinned on chain: the buyer's at dispute, the seller's in its
+  /// response. The award must land between them. Defaults: 0 and 10000.
+  buyerOfferBps?: number;
+  sellerAskBps?: number;
   expect: ScenarioExpectation;
   /// Only scenarios marked live are run against the chain; the rest are analysed
   /// offline, which needs no keys and costs nothing.
@@ -116,6 +123,11 @@ const underdelivered: Scenario = {
     center: 3_250,
     band: [2_050, 4_450],
   },
+  // The buyer concedes a quarter was earned; the seller holds out for half. The
+  // rule band's centre, 3250, sits inside both, so the offers bound the arbiter
+  // without moving the ruling.
+  buyerOfferBps: 2_500,
+  sellerAskBps: 5_000,
   live: true,
   drill: [-8_000, 0, 3_100, 5_000, 10_000],
 };
@@ -334,5 +346,15 @@ export function jobFor(
     deliverableHash: hashText(scenario.deliverable),
     disputeHash: disputeHashOf(input.evidenceCase),
     verdictHash: ZERO_HASH,
+
+    disputedAt: 0,
+    respondedAt: 0,
+    responseHash: ZERO_HASH,
+    arbiter: `0x${'0'.repeat(40)}`,
+    platformFeeBps: 0,
+    arbitrationFeeBps: 0,
+    protocolCutBps: 0,
+    buyerOfferBps: 0,
+    sellerAskBps: 10_000,
   };
 }

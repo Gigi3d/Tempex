@@ -4,6 +4,7 @@ import {
   type EvidenceBundle,
   type Job,
   type JobTerms,
+  type SellerResponse,
 } from '@tempex/sdk';
 
 /// The arbiter's job is to split a disputed remainder, never more than the job is
@@ -141,8 +142,14 @@ export type RuleSignals = {
   admitted: string[];
   integrity: {
     termsHashMatches: boolean;
+    /// the deliverable text being scored hashes to the on-chain delivery commitment
     deliverableHashMatches: boolean;
   };
+  /// Whose copy of the deliverable was scored. Only a copy whose content hashes to
+  /// the on-chain commitment counts as verified; the buyer's is preferred when both do.
+  scoredCopy: 'uri' | 'buyer' | 'seller' | 'unverified';
+  /// The seller pinned a response to the dispute.
+  sellerResponded: boolean;
   /// Does the claim point at a gap the artifact actually has?
   corroboration: 'grounded' | 'contradicted' | 'unknown';
   weakest: CriterionScore | null;
@@ -184,8 +191,11 @@ export function analyze(input: {
   job: Job;
   terms: JobTerms;
   bundle: EvidenceBundle;
+  response?: SellerResponse;
+  /// The work as fetched from the URI the seller recorded at delivery, if any.
+  fetched?: { uri: string; text: string };
 }): RuleAnalysis {
-  const { jobId, job, terms, bundle } = input;
+  const { jobId, job, terms, bundle, response, fetched } = input;
   const blocking: string[] = [];
   const flags: string[] = [];
 
@@ -212,15 +222,50 @@ export function analyze(input: {
     blocking.push('terms carry no acceptance criteria to rule on');
   }
 
-  const deliverableHashMatches = bundle.deliverable.contentHash === job.deliverableHash;
-  if (!deliverableHashMatches) {
+  // ---- which copy of the deliverable to score ----
+  // The chain holds only the deliverable's hash. A declared contentHash proves
+  // nothing on its own, so a copy counts only if its content reproduces the
+  // on-chain commitment. Both parties may hand one in; the buyer's is preferred
+  // when it verifies, the seller's is the fallback, so neither side can win by
+  // describing work the other side never saw.
+  const verifies = (content: string | undefined): content is string =>
+    content !== undefined && hashText(content) === job.deliverableHash;
+  const buyerCopy = bundle.deliverable.content;
+  const sellerCopy = response?.deliverable.content;
+  let scoredCopy: RuleSignals['scoredCopy'] = 'unverified';
+  let deliverableText = buyerCopy;
+  if (verifies(fetched?.text)) {
+    // The work itself, read from where the seller said it lives. Neither party
+    // supplied this copy, so it outranks both.
+    scoredCopy = 'uri';
+    deliverableText = fetched.text;
+    if (buyerCopy !== undefined && !verifies(buyerCopy)) {
+      flags.push(
+        "the buyer's copy of the deliverable does not match the work at the delivery URI; scored the work itself",
+      );
+    }
+  } else if (verifies(buyerCopy)) {
+    scoredCopy = 'buyer';
+  } else if (verifies(sellerCopy)) {
+    scoredCopy = 'seller';
+    deliverableText = sellerCopy;
     flags.push(
-      `deliverable contentHash ${bundle.deliverable.contentHash} does not match the on-chain delivery ${job.deliverableHash}`,
+      buyerCopy === undefined
+        ? "the buyer's bundle carries no deliverable text; scored the seller's copy, which hashes to the on-chain delivery"
+        : "the buyer's copy of the deliverable does not hash to the on-chain delivery; scored the seller's copy, which does",
     );
+  } else {
+    flags.push(
+      `no copy of the deliverable hashes to the on-chain delivery ${job.deliverableHash}; the text before the arbiter is unverified`,
+    );
+  }
+  const deliverableHashMatches = scoredCopy !== 'unverified';
+  if (response === undefined && job.disputedAt > 0) {
+    flags.push('the seller did not respond to the dispute within its response window');
   }
 
   // ---- coverage: how much of the agreed criteria the artifact speaks to ----
-  const textPieces = [bundle.deliverable.content ?? '', ...bundle.artifacts.map((a) => a.content ?? '')]
+  const textPieces = [deliverableText ?? '', ...bundle.artifacts.map((a) => a.content ?? '')]
     .map((piece) => piece.trim())
     .filter((piece) => piece.length > 0);
   // Each piece is classified on its own so a negation never reaches across a
@@ -317,6 +362,8 @@ export function analyze(input: {
     evidenceStrength,
     admitted,
     integrity: { termsHashMatches, deliverableHashMatches },
+    scoredCopy,
+    sellerResponded: response !== undefined,
     corroboration,
     weakest,
   };

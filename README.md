@@ -6,8 +6,8 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 25/25 Forge tests, 10,362 hand-written lines, one Solidity contract, no proxies
-- Live deployment: `0x7579736636dd67A8811A8A2ef95c44560fe6ec27` ([explorer](https://explore.testnet.tempo.xyz/address/0x7579736636dd67A8811A8A2ef95c44560fe6ec27)), 5 jobs funded, 3 settled by verdict
+- 61/61 Forge tests (one fuzzed), 10,362 hand-written lines, one Solidity contract, no proxies
+- Live deployment: `0x001c8C3391E591C9CBDFdFE4227e585b86041157` ([explorer](https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157)), block 38,497,375, deployed and verified by `pnpm deploy:escrow`. It supersedes `0x7579…ec27`, whose 5 jobs and 3 verdicts remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
 
@@ -17,7 +17,7 @@ Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moder
 |---|---|
 | **Custody** | Funds are provably locked in one escrow contract — never held by a trusted party. |
 | **Judgement** | Qualitative delivery is scored ("4 of 8 criteria met"), not reduced to yes/no. |
-| **Boundedness** | The LLM judge has no unilateral power: its proposal is clamped to a rule-derived band, and the clamp runs on chain. |
+| **Boundedness** | The judge has no unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the arbiter clamps the model's proposal into a rule-derived band inside that range, and the receipt lets anyone re-derive the band. |
 | **Verifiability** | A stranger can reconstruct exactly why the money moved: evidence hash, verdict digest, EIP-712 signature, JSON receipt per run. |
 
 ## How a deal plays out
@@ -41,7 +41,19 @@ buyer                TempexEscrow                seller                arbiter
   |<----- refund / payout --|                       |                     |
 ```
 
-`resolve`, `refundExpired`, and `autoAccept` are permissionless — no stuck money, no admin god-mode over funds.
+**The seller is heard before any verdict.** Once work is delivered, the buyer either pays (`accept`, or `autoAccept` after the review window) or opens a dispute. A dispute emits `SellerResponseRequested` to the seller with a deadline 7 days out (`SELLER_RESPONSE_WINDOW`). Inside that window the seller calls `respond(jobId, responseHash)`, pinning its own evidence bundle: its copy of the deliverable and its account of why the work meets the terms. `resolve` reverts until the seller has responded or the window has closed, and it rejects any verdict issued before that moment. The arbiter scores whichever copy of the deliverable actually hashes to the on-chain delivery, so neither side can win by describing work the other never saw.
+
+**Each job locks its referee and its fees.** `createJob` uses the house arbiter; `createJobWithArbiter` names any arbiter that listed itself with `listArbiter(feeBps, metadataURI)`. Either way the job records its arbiter, its platform and arbitration fee rates, and the protocol's cut of the arbitration fee (`JobTermsLocked`). Later calls to `setArbiter`, `setFees`, `setProtocolCut`, or an arbiter re-pricing or delisting itself, reach new jobs only. A listed arbiter earns its fee minus the protocol cut (20% by default, capped at 50%); the house arbiter's fee goes to the treasury. `GET /arbiters` on the beacon lists the market with each arbiter's track record, and `pnpm arbiter list --fee <bps>` puts a key on it.
+
+**Bigger deals pay in milestones.** `createMilestones(seller, planHash, milestones[], reviewWindow, arbiter)` opens one job per tranche, each with its own terms, amount and strictly later deadline, all linked on chain by the plan's hash (`milestonePlanOf`). Each tranche is a full job with its own deliver, accept and dispute, so a dispute only puts that tranche at stake, and its bond is 5% of the tranche, not the deal. The SDK's `createAndFundMilestones(plan, …)` approves the total, creates the tranches and funds each one in a single atomic Tempo transaction; each tranche's terms document names its plan and position, so the arbiter rules on that tranche's criteria alone.
+
+**The arbiter reads the real work.** `deliver(jobId, hash, uri)` can record where the delivered work lives (`ipfs://`, `ar://`, `https://` or a `data:` URI for small text). When a dispute is ruled, the arbiter fetches it and uses it only if its bytes hash to the on-chain deliverable hash; that copy outranks both parties' copies, so neither side can win by describing work the other never saw. Gateways are configurable (`TEMPEX_IPFS_GATEWAY`, `TEMPEX_ARWEAVE_GATEWAY`) and untrusted, since the hash check decides.
+
+**Disputing costs the buyer a bond, and the loser pays.** Opening a dispute pulls a bond of 5% of the job amount (`DISPUTE_BOND_BPS`). Each side bears the arbitration fee in proportion to the share it lost; the buyer's part comes out of its bond first, and the rest of the bond follows the award. A buyer who disputes work that was delivered pays the fee and forfeits the rest of its bond to the seller; a buyer who was right gets its bond back. `disputeSettlement(amount, bond, fee, awardBps)` is public, so anyone can compute a ruling's payout before it lands. If the arbiter never rules, the bond goes back in full.
+
+**A silent arbiter cannot lock funds.** If no verdict lands within `ARBITRATION_WINDOW` (7 days after the seller responds or its window closes), anyone can call `settleLapsed`, which splits the job evenly and pays no arbitration fee. A verdict must also cite the exact evidence the buyer pinned (`evidenceHash == disputeHash`), the review window is capped at 30 days, and ownership transfers in two steps.
+
+`resolve`, `refundExpired`, and `autoAccept` are permissionless, as is `settleLapsed` — no stuck money, no admin god-mode over funds.
 
 ## Repository layout
 
@@ -76,7 +88,7 @@ before you generate a single key. Keys are only ever needed to *act*.
 
 ## The guardrail, in one paragraph
 
-The rule engine scores the evidence and signs a band (e.g. center 3,250 bps, band 2,050–4,450). The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys.
+Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own: the rule engine scores the evidence and derives a band (e.g. center 3,250 bps, band 2,050–4,450), narrowed to the parties' offers. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
 
 ## The Beacon — how an agent adopts Tempex with no account and no balance
 

@@ -92,7 +92,12 @@ export {
   blueprintCreateAndFund,
   blueprintDeliver,
   blueprintDispute,
+  blueprintRespond,
   blueprintRefundExpired,
+  blueprintSettleLapsed,
+  blueprintListArbiter,
+  blueprintCreateMilestones,
+  blueprintDelistArbiter,
   blueprintResolve,
   blueprintWithdraw,
 } from './blueprint.js';

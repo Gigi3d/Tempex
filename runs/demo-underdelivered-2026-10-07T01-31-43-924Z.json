@@ -1,0 +1,960 @@
+{
+  "tempex": "demo-receipt/1",
+  "scenario": "underdelivered",
+  "title": "Localization sprint, partly delivered",
+  "premise": "A buyer paid 25 alphaUSD for a French localization. The seller delivered a handoff note that says, in its own words, which parts were not done.",
+  "at": "2026-10-07T01:31:43.924Z",
+  "chainId": 42431,
+  "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+  "sponsored": false,
+  "ran": [
+    "case",
+    "approve",
+    "open",
+    "deliver",
+    "dispute",
+    "rule",
+    "relay",
+    "settle"
+  ],
+  "skipped": [],
+  "ok": true,
+  "failures": [],
+  "expectations": [
+    {
+      "check": "job amount",
+      "expected": "25000000",
+      "actual": "25000000",
+      "passed": true
+    },
+    {
+      "check": "job termsHash",
+      "expected": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+      "actual": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+      "passed": true
+    },
+    {
+      "check": "job arbiter",
+      "expected": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+      "actual": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+      "passed": true
+    },
+    {
+      "check": "deliverable URI",
+      "expected": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku",
+      "actual": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku",
+      "passed": true
+    },
+    {
+      "check": "job deliverableHash",
+      "expected": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+      "actual": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+      "passed": true
+    },
+    {
+      "check": "job disputeHash",
+      "expected": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "actual": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "passed": true
+    },
+    {
+      "check": "disputeHash from disk",
+      "expected": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "actual": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "passed": true
+    },
+    {
+      "check": "job responseHash",
+      "expected": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
+      "actual": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
+      "passed": true
+    },
+    {
+      "check": "buyer offer",
+      "expected": "2500",
+      "actual": "2500",
+      "passed": true
+    },
+    {
+      "check": "seller ask",
+      "expected": "5000",
+      "actual": "5000",
+      "passed": true
+    },
+    {
+      "check": "coverage",
+      "expected": "0.375000",
+      "actual": "0.375000",
+      "passed": true
+    },
+    {
+      "check": "claim reading",
+      "expected": "grounded",
+      "actual": "grounded",
+      "passed": true
+    },
+    {
+      "check": "admitted terms",
+      "expected": "date,european,format,glossary,price,supplied",
+      "actual": "date,european,format,glossary,price,supplied",
+      "passed": true
+    },
+    {
+      "check": "band",
+      "expected": "2050-4450",
+      "actual": "2050-4450",
+      "passed": true
+    },
+    {
+      "check": "band centre",
+      "expected": "3250",
+      "actual": "3250",
+      "passed": true
+    },
+    {
+      "check": "certified",
+      "expected": "true",
+      "actual": "true",
+      "passed": true
+    },
+    {
+      "check": "escrow digest",
+      "expected": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+      "actual": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+      "passed": true
+    },
+    {
+      "check": "escrow awardBps",
+      "expected": "3250",
+      "actual": "3250",
+      "passed": true
+    },
+    {
+      "check": "escrow sellerAmount",
+      "expected": "8140937",
+      "actual": "8140937",
+      "passed": true
+    },
+    {
+      "check": "escrow buyerAmount",
+      "expected": "17609063",
+      "actual": "17609063",
+      "passed": true
+    },
+    {
+      "check": "escrow arbitrationFee",
+      "expected": "500000",
+      "actual": "500000",
+      "passed": true
+    },
+    {
+      "check": "job verdictHash",
+      "expected": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+      "actual": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+      "passed": true
+    },
+    {
+      "check": "seller payout",
+      "expected": "8140937",
+      "actual": "8140937",
+      "passed": true
+    },
+    {
+      "check": "seller wallet delta",
+      "expected": "8140908",
+      "actual": "8140908",
+      "passed": true
+    },
+    {
+      "check": "buyer payout",
+      "expected": "17609063",
+      "actual": "17609063",
+      "passed": true
+    },
+    {
+      "check": "buyer wallet delta",
+      "expected": "17609034",
+      "actual": "17609034",
+      "passed": true
+    },
+    {
+      "check": "arbiter payout",
+      "expected": "400000",
+      "actual": "400000",
+      "passed": true
+    },
+    {
+      "check": "arbiter wallet delta",
+      "expected": "399971",
+      "actual": "399971",
+      "passed": true
+    }
+  ],
+  "parties": {
+    "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+    "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64"
+  },
+  "session": {
+    "tempex": "demo-session/1",
+    "scenario": "underdelivered",
+    "title": "Localization sprint, partly delivered",
+    "session": "underdelivered",
+    "startedAt": "2026-10-07T01:31:31.815Z",
+    "updatedAt": "2026-10-07T01:31:43.923Z",
+    "submittedAt": "2026-10-07T01:31:31.815Z",
+    "predictedJobId": "1",
+    "jobId": "1",
+    "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+    "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+    "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+    "amount": "25000000",
+    "stages": {
+      "case": {
+        "predictedJobId": "1",
+        "jobId": "",
+        "submittedAt": "2026-10-07T01:31:31.815Z",
+        "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+        "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+        "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+        "amount": "25000000",
+        "termsPath": "/home/user/tempex/evidence/job-1.terms.json",
+        "bundlePath": "/home/user/tempex/evidence/job-1.evidence.json"
+      },
+      "approve": {
+        "hash": "0xb379a7949bffddbed537e917ff91e0533ceacc97718bc322e0f740473ae47b1c",
+        "amount": "25000000"
+      },
+      "open": {
+        "hash": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+        "jobId": "1",
+        "deliveryDeadline": "1791340293",
+        "reviewWindow": "3600"
+      },
+      "deliver": {
+        "hash": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+        "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e"
+      },
+      "dispute": {
+        "hash": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+        "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+        "rederived": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+        "response": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+        "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081"
+      },
+      "rule": {
+        "digest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+        "signature": "0x879a32d16a00918a78989aec72d2003ffd9b9c7abc8047b6db9c3f28681ed7d4592a18554a2ab6ee29e5f902777912cf9e4eadb9e07482c2281a4a05fdad26811c",
+        "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "certified": "true",
+        "engine": "rules",
+        "model": "tempex-rules/1",
+        "sellerAwardBps": "3250",
+        "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+        "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+        "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so the ruling is a function of the evidence text alone and can be re-derived by anyone holding the same files. The delivered artifact covers 1 of 4 acceptance criteria, mean term coverage 0.38 (\"Checkout strings translated to French\" 0.50, \"Prices and dates in European formats\" 0.00, \"Supplied glossary terms preserved\" 0.00, \"Order confirmation email localized\" 1.00). The weakest criterion is \"Prices and dates in European formats\" at 0.00; its missing terms are price, date, european, format. 1 of 1 declared artifacts verify against their own content hashes. The artifact raises date, european, format, glossary, price, supplied only to say they are not delivered; those terms are read as a gap, not counted as coverage. The claim names terms the deliverable under-delivers, so the complaint is corroborated by the artifact itself. Integrity: the delivered artifact hashes to the hash committed on chain, and the terms hash matches the job. Objective band 2500-4450 bps; ruling 3250 bps of the disputed remainder after the arbitration fee, i.e. 32.5% to the seller of \"Localization sprint, partly delivered\" (job 1).",
+        "issuedAt": "1791336698",
+        "validUntil": "1791423099",
+        "amount": "25000000",
+        "bond": "1250000",
+        "bondToSeller": "353437",
+        "arbitrationFee": "500000",
+        "arbitrationFeeBps": "200",
+        "sellerAmount": "8140937",
+        "buyerAmount": "17609063",
+        "band": "2050-4450"
+      },
+      "relay": {
+        "hash": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+        "relayer": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
+        "digest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+        "sellerAmount": "8140937",
+        "buyerAmount": "17609063",
+        "arbitrationFee": "500000",
+        "verdictHash": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+      },
+      "settle": {
+        "at": "2026-10-07T01:31:43.923Z"
+      }
+    }
+  },
+  "sessionPath": "/home/user/tempex/runs/demo-underdelivered.json",
+  "corpus": {
+    "coverage": 0.375,
+    "corroboration": "grounded",
+    "admitted": [
+      "date",
+      "european",
+      "format",
+      "glossary",
+      "price",
+      "supplied"
+    ],
+    "center": 3250,
+    "band": [
+      2050,
+      4450
+    ]
+  },
+  "transcript": [
+    {
+      "stage": "setup",
+      "label": "scenario",
+      "value": "underdelivered — Localization sprint, partly delivered"
+    },
+    {
+      "stage": "setup",
+      "label": "premise",
+      "value": "A buyer paid 25 alphaUSD for a French localization. The seller delivered a"
+    },
+    {
+      "stage": "setup",
+      "label": "premise",
+      "value": "handoff note that says, in its own words, which parts were not done."
+    },
+    {
+      "stage": "setup",
+      "label": "chain",
+      "value": "42431 Moderato · escrow 0x001c8C3391E591C9CBDFdFE4227e585b86041157"
+    },
+    {
+      "stage": "setup",
+      "label": "explorer",
+      "value": "https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157"
+    },
+    {
+      "stage": "setup",
+      "label": "buyer",
+      "value": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 · 1000000 alphaUSD"
+    },
+    {
+      "stage": "setup",
+      "label": "seller",
+      "value": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64 · 1000000 alphaUSD"
+    },
+    {
+      "stage": "setup",
+      "label": "arbiter",
+      "value": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8 · 200 bps arbitration fee"
+    },
+    {
+      "stage": "setup",
+      "label": "relayer",
+      "value": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5 — a fourth key, so the relay below"
+    },
+    {
+      "stage": "setup",
+      "label": "relayer",
+      "value": "is not self-signed"
+    },
+    {
+      "stage": "setup",
+      "label": "fees",
+      "value": "each role pays its own fee in alphaUSD — no gas token exists on this chain"
+    },
+    {
+      "stage": "setup",
+      "label": "session",
+      "value": "/home/user/tempex/runs/demo-underdelivered.json"
+    },
+    {
+      "stage": "setup",
+      "label": "stages",
+      "value": "case → settle of case → approve → open → deliver → dispute → rule → relay →"
+    },
+    {
+      "stage": "setup",
+      "label": "stages",
+      "value": "settle"
+    },
+    {
+      "stage": "case",
+      "label": "point",
+      "value": "pin the case — terms, deliverable and claim are hashed before anything is"
+    },
+    {
+      "stage": "case",
+      "label": "",
+      "value": "written to the chain; the same files go to the arbiter"
+    },
+    {
+      "stage": "case",
+      "label": "buyer",
+      "value": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4"
+    },
+    {
+      "stage": "case",
+      "label": "seller",
+      "value": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64"
+    },
+    {
+      "stage": "case",
+      "label": "predicted",
+      "value": "job 1 — read from nextJobId() before the batch, because batched calls cannot see each other's return values"
+    },
+    {
+      "stage": "case",
+      "label": "terms",
+      "value": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0  /home/user/tempex/evidence/job-1.terms.json"
+    },
+    {
+      "stage": "case",
+      "label": "deliverable",
+      "value": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e  /home/user/tempex/evidence/job-1.evidence.json"
+    },
+    {
+      "stage": "case",
+      "label": "bundle",
+      "value": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1 — what the buyer will pin at dispute time"
+    },
+    {
+      "stage": "case",
+      "label": "corpus",
+      "value": "the offline rehearsal already knows this case: coverage 0.375, claim grounded, band 2050-4450 bps. The live run below has to reproduce it."
+    },
+    {
+      "stage": "approve",
+      "label": "point",
+      "value": "buyer approves the escrow — the escrow pulls the money later, so the"
+    },
+    {
+      "stage": "approve",
+      "label": "",
+      "value": "allowance comes first — one approval covers every job this buyer opens"
+    },
+    {
+      "stage": "approve",
+      "label": "amount",
+      "value": "25 alphaUSD — the escrow pulls this with transferFromWithMemo, so the allowance comes first"
+    },
+    {
+      "stage": "approve",
+      "label": "tx",
+      "value": "0xb379a7949bffddbed537e917ff91e0533ceacc97718bc322e0f740473ae47b1c",
+      "tx": "0xb379a7949bffddbed537e917ff91e0533ceacc97718bc322e0f740473ae47b1c",
+      "link": "https://explore.testnet.tempo.xyz/tx/0xb379a7949bffddbed537e917ff91e0533ceacc97718bc322e0f740473ae47b1c"
+    },
+    {
+      "stage": "approve",
+      "label": "fee",
+      "value": "the sender paid 0.000317 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "open",
+      "label": "point",
+      "value": "create and fund in one transaction — two calls in a single Tempo transaction:"
+    },
+    {
+      "stage": "open",
+      "label": "",
+      "value": "a job can never exist without the money behind it"
+    },
+    {
+      "stage": "open",
+      "label": "listed",
+      "value": "0x30c8756787b1611cf02afa11b26f6faba7240368832dab447cb73ba6c0e99d1d",
+      "tx": "0x30c8756787b1611cf02afa11b26f6faba7240368832dab447cb73ba6c0e99d1d",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x30c8756787b1611cf02afa11b26f6faba7240368832dab447cb73ba6c0e99d1d"
+    },
+    {
+      "stage": "open",
+      "label": "arbiter",
+      "value": "0x3425173FAB110f780482af62Bf603b9A7D023905 — listed on the market at 200 bps, named for this job by the buyer"
+    },
+    {
+      "stage": "open",
+      "label": "tx",
+      "value": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+      "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+      "link": "https://explore.testnet.tempo.xyz/tx/0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+    },
+    {
+      "stage": "open",
+      "label": "fee",
+      "value": "the sender paid 0.001102 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "open",
+      "label": "job",
+      "value": "1 — Funded, 25 escrowed"
+    },
+    {
+      "stage": "open",
+      "label": "memo",
+      "value": "bytes32(1) on the TIP-20 transfer — the stablecoin payment names the job itself"
+    },
+    {
+      "stage": "deliver",
+      "label": "point",
+      "value": "seller delivers — only the hash is committed on chain; the artifact itself"
+    },
+    {
+      "stage": "deliver",
+      "label": "",
+      "value": "stays off chain and is handed to the arbiter with the claim"
+    },
+    {
+      "stage": "deliver",
+      "label": "tx",
+      "value": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+      "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+      "link": "https://explore.testnet.tempo.xyz/tx/0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc"
+    },
+    {
+      "stage": "deliver",
+      "label": "located",
+      "value": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiB… — the arbiter reads the work from here"
+    },
+    {
+      "stage": "deliver",
+      "label": "fee",
+      "value": "the sender paid 0.001994 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "deliver",
+      "label": "committed",
+      "value": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e — the hash only; the artifact stays off chain"
+    },
+    {
+      "stage": "dispute",
+      "label": "point",
+      "value": "buyer disputes — the bundle hash is pinned here, so the arbiter is later"
+    },
+    {
+      "stage": "dispute",
+      "label": "",
+      "value": "forced to rule on exactly these bytes"
+    },
+    {
+      "stage": "dispute",
+      "label": "claim",
+      "value": "\"The delivery is incomplete: the prices and dates are in US formats, the supplied glossary is missing, and the checkout strings were never translated.\""
+    },
+    {
+      "stage": "dispute",
+      "label": "tx",
+      "value": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+      "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+      "link": "https://explore.testnet.tempo.xyz/tx/0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7"
+    },
+    {
+      "stage": "dispute",
+      "label": "fee",
+      "value": "the sender paid 0.000349 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "dispute",
+      "label": "pinned",
+      "value": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1 — re-derived from the files on disk, so the arbiter cannot rule on anything else"
+    },
+    {
+      "stage": "dispute",
+      "label": "notified",
+      "value": "seller 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 has until 2026-10-14T01:31:37.000Z to respond"
+    },
+    {
+      "stage": "dispute",
+      "label": "response",
+      "value": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+      "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f"
+    },
+    {
+      "stage": "dispute",
+      "label": "fee",
+      "value": "the sender paid 0.000177 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "dispute",
+      "label": "offers",
+      "value": "buyer concedes 2500 bps, seller asks 5000 bps — the escrow will reject any award outside that range"
+    },
+    {
+      "stage": "rule",
+      "label": "point",
+      "value": "arbiter rules — the text signals fix a band first, the ruling is derived,"
+    },
+    {
+      "stage": "rule",
+      "label": "",
+      "value": "then certified against the deployed escrow before anything is broadcast"
+    },
+    {
+      "stage": "rule",
+      "label": "signer",
+      "value": "0x3425173FAB110f780482af62Bf603b9A7D023905 — the arbiter's own key"
+    },
+    {
+      "stage": "rule",
+      "label": "fee schedule",
+      "value": "200 bps arbitration fee locked by job 1 at creation (the corpus assumes 200); 20% of it to the treasury"
+    },
+    {
+      "stage": "rule",
+      "label": "·",
+      "value": "read the delivered work from data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2F (201 bytes, hash matches)"
+    },
+    {
+      "stage": "rule",
+      "label": "·",
+      "value": "objective band 2500-4450 bps (centre 3250); coverage 0.38, evidence strength 1.00, claim grounded"
+    },
+    {
+      "stage": "rule",
+      "label": "·",
+      "value": "digest 0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72 ==  on-chain 0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+    },
+    {
+      "stage": "rule",
+      "label": "·",
+      "value": "signature recovers to 0x3425173FAB110f780482af62Bf603b9A7D023905 (registered arbiter)"
+    },
+    {
+      "stage": "rule",
+      "label": "engine",
+      "value": "tempex-rules/1 — deterministic, no model in the loop"
+    },
+    {
+      "stage": "rule",
+      "label": "signals",
+      "value": "coverage 0.375 · evidence 1.00 · claim grounded"
+    },
+    {
+      "stage": "rule",
+      "label": "admitted",
+      "value": "date, european, format, glossary, price, supplied — named only to say they are absent"
+    },
+    {
+      "stage": "rule",
+      "label": "rationale",
+      "value": "Ruled by the deterministic rule arbiter: no language model was configured, so the ruling is a function of the evidence text alone and can be re-derived by anyone holding the same files. The delivered artifact covers 1 of 4 acceptance criteria, mean term coverage 0.38 (\"Checkout strings translated to French\" 0.50, \"Prices and dates in European formats\" 0.00, \"Supplied glossary terms preserved\" 0.00, \"Order confirmation email localized\" 1.00). The weakest criterion is \"Prices and dates in European formats\" at 0.00; its missing terms are price, date, european, format. 1 of 1 declared artifacts verify against their own content hashes. The artifact raises date, european, format, glossary, price, supplied only to say they are not delivered; those terms are read as a gap, not counted as coverage. The claim names terms the deliverable under-delivers, so the complaint is corroborated by the artifact itself. Integrity: the delivered artifact hashes to the hash committed on chain, and the terms hash matches the job. Objective band 2500-4450 bps; ruling 3250 bps of the disputed remainder after the arbitration fee, i.e. 32.5% to the seller of \"Localization sprint, partly delivered\" (job 1)."
+    },
+    {
+      "stage": "rule",
+      "label": "band",
+      "value": "2050-4450 bps around 3250"
+    },
+    {
+      "stage": "rule",
+      "label": "ruling",
+      "value": "3250 bps to the seller (8.140937), 17.609063 back to the buyer (bond of 1.25 included: 0.353437 forfeited to the seller)"
+    },
+    {
+      "stage": "rule",
+      "label": "arbitration fee",
+      "value": "0.5 — 200 bps of 25, borne by each side in proportion to what it lost"
+    },
+    {
+      "stage": "rule",
+      "label": "rationaleHash",
+      "value": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e — the text stays off chain"
+    },
+    {
+      "stage": "rule",
+      "label": "evidenceHash",
+      "value": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1 — the hash pinned at dispute time"
+    },
+    {
+      "stage": "rule",
+      "label": "digest",
+      "value": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72 == the deployed escrow"
+    },
+    {
+      "stage": "rule",
+      "label": "recovers to",
+      "value": "0x3425173FAB110f780482af62Bf603b9A7D023905 — the registered arbiter"
+    },
+    {
+      "stage": "rule",
+      "label": "signature",
+      "value": "0x879a32d16a00918a78989aec72d2003ffd9b9c7abc8047b6db9c3f28681ed7d4592a18554a2ab6ee29e5f902777912cf9e4eadb9e07482c2281a4a05fdad26811c"
+    },
+    {
+      "stage": "rule",
+      "label": "note",
+      "value": "the parties' offers [2500, 5000] narrowed the rule band [2050, 4450] to [2500, 4450]"
+    },
+    {
+      "stage": "rule",
+      "label": "note",
+      "value": "no OPENAI_API_KEY configured; ruled by the deterministic rule engine"
+    },
+    {
+      "stage": "relay",
+      "label": "point",
+      "value": "an unrelated key relays — settlement is permissionless: the key paying for"
+    },
+    {
+      "stage": "relay",
+      "label": "",
+      "value": "this transaction is not the arbiter, and the escrow still pays out"
+    },
+    {
+      "stage": "relay",
+      "label": "relayer",
+      "value": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5 — pays for this transaction, and is not the arbiter (0x3425173FAB110f780482af62Bf603b9A7D023905)"
+    },
+    {
+      "stage": "relay",
+      "label": "tx",
+      "value": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+      "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
+    },
+    {
+      "stage": "relay",
+      "label": "fee",
+      "value": "the sender paid 0.000797 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "relay",
+      "label": "settled",
+      "value": "Settled — verdictHash 0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+    },
+    {
+      "stage": "relay",
+      "label": "credited",
+      "value": "seller 8.140937 · buyer 17.609063 — claims on the escrow, not transfers yet"
+    },
+    {
+      "stage": "settle",
+      "label": "point",
+      "value": "parties withdraw — payments land as TIP-20 transfers tagged tempex.withdraw,"
+    },
+    {
+      "stage": "settle",
+      "label": "",
+      "value": "so the settlement is reconcilable on the token itself"
+    },
+    {
+      "stage": "settle",
+      "label": "seller",
+      "value": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64 withdraws 8.140937 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "tx",
+      "value": "0x80c1e5a0fe798100b58613b15d813857b490b61a530288c9232fcbdc541dbc40",
+      "tx": "0x80c1e5a0fe798100b58613b15d813857b490b61a530288c9232fcbdc541dbc40",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x80c1e5a0fe798100b58613b15d813857b490b61a530288c9232fcbdc541dbc40"
+    },
+    {
+      "stage": "settle",
+      "label": "fee",
+      "value": "the sender paid 0.000029 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "settle",
+      "label": "memo",
+      "value": "\"tempex.withdraw\" on the TIP-20 transfer itself"
+    },
+    {
+      "stage": "settle",
+      "label": "wallet",
+      "value": "999999.997829 → 1000008.138737 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "buyer",
+      "value": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 withdraws 17.609063 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "tx",
+      "value": "0x8172484a49e1cd6b26de10345f44b1c3f173b4e1d5eada227f39980b8b0df48b",
+      "tx": "0x8172484a49e1cd6b26de10345f44b1c3f173b4e1d5eada227f39980b8b0df48b",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x8172484a49e1cd6b26de10345f44b1c3f173b4e1d5eada227f39980b8b0df48b"
+    },
+    {
+      "stage": "settle",
+      "label": "fee",
+      "value": "the sender paid 0.000029 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "settle",
+      "label": "memo",
+      "value": "\"tempex.withdraw\" on the TIP-20 transfer itself"
+    },
+    {
+      "stage": "settle",
+      "label": "wallet",
+      "value": "999973.748232 → 999991.357266 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "arbiter",
+      "value": "0x3425173FAB110f780482af62Bf603b9A7D023905 withdraws 0.4 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "tx",
+      "value": "0x3f8ad2aaa1785323684816abee965c39f2cb2bfbc9334a3cbc042f43f3d8e2e8",
+      "tx": "0x3f8ad2aaa1785323684816abee965c39f2cb2bfbc9334a3cbc042f43f3d8e2e8",
+      "link": "https://explore.testnet.tempo.xyz/tx/0x3f8ad2aaa1785323684816abee965c39f2cb2bfbc9334a3cbc042f43f3d8e2e8"
+    },
+    {
+      "stage": "settle",
+      "label": "fee",
+      "value": "the sender paid 0.000029 alphaUSD — charged as a TIP-20 transfer, because Tempo has no gas token"
+    },
+    {
+      "stage": "settle",
+      "label": "memo",
+      "value": "\"tempex.withdraw\" on the TIP-20 transfer itself"
+    },
+    {
+      "stage": "settle",
+      "label": "wallet",
+      "value": "999999.999227 → 1000000.399198 alphaUSD"
+    },
+    {
+      "stage": "settle",
+      "label": "treasury",
+      "value": "0x592C94228BDEfc1B34EB6559934544437a19C37b holds the arbitration fee; no key for it in this demo, so it stays credited"
+    },
+    {
+      "stage": "settle",
+      "label": "corpus",
+      "value": "28/28 expectations from scenarios.ts held against the live chain"
+    }
+  ],
+  "adjudication": {
+    "jobId": 1,
+    "engine": "rules",
+    "model": "tempex-rules/1",
+    "amount": "25000000",
+    "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+    "ruling": {
+      "jobId": 1,
+      "sellerAwardBps": 3250,
+      "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+      "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so the ruling is a function of the evidence text alone and can be re-derived by anyone holding the same files. The delivered artifact covers 1 of 4 acceptance criteria, mean term coverage 0.38 (\"Checkout strings translated to French\" 0.50, \"Prices and dates in European formats\" 0.00, \"Supplied glossary terms preserved\" 0.00, \"Order confirmation email localized\" 1.00). The weakest criterion is \"Prices and dates in European formats\" at 0.00; its missing terms are price, date, european, format. 1 of 1 declared artifacts verify against their own content hashes. The artifact raises date, european, format, glossary, price, supplied only to say they are not delivered; those terms are read as a gap, not counted as coverage. The claim names terms the deliverable under-delivers, so the complaint is corroborated by the artifact itself. Integrity: the delivered artifact hashes to the hash committed on chain, and the terms hash matches the job. Objective band 2500-4450 bps; ruling 3250 bps of the disputed remainder after the arbitration fee, i.e. 32.5% to the seller of \"Localization sprint, partly delivered\" (job 1).",
+      "issuedAt": 1791336698,
+      "validUntil": 1791423099,
+      "model": "tempex-rules/1"
+    },
+    "verdict": {
+      "jobId": "1",
+      "sellerAwardBps": 3250,
+      "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+      "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+      "issuedAt": "1791336698",
+      "validUntil": "1791423099"
+    },
+    "signature": "0x879a32d16a00918a78989aec72d2003ffd9b9c7abc8047b6db9c3f28681ed7d4592a18554a2ab6ee29e5f902777912cf9e4eadb9e07482c2281a4a05fdad26811c",
+    "digest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72",
+    "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+    "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+    "certified": true,
+    "money": {
+      "amount": "25000000",
+      "bond": "1250000",
+      "bondToSeller": "353437",
+      "arbitrationFee": "500000",
+      "arbitrationFeeBps": 200,
+      "sellerAmount": "8140937",
+      "buyerAmount": "17609063"
+    },
+    "band": {
+      "center": 3250,
+      "lowBps": 2050,
+      "highBps": 4450
+    },
+    "offers": {
+      "lowBps": 2500,
+      "highBps": 5000
+    },
+    "boundedBand": {
+      "lowBps": 2500,
+      "highBps": 4450,
+      "center": 3250
+    },
+    "signals": {
+      "criteria": [
+        {
+          "criterion": "Checkout strings translated to French",
+          "score": 0.5,
+          "matched": [
+            "checkout",
+            "french"
+          ],
+          "missing": [
+            "string",
+            "translated"
+          ]
+        },
+        {
+          "criterion": "Prices and dates in European formats",
+          "score": 0,
+          "matched": [],
+          "missing": [
+            "price",
+            "date",
+            "european",
+            "format"
+          ]
+        },
+        {
+          "criterion": "Supplied glossary terms preserved",
+          "score": 0,
+          "matched": [],
+          "missing": [
+            "supplied",
+            "glossary",
+            "term",
+            "preserved"
+          ]
+        },
+        {
+          "criterion": "Order confirmation email localized",
+          "score": 1,
+          "matched": [
+            "order",
+            "confirmation",
+            "email",
+            "localized"
+          ],
+          "missing": []
+        }
+      ],
+      "coverage": 0.375,
+      "artifactsDeclared": 1,
+      "artifactsVerifiable": 1,
+      "evidenceStrength": 1,
+      "admitted": [
+        "date",
+        "european",
+        "format",
+        "glossary",
+        "price",
+        "supplied"
+      ],
+      "integrity": {
+        "termsHashMatches": true,
+        "deliverableHashMatches": true
+      },
+      "scoredCopy": "uri",
+      "sellerResponded": true,
+      "corroboration": "grounded",
+      "weakest": {
+        "criterion": "Prices and dates in European formats",
+        "score": 0,
+        "matched": [],
+        "missing": [
+          "price",
+          "date",
+          "european",
+          "format"
+        ]
+      }
+    },
+    "clamped": false,
+    "flags": [],
+    "notes": [
+      "the parties' offers [2500, 5000] narrowed the rule band [2050, 4450] to [2500, 4450]",
+      "no OPENAI_API_KEY configured; ruled by the deterministic rule engine"
+    ]
+  }
+}

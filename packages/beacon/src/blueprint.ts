@@ -135,6 +135,8 @@ export function blueprintCreateAndFund(
     reviewWindow: number;
     nextJobId: bigint;
     allowance: bigint;
+    /// a listed arbiter the buyer chose; omitted means the house arbiter
+    arbiter?: Address;
   },
 ): Blueprint {
   const needsApproval = params.allowance < params.amount;
@@ -145,20 +147,52 @@ export function blueprintCreateAndFund(
     decoded: [{ contract: 'token' as const, function: 'approve', args: show('token', 'approve', [ctx.escrow, params.amount]) }],
   };
 
+  const common = [params.seller, params.amount, params.termsHash, params.deliveryDeadline, params.reviewWindow];
   return base(
     ctx,
-    `open job ${params.nextJobId} with ${params.seller} for ${params.amount} units and fund it atomically`,
+    `open job ${params.nextJobId} with ${params.seller} for ${params.amount} units${
+      params.arbiter ? `, judged by ${params.arbiter},` : ''
+    } and fund it atomically`,
     'buyer',
     [
-      {
-        contract: 'escrow',
-        to: ctx.escrow,
-        fn: 'createJob',
-        args: [params.seller, params.amount, params.termsHash, params.deliveryDeadline, params.reviewWindow],
-      },
+      params.arbiter
+        ? { contract: 'escrow', to: ctx.escrow, fn: 'createJobWithArbiter', args: [...common, params.arbiter] }
+        : { contract: 'escrow', to: ctx.escrow, fn: 'createJob', args: common },
       { contract: 'escrow', to: ctx.escrow, fn: 'fund', args: [params.nextJobId] },
     ],
     needsApproval ? [approve] : [],
+  );
+}
+
+/// Every tranche of a milestone plan, opened and funded in one atomic batch:
+/// approve the total, create the tranches, then fund each under its own job id.
+export function blueprintCreateMilestones(
+  ctx: BlueprintContext,
+  params: {
+    seller: Address;
+    planHash: Hex;
+    milestones: { termsHash: Hex; amount: bigint; deliveryDeadline: bigint }[];
+    total: bigint;
+    reviewWindow: number;
+    arbiter: Address;
+    nextJobId: bigint;
+  },
+): Blueprint {
+  const ids = params.milestones.map((_, index) => params.nextJobId + BigInt(index));
+  return base(
+    ctx,
+    `open and fund ${ids.length} milestones (jobs ${ids[0]}-${ids[ids.length - 1]}) with ${params.seller}, ${params.total} units in all`,
+    'buyer',
+    [
+      { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, params.total] },
+      {
+        contract: 'escrow',
+        to: ctx.escrow,
+        fn: 'createMilestones',
+        args: [params.seller, params.planHash, params.milestones, params.reviewWindow, params.arbiter],
+      },
+      ...ids.map((jobId) => ({ contract: 'escrow' as const, to: ctx.escrow, fn: 'fund', args: [jobId] })),
+    ],
   );
 }
 
@@ -168,9 +202,16 @@ export function blueprintApprove(ctx: BlueprintContext, amount: bigint): Bluepri
   ]);
 }
 
-export function blueprintDeliver(ctx: BlueprintContext, jobId: bigint, deliverableHash: Hex): Blueprint {
-  return base(ctx, `deliver job ${jobId}`, 'seller', [
-    { contract: 'escrow', to: ctx.escrow, fn: 'deliver', args: [jobId, deliverableHash] },
+/// `uri` says where the delivered work lives (ipfs://, ar://, https://, data:) so
+/// the arbiter can fetch it and check it against the hash; empty records nothing.
+export function blueprintDeliver(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  deliverableHash: Hex,
+  uri: string,
+): Blueprint {
+  return base(ctx, `deliver job ${jobId}${uri ? ` (located at ${uri.slice(0, 48)})` : ''}`, 'seller', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'deliver', args: [jobId, deliverableHash, uri] },
   ]);
 }
 
@@ -186,10 +227,41 @@ export function blueprintAutoAccept(ctx: BlueprintContext, jobId: bigint): Bluep
   ]);
 }
 
-export function blueprintDispute(ctx: BlueprintContext, jobId: bigint, disputeHash: Hex): Blueprint {
-  return base(ctx, `dispute job ${jobId} and hand it to the arbiter`, 'buyer', [
-    { contract: 'escrow', to: ctx.escrow, fn: 'dispute', args: [jobId, disputeHash] },
-  ]);
+/// Opening a dispute posts a bond (5% of the job amount) that follows the award,
+/// so the allowance for it rides in the same transaction, ahead of the call.
+export function blueprintDispute(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  disputeHash: Hex,
+  bond: bigint,
+  buyerOfferBps: number,
+): Blueprint {
+  return base(
+    ctx,
+    `dispute job ${jobId}, posting a bond of ${bond} units and a final offer of ${buyerOfferBps} bps, and hand it to the arbiter`,
+    'buyer',
+    [
+      { contract: 'token', to: ctx.token, fn: 'approve', args: [ctx.escrow, bond] },
+      { contract: 'escrow', to: ctx.escrow, fn: 'dispute', args: [jobId, disputeHash, buyerOfferBps] },
+    ],
+  );
+}
+
+/// The seller's answer to a dispute: pins its evidence of proper delivery inside
+/// the 7-day response window. The arbiter will not rule before this lands or
+/// the window closes.
+export function blueprintRespond(
+  ctx: BlueprintContext,
+  jobId: bigint,
+  responseHash: Hex,
+  sellerAskBps: number,
+): Blueprint {
+  return base(
+    ctx,
+    `respond to the dispute on job ${jobId} with the seller's evidence and a final ask of ${sellerAskBps} bps`,
+    'seller',
+    [{ contract: 'escrow', to: ctx.escrow, fn: 'respond', args: [jobId, responseHash, sellerAskBps] }],
+  );
 }
 
 /// Relaying a verdict is permissionless: whoever submits it pays the fee (or has it
@@ -224,6 +296,28 @@ export function blueprintResolve(
       },
     ],
   );
+}
+
+/// Lists the signer as an arbiter buyers can name, at its own fee.
+export function blueprintListArbiter(ctx: BlueprintContext, feeBps: number, metadataURI: string): Blueprint {
+  return base(ctx, `list yourself as an arbiter at ${feeBps} bps`, 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'listArbiter', args: [feeBps, metadataURI] },
+  ]);
+}
+
+/// Stops new jobs naming the signer; jobs it already judges are unaffected.
+export function blueprintDelistArbiter(ctx: BlueprintContext): Blueprint {
+  return base(ctx, 'stop accepting new jobs as an arbiter', 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'delistArbiter', args: [] },
+  ]);
+}
+
+/// Closes a dispute whose arbiter never ruled within its window, on the escrow's
+/// fixed even split with no arbitration fee. Permissionless.
+export function blueprintSettleLapsed(ctx: BlueprintContext, jobId: bigint): Blueprint {
+  return base(ctx, `settle lapsed dispute on job ${jobId} on the default split (permissionless)`, 'either', [
+    { contract: 'escrow', to: ctx.escrow, fn: 'settleLapsed', args: [jobId] },
+  ]);
 }
 
 export function blueprintRefundExpired(ctx: BlueprintContext, jobId: bigint): Blueprint {

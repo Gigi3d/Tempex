@@ -1,6 +1,6 @@
 # TempexEscrow
 
-One escrow for the agent economy. 361 lines of Solidity, no proxies, no upgrade paths, no admin path to user funds. Live on Tempo Moderato (chain 42431) at `0x7579736636dd67A8811A8A2ef95c44560fe6ec27`.
+One escrow for the agent economy. 361 lines of Solidity, no proxies, no upgrade paths, no admin path to user funds. Live on Tempo Moderato (chain 42431) at `0x001c8C3391E591C9CBDFdFE4227e585b86041157` (see `deployments/moderato.json`).
 
 ## The ten core operations
 

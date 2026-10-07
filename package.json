@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Default referee for every MPP and x402 business — agentic arbitration and settlement on Tempo",
+  "description": "Default referee for every MPP and x402 business \u2014 agentic arbitration and settlement on Tempo",
   "scripts": {
     "test": "forge test --root contracts",
     "abi": "bash scripts/gen-abi.sh",
@@ -11,7 +11,8 @@
     "arbiter": "pnpm --filter @tempex/arbiter start",
     "demo": "pnpm --filter @tempex/demo start",
     "beacon": "pnpm --filter @tempex/beacon start",
-    "smoke": "pnpm --filter @tempex/sdk smoke && pnpm --filter @tempex/beacon smoke"
+    "smoke": "pnpm --filter @tempex/sdk smoke && pnpm --filter @tempex/beacon smoke",
+    "deploy:escrow": "forge build --root contracts && pnpm --filter @tempex/sdk deploy:escrow"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",

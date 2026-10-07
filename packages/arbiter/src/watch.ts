@@ -1,7 +1,11 @@
 import {
   caseIntegrity,
   disputeHashOf,
+  evidenceClosedAt,
   readCase,
+  responseDeadline,
+  ARBITRATION_WINDOW_SECONDS,
+  SELLER_RESPONSE_WINDOW_SECONDS,
   tempexEscrowAbi,
   WS_URL,
   type EvidenceCase,
@@ -14,6 +18,9 @@ import { tempoTestnet } from 'viem/tempo/chains';
 
 import { adjudicate, type AdjudicationEngine, type AdjudicationResult } from './adjudicate.js';
 import type { LlmConfig } from './llm.js';
+
+/// Under Moderato's 100,000-block eth_getLogs ceiling, with room to spare.
+const SCAN_CHUNK_BLOCKS = 50_000n;
 
 export type WatchOptions = {
   client: TempexClient;
@@ -90,11 +97,33 @@ export async function watchDisputes(options: WatchOptions): Promise<WatchHandle>
         return;
       }
 
+      if (job.arbiter.toLowerCase() !== options.client.address.toLowerCase()) {
+        log(`job ${key}: assigned to arbiter ${job.arbiter}, not this key; skipping`);
+        pending.delete(key);
+        settled.add(key);
+        return;
+      }
+
+      // The seller gets its 7 days. Until it responds or the window closes, the
+      // dispute stays pending and is retried; the escrow enforces the same rule.
+      const now = Math.floor(Date.now() / 1000);
+      if (evidenceClosedAt(job, now) === null) {
+        log(
+          `job ${key}: waiting for the seller's response (window closes ${new Date((responseDeadline(job) ?? now) * 1000).toISOString()})`,
+        );
+        return;
+      }
+
       let evidenceCase: EvidenceCase;
       try {
         evidenceCase = readCase(options.evidenceDir, jobId);
       } catch {
         log(`job ${key}: disputed, waiting for the buyer's evidence bundle in ${options.evidenceDir}`);
+        return;
+      }
+
+      if (job.respondedAt !== 0 && evidenceCase.response === undefined) {
+        log(`job ${key}: seller responded on chain, waiting for its response file in ${options.evidenceDir}`);
         return;
       }
 
@@ -159,14 +188,35 @@ export async function watchDisputes(options: WatchOptions): Promise<WatchHandle>
   }
 
   // ---- catch up on anything opened while the arbiter was not running ----
-  const past = await watcher.getContractEvents({
-    address: escrow,
-    abi: tempexEscrowAbi,
-    eventName: 'DisputeRaised',
-    strict: true,
-    fromBlock: options.fromBlock ?? 0n,
-    toBlock: 'latest',
-  });
+  // Walked in chunks: Moderato rejects any eth_getLogs range over 100,000 blocks,
+  // so one call from the deployment block fails as soon as the chain is a day
+  // older than the escrow. Without an explicit start, only the blocks a live
+  // dispute can still occupy are scanned: past the seller window plus the
+  // arbitration window a dispute has lapsed and can no longer be ruled on.
+  const head = await watcher.getBlockNumber();
+  const envFrom = process.env['TEMPEX_INDEX_FROM_BLOCK'];
+  const liveSpan = BigInt(SELLER_RESPONSE_WINDOW_SECONDS + ARBITRATION_WINDOW_SECONDS + 86_400);
+  const fromBlock =
+    options.fromBlock ??
+    (envFrom !== undefined && envFrom.trim() !== ''
+      ? BigInt(envFrom)
+      : head > liveSpan
+        ? head - liveSpan
+        : 0n);
+  const past: { args: { jobId: bigint; disputeHash: Hex; disputedAt: bigint } }[] = [];
+  for (let from = fromBlock; from <= head; from += SCAN_CHUNK_BLOCKS) {
+    const to = from + SCAN_CHUNK_BLOCKS - 1n > head ? head : from + SCAN_CHUNK_BLOCKS - 1n;
+    const logs = await watcher.getContractEvents({
+      address: escrow,
+      abi: tempexEscrowAbi,
+      eventName: 'DisputeRaised',
+      strict: true,
+      fromBlock: from,
+      toBlock: to,
+    });
+    past.push(...logs);
+  }
+  log(`catch-up scanned blocks ${fromBlock}..${head}`);
   if (past.length > 0) log(`catch-up: ${past.length} dispute(s) in escrow history`);
   for (const entry of past) {
     enqueue(entry.args.jobId, entry.args.disputeHash, entry.args.disputedAt);

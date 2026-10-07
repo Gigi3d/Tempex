@@ -15,6 +15,7 @@ export type JobStage =
   | 'disputed'
   | 'resolved'
   | 'refunded'
+  | 'lapsed'
   | 'cancelled';
 
 type Stamp = { block: number; tx: Hex };
@@ -30,9 +31,23 @@ export type JobRecord = {
   stage: JobStage;
   created: Stamp;
   funded?: Stamp & { amount: bigint };
-  delivered?: Stamp & { deliverableHash: Hex; deliveredAt: number; reviewDeadline: number };
+  delivered?: Stamp & {
+    deliverableHash: Hex;
+    deliveredAt: number;
+    reviewDeadline: number;
+    /// where the seller said the work lives, if it said
+    uri?: string;
+  };
   accepted?: Stamp & { sellerAmount: bigint; platformFee: bigint };
-  dispute?: Stamp & { disputeHash: Hex; disputedAt: number };
+  dispute?: Stamp & {
+    disputeHash: Hex;
+    disputedAt: number;
+    responseDeadline?: number;
+    /// the buyer's final offer, in bps of the job amount
+    buyerOfferBps?: number;
+  };
+  /// The seller's answer to the dispute, pinned inside its response window.
+  response?: Stamp & { responseHash: Hex; respondedAt: number; sellerAskBps: number };
   verdict?: Stamp & {
     sellerAwardBps: number;
     sellerAmount: bigint;
@@ -43,6 +58,27 @@ export type JobRecord = {
     verdictDigest: Hex;
   };
   refund?: Stamp & { amount: bigint };
+  /// The arbiter and fee rates the job locked at creation.
+  terms?: Stamp & {
+    arbiter: Address;
+    platformFeeBps: number;
+    arbitrationFeeBps: number;
+    protocolCutBps: number;
+  };
+  /// The arbiter never ruled in time; anyone settled it on the default split.
+  lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
+  /// Set when the job is one tranche of a milestone plan.
+  milestone?: { planHash: Hex; index: number; count: number };
+};
+
+/// An arbiter that listed itself on the escrow, as folded from its events.
+export type ArbiterRecord = {
+  arbiter: Address;
+  active: boolean;
+  feeBps: number;
+  metadataURI: string;
+  listed: Stamp;
+  delisted?: Stamp;
 };
 
 export type WithdrawalRecord = { account: Address; amount: bigint } & Stamp;
@@ -54,6 +90,7 @@ export type LedgerView = {
   jobs: JobRecord[];
   withdrawals: WithdrawalRecord[];
   arbiterUpdates: (Stamp & { arbiter: Address })[];
+  arbiters: ArbiterRecord[];
   treasuryUpdates: (Stamp & { treasury: Address })[];
   feeUpdates: (Stamp & { platformFeeBps: number; arbitrationFeeBps: number })[];
 };
@@ -75,6 +112,7 @@ export class EscrowLedger {
   private readonly jobs = new Map<string, JobRecord>();
   private readonly withdrawals: WithdrawalRecord[] = [];
   private readonly arbiterUpdates: LedgerView['arbiterUpdates'] = [];
+  private readonly arbiters = new Map<string, ArbiterRecord>();
   private readonly treasuryUpdates: LedgerView['treasuryUpdates'] = [];
   private readonly feeUpdates: LedgerView['feeUpdates'] = [];
   private scannedTo: bigint | null = null;
@@ -120,6 +158,7 @@ export class EscrowLedger {
       jobs,
       withdrawals: [...this.withdrawals],
       arbiterUpdates: [...this.arbiterUpdates],
+      arbiters: [...this.arbiters.values()],
       treasuryUpdates: [...this.treasuryUpdates],
       feeUpdates: [...this.feeUpdates],
     };
@@ -149,6 +188,17 @@ export class EscrowLedger {
         });
         return;
       }
+      case 'MilestonePlanCreated': {
+        // Emitted after the plan's JobCreated events in the same transaction, so
+        // every tranche is already in the index when its plan is folded.
+        const first = big(args['firstJobId']);
+        const count = num(args['count']);
+        for (let index = 0; index < count; index++) {
+          const job = this.mutate(first + BigInt(index));
+          if (job) job.milestone = { planHash: hex(args['planHash']), index, count };
+        }
+        return;
+      }
       case 'JobFunded': {
         const job = this.mutate(big(args['jobId']));
         if (job) {
@@ -168,6 +218,11 @@ export class EscrowLedger {
           };
           if (job.stage === 'funded') job.stage = 'delivered';
         }
+        return;
+      }
+      case 'DeliverableLocated': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.delivered) job.delivered.uri = String(args['uri'] ?? '');
         return;
       }
       case 'JobAccepted': {
@@ -194,6 +249,28 @@ export class EscrowLedger {
         }
         return;
       }
+      case 'SellerResponseRequested': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.dispute) job.dispute.responseDeadline = num(args['responseDeadline']);
+        return;
+      }
+      case 'BuyerOfferPinned': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.dispute) job.dispute.buyerOfferBps = num(args['buyerOfferBps']);
+        return;
+      }
+      case 'SellerResponded': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.response = {
+            ...stamp,
+            responseHash: hex(args['responseHash']),
+            respondedAt: num(args['respondedAt']),
+            sellerAskBps: num(args['sellerAskBps']),
+          };
+        }
+        return;
+      }
       case 'VerdictResolved': {
         const job = this.mutate(big(args['jobId']));
         if (job) {
@@ -208,6 +285,31 @@ export class EscrowLedger {
             verdictDigest: hex(args['verdictDigest']),
           };
           job.stage = 'resolved';
+        }
+        return;
+      }
+      case 'JobTermsLocked': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.terms = {
+            ...stamp,
+            arbiter: String(args['arbiter']) as Address,
+            platformFeeBps: num(args['platformFeeBps']),
+            arbitrationFeeBps: num(args['arbitrationFeeBps']),
+            protocolCutBps: num(args['protocolCutBps']),
+          };
+        }
+        return;
+      }
+      case 'DisputeLapsed': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.lapsed = {
+            ...stamp,
+            sellerAmount: big(args['sellerAmount']),
+            buyerAmount: big(args['buyerAmount']),
+          };
+          job.stage = 'lapsed';
         }
         return;
       }
@@ -230,6 +332,27 @@ export class EscrowLedger {
           amount: big(args['amount']),
           ...stamp,
         });
+        return;
+      }
+      case 'ArbiterListed': {
+        const arbiter = addr(args['arbiter']);
+        const { delisted: _previous, ...prior } = this.arbiters.get(arbiter.toLowerCase()) ?? {};
+        this.arbiters.set(arbiter.toLowerCase(), {
+          ...prior,
+          arbiter,
+          active: true,
+          feeBps: num(args['feeBps']),
+          metadataURI: String(args['metadataURI'] ?? ''),
+          listed: stamp,
+        });
+        return;
+      }
+      case 'ArbiterDelisted': {
+        const record = this.arbiters.get(addr(args['arbiter']).toLowerCase());
+        if (record) {
+          record.active = false;
+          record.delisted = stamp;
+        }
         return;
       }
       case 'ArbiterUpdated': {

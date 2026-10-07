@@ -17,6 +17,7 @@ import {
 import {
   CHAIN_ID,
   SPONSOR_URL,
+  SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
   accountFor,
   addressesFromEnv,
@@ -26,15 +27,20 @@ import {
   feePaid,
   formatToken,
   hashCanonical,
+  dataUriFor,
+  hashText,
   loadEnv,
   memoTransfers,
   privateKeyFor,
   readCase,
+  responseHashOf,
   tempexEscrowAbi,
   tokenAmount,
   writeCase,
+  writeResponse,
   type EvidenceCase,
   type Role,
+  type SellerResponse,
   type TempexAddresses,
   type VerdictStruct,
   type WriteOptions,
@@ -104,6 +110,10 @@ export type DemoOptions = {
   force?: boolean;
   /// Discard the recorded session and start over.
   fresh?: boolean;
+  /// Judge the job by the arbiter key as a listed market arbiter, named with
+  /// createJobWithArbiter, instead of the escrow's house arbiter. Lets anyone run
+  /// the full lifecycle with keys of their own, and exercises the arbiter market.
+  listedArbiter?: boolean;
   /// Session name; `runs/demo-<session>.json`. Defaults to the scenario id.
   session?: string;
   engine?: AdjudicationEngine;
@@ -140,6 +150,7 @@ type ResolvedOptions = {
   sponsored: boolean;
   force: boolean;
   fresh: boolean;
+  listedArbiter: boolean;
   engine: AdjudicationEngine;
   session: string;
   evidenceDir: string;
@@ -186,6 +197,8 @@ function relayableFromRecord(
     digest: need('digest') as Hex,
     money: {
       amount: BigInt(need('amount')),
+      bond: BigInt(need('bond')),
+      bondToSeller: BigInt(need('bondToSeller')),
       arbitrationFee: BigInt(need('arbitrationFee')),
       arbitrationFeeBps: Number(need('arbitrationFeeBps')),
       sellerAmount: BigInt(need('sellerAmount')),
@@ -385,6 +398,26 @@ class DemoRun {
     const evidenceCase = await this.case();
     const now = Math.floor(Date.now() / 1000);
 
+    // A listed arbiter must be on the market before a job can name it. It lists
+    // at the fee the corpus prices money at, so the predicted split still holds.
+    let arbiter: Address | undefined;
+    if (this.options.listedArbiter) {
+      arbiter = this.clients.arbiter.address;
+      const listing = await this.clients.arbiter.arbiterListing(arbiter);
+      if (!listing.active || listing.feeBps !== ARBITRATION_FEE_BPS) {
+        const listed = await this.clients.arbiter.listArbiter(
+          ARBITRATION_FEE_BPS,
+          'tempex-demo: the rule engine in packages/arbiter',
+          this.writeOptions,
+        );
+        this.transcript.tx('listed', listed.transactionHash);
+      }
+      this.transcript.row(
+        'arbiter',
+        `${arbiter} — listed on the market at ${ARBITRATION_FEE_BPS} bps, named for this job by the buyer`,
+      );
+    }
+
     const created = await this.clients.buyer.createAndFundJob(
       {
         seller: this.clients.seller.address,
@@ -392,6 +425,7 @@ class DemoRun {
         termsHash: hashCanonical(evidenceCase.terms),
         deliveryDeadline: now + this.scenario.deliveryDeadlineSeconds,
         reviewWindow: this.scenario.reviewWindowSeconds,
+        ...(arbiter !== undefined ? { arbiter } : {}),
       },
       this.writeOptions,
     );
@@ -410,6 +444,7 @@ class DemoRun {
     }
     this.expect('job amount', amount.toString(), onChain.amount.toString());
     this.expect('job termsHash', hashCanonical(evidenceCase.terms), onChain.termsHash);
+    if (arbiter !== undefined) this.expect('job arbiter', arbiter, onChain.arbiter);
     this.transcript.row('job', `${jobId} — ${onChain.state}, ${formatToken(onChain.amount)} escrowed`);
 
     const funding = memoTransfers(receipt.logs).find((entry) => entry.jobId === jobId);
@@ -437,8 +472,13 @@ class DemoRun {
     const evidenceCase = await this.case();
     const deliverableHash = evidenceCase.bundle.deliverableHash;
 
-    const receipt = await this.clients.seller.deliver(jobId, deliverableHash, this.writeOptions);
+    // The work rides in the delivery itself as a data: URI, so the arbiter can
+    // read it without trusting either party's copy and nothing has to be hosted.
+    const uri = dataUriFor(this.scenario.deliverable);
+    const receipt = await this.clients.seller.deliver(jobId, deliverableHash, uri, this.writeOptions);
     this.transcript.tx('tx', receipt.transactionHash);
+    this.expect('deliverable URI', uri, await this.clients.seller.deliverableURI(jobId));
+    this.transcript.row('located', `${uri.slice(0, 48)}… — the arbiter reads the work from here`);
     this.reportFeePayer(receipt, this.clients.seller.address);
 
     const onChain = await this.clients.seller.job(jobId);
@@ -464,7 +504,13 @@ class DemoRun {
       `"${this.scenario.claim}"`,
       'claim',
     );
-    const receipt = await this.clients.buyer.dispute(jobId, disputeHash, this.writeOptions);
+    const buyerOfferBps = this.scenario.buyerOfferBps ?? 0;
+    const receipt = await this.clients.buyer.dispute(
+      jobId,
+      disputeHash,
+      buyerOfferBps,
+      this.writeOptions,
+    );
     this.transcript.tx('tx', receipt.transactionHash);
     this.reportFeePayer(receipt, this.clients.buyer.address);
 
@@ -483,7 +529,55 @@ class DemoRun {
       `${onChain.disputeHash} — re-derived from the files on disk, so the arbiter cannot rule on anything else`,
     );
 
-    this.record('dispute', { hash: receipt.transactionHash, disputeHash, rederived });
+    // The dispute notifies the seller, which has 7 days to pin its own evidence.
+    // The demo seller answers at once with its copy of the deliverable, so the
+    // arbiter can rule without waiting out the window.
+    const responseDeadline = onChain.disputedAt + SELLER_RESPONSE_WINDOW_SECONDS;
+    this.transcript.row(
+      'notified',
+      `seller ${onChain.seller} has until ${new Date(responseDeadline * 1000).toISOString()} to respond`,
+    );
+    const response: SellerResponse = {
+      version: 1,
+      jobId: Number(jobId),
+      disputeHash,
+      statement:
+        this.scenario.sellerStatement ??
+        'The attached deliverable is the work committed on chain at delivery; it is submitted as delivered.',
+      deliverable: {
+        content: this.scenario.deliverable,
+        contentHash: hashText(this.scenario.deliverable),
+      },
+      artifacts: [],
+      submittedAt: this.session.submittedAt,
+    };
+    writeResponse(this.options.evidenceDir, jobId, response);
+    const responseHash = responseHashOf(response);
+    const sellerAskBps = this.scenario.sellerAskBps ?? 10_000;
+    const answered = await this.clients.seller.respond(
+      jobId,
+      responseHash,
+      sellerAskBps,
+      this.writeOptions,
+    );
+    this.transcript.tx('response', answered.transactionHash);
+    this.reportFeePayer(answered, this.clients.seller.address);
+    const afterResponse = await this.clients.seller.job(jobId);
+    this.expect('job responseHash', responseHash, afterResponse.responseHash);
+    this.expect('buyer offer', String(buyerOfferBps), String(afterResponse.buyerOfferBps));
+    this.expect('seller ask', String(sellerAskBps), String(afterResponse.sellerAskBps));
+    this.transcript.row(
+      'offers',
+      `buyer concedes ${buyerOfferBps} bps, seller asks ${sellerAskBps} bps — the escrow will reject any award outside that range`,
+    );
+
+    this.record('dispute', {
+      hash: receipt.transactionHash,
+      disputeHash,
+      rederived,
+      response: answered.transactionHash,
+      responseHash,
+    });
   }
 
   private async stageRule(): Promise<void> {
@@ -491,27 +585,32 @@ class DemoRun {
     const jobId = this.jobId();
     const evidenceCase = await this.case();
 
-    const config = await escrowArbiterConfig(this.clients.arbiter);
+    // Each job locks its arbiter and fee at creation, so those are what count,
+    // not the escrow's current defaults for new jobs.
+    const job = await this.clients.arbiter.job(jobId);
     this.transcript.row('signer', `${this.clients.arbiter.address} — the arbiter's own key`);
-    if (config.arbiter.toLowerCase() !== this.clients.arbiter.address.toLowerCase()) {
+    if (job.arbiter.toLowerCase() !== this.clients.arbiter.address.toLowerCase()) {
       this.failures.push(
-        `the signing key ${this.clients.arbiter.address} is not the escrow's arbiter ${config.arbiter}`,
+        `the signing key ${this.clients.arbiter.address} is not job ${jobId}'s arbiter ${job.arbiter}`,
       );
     }
-    if (config.arbitrationFeeBps !== ARBITRATION_FEE_BPS) {
+    if (job.arbitrationFeeBps !== ARBITRATION_FEE_BPS) {
       this.failures.push(
-        `the escrow charges ${config.arbitrationFeeBps} bps arbitration fee; the corpus predicts money at ${ARBITRATION_FEE_BPS} bps`,
+        `job ${jobId} locked a ${job.arbitrationFeeBps} bps arbitration fee; the corpus predicts money at ${ARBITRATION_FEE_BPS} bps`,
       );
     }
     this.transcript.row(
       'fee schedule',
-      `${config.arbitrationFeeBps} bps arbitration fee, read from the escrow (the corpus assumes ${ARBITRATION_FEE_BPS})`,
+      `${job.arbitrationFeeBps} bps arbitration fee locked by job ${jobId} at creation (the corpus assumes ${ARBITRATION_FEE_BPS}); ${job.protocolCutBps / 100}% of it to the treasury`,
     );
 
+    // The seller's response lives on disk next to the buyer's bundle, exactly
+    // where the arbiter's watcher would read it.
+    const response = readCase(this.options.evidenceDir, jobId).response;
     const result = await adjudicate({
       client: this.clients.arbiter,
       jobId,
-      evidenceCase,
+      evidenceCase: response === undefined ? evidenceCase : { ...evidenceCase, response },
       engine: this.options.engine,
       dryRun: false,
       relay: false,
@@ -556,11 +655,11 @@ class DemoRun {
     this.transcript.row(
       'ruling',
       `${ruling.sellerAwardBps} bps to the seller (${formatToken(money.sellerAmount)}), ` +
-        `${formatToken(money.buyerAmount)} back to the buyer`,
+        `${formatToken(money.buyerAmount)} back to the buyer (bond of ${formatToken(money.bond)} included: ${formatToken(money.bondToSeller)} forfeited to the seller)`,
     );
     this.transcript.row(
       'arbitration fee',
-      `${formatToken(money.arbitrationFee)} — ${money.arbitrationFeeBps} bps of ${formatToken(money.amount)}, to the treasury`,
+      `${formatToken(money.arbitrationFee)} — ${money.arbitrationFeeBps} bps of ${formatToken(money.amount)}, borne by each side in proportion to what it lost`,
     );
     this.transcript.row('rationaleHash', `${ruling.rationaleHash} — the text stays off chain`);
     this.transcript.row('evidenceHash', `${ruling.evidenceHash} — the hash pinned at dispute time`);
@@ -591,6 +690,8 @@ class DemoRun {
       issuedAt: String(ruling.issuedAt),
       validUntil: String(ruling.validUntil),
       amount: money.amount.toString(),
+      bond: money.bond.toString(),
+      bondToSeller: money.bondToSeller.toString(),
       arbitrationFee: money.arbitrationFee.toString(),
       arbitrationFeeBps: String(money.arbitrationFeeBps),
       sellerAmount: money.sellerAmount.toString(),
@@ -675,6 +776,11 @@ class DemoRun {
       (client) => client.address.toLowerCase() === treasury.toLowerCase(),
     );
     await this.withdrawCredit('buyer', this.clients.buyer);
+    // A listed arbiter earns its fee minus the protocol's cut; the house arbiter
+    // earns nothing directly, its whole fee goes to the treasury.
+    if (this.clients.arbiter.address.toLowerCase() !== treasury.toLowerCase()) {
+      await this.withdrawCredit('arbiter', this.clients.arbiter);
+    }
     if (holder === undefined) {
       this.transcript.row(
         'treasury',
@@ -938,6 +1044,7 @@ export async function runDemo(options: DemoOptions): Promise<DemoResult> {
     sponsored: options.sponsored ?? false,
     force: options.force ?? false,
     fresh: options.fresh ?? false,
+    listedArbiter: options.listedArbiter ?? false,
     engine: options.engine ?? 'auto',
     session: name,
     evidenceDir,
