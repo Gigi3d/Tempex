@@ -6,7 +6,7 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 61/61 Forge tests (one fuzzed) and 45 arbiter tests (`pnpm test:ts`), including the audit's failure cases as regressions, 10,362 hand-written lines, one Solidity contract, no proxies
+- 61/61 Forge tests (one fuzzed) and 45 arbiter tests (`pnpm test:ts`), including the audit's failure cases as regressions, 13,650 hand-written lines, one Solidity contract, no proxies
 - Live deployment: `0x001c8C3391E591C9CBDFdFE4227e585b86041157` ([explorer](https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157)), block 38,497,375, deployed and verified by `pnpm deploy:escrow`. It supersedes `0x7579…ec27`, whose 5 jobs and 3 verdicts remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 185 assertions against the live chain, 0 units spent
