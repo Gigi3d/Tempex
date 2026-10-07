@@ -21,6 +21,7 @@ import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 import { complete, judgePanel, llmConfigFromEnv, type LlmConfig, type PanelVerdict } from './llm.js';
 import { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
 import { analyze, composeRuleRationale, type RuleBand, type RuleSignals } from './rules.js';
+import { clamp, clampToBand, withinOffers } from './guardrail.js';
 
 const VERDICT_RESOLVED = parseAbiItem(
   'event VerdictResolved(uint256 indexed jobId, uint16 sellerAwardBps, uint256 sellerAmount, uint256 buyerAmount, uint256 arbitrationFee, bytes32 evidenceHash, bytes32 rationaleHash, bytes32 verdictDigest)',
@@ -170,32 +171,7 @@ function composePanelRationale(input: {
   return lines.join(' ');
 }
 
-const clamp = (value: number, low: number, high: number): number =>
-  Math.min(high, Math.max(low, value));
-
-/// The guardrail, in one place: whatever a judge proposes is pulled into the band
-/// the objective signals justify. Exported so it can be exercised without a live
-/// dispute — this is the line the "bounded judge" claim rests on.
-export function clampToBand(
-  requestedBps: number,
-  band: RuleBand,
-): { bps: number; clamped: boolean } {
-  const bps = clamp(requestedBps, band.lowBps, band.highBps);
-  return { bps, clamped: bps !== requestedBps };
-}
-
-/// Narrows the rule band to the range the parties' final offers allow. The escrow
-/// rejects any award outside the offers, so a band reaching past them would only
-/// let the judge propose something that cannot settle. When the two ranges do
-/// not meet, the band collapses to the offer edge nearest the evidence.
-export function withinOffers(
-  band: RuleBand,
-  offers: { lowBps: number; highBps: number },
-): RuleBand {
-  const lowBps = clamp(band.lowBps, offers.lowBps, offers.highBps);
-  const highBps = clamp(band.highBps, offers.lowBps, offers.highBps);
-  return { lowBps, highBps, center: clamp(band.center, lowBps, highBps) };
-}
+export { clampToBand, withinOffers };
 
 /// Evidence bundle in, signed verdict out.
 ///

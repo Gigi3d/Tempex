@@ -7,7 +7,7 @@ import {
   type JobTerms,
   type NormalizedCriterion,
   type SellerResponse,
-} from '@tempex/sdk';
+} from '@tempex/sdk/browser';
 
 import { checkProblem, runCheck } from './checks.js';
 
