@@ -313,7 +313,9 @@ export async function judgePanel(params: {
     const accepted = said.filter((s) => s.accepted).map((s) => s.score);
     return {
       id,
-      score: accepted.length > 0 ? median(accepted) : NEUTRAL_SCORE,
+      // Rounded so receipts read 0.85, not 0.8500000000000001; 1e-4 of a
+      // criterion's weight is far below a basis point of the award.
+      score: accepted.length > 0 ? Math.round(median(accepted) * 10_000) / 10_000 : NEUTRAL_SCORE,
       accepted: accepted.length,
       discarded: said.length - accepted.length,
       neutral: accepted.length === 0,

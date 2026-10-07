@@ -12,7 +12,9 @@
     "demo": "pnpm --filter @tempex/demo start",
     "beacon": "pnpm --filter @tempex/beacon start",
     "smoke": "pnpm --filter @tempex/sdk smoke && pnpm --filter @tempex/beacon smoke",
-    "deploy:escrow": "forge build --root contracts && pnpm --filter @tempex/sdk deploy:escrow"
+    "deploy:escrow": "forge build --root contracts && pnpm --filter @tempex/sdk deploy:escrow",
+    "test:ts": "pnpm --filter @tempex/arbiter test",
+    "check": "pnpm test && pnpm typecheck && pnpm test:ts && pnpm demo predict && pnpm demo drill"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
