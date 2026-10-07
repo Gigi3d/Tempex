@@ -20,7 +20,7 @@ import {
   type AdjudicationResult,
 } from './adjudicate.js';
 import { formatBps } from './rules.js';
-import { evidenceDir, jsonText, receiptPath, repoRoot, runsDir, writeJson } from './store.js';
+import { evidenceDir, filePanelCache, jsonText, receiptPath, repoRoot, runsDir, writeJson } from './store.js';
 import { startCourt } from './court.js';
 import { verifyArbiter } from './verify.js';
 import { watchDisputes } from './watch.js';
@@ -209,6 +209,7 @@ async function cmdAdjudicate(flags: Record<string, FlagValue>): Promise<number> 
     relay,
     writeOptions: sponsored ? { sponsored } : {},
     log: asJson ? undefined : trace,
+    panelCache: filePanelCache(),
   });
 
   const receipt =
@@ -253,6 +254,7 @@ async function cmdWatch(flags: Record<string, FlagValue>): Promise<number> {
     poll,
     once,
     writeOptions: sponsored ? { sponsored } : {},
+    panelCache: filePanelCache(),
     log: (line) => out(`[${stamp()}] ${line}`),
     onRuling: (result) => {
       const path = writeJson(receiptPath(result.jobId), receiptFor(result, client, 'watch'));
@@ -355,6 +357,7 @@ async function cmdCourt(flags: Record<string, FlagValue>): Promise<number> {
     origins,
     evidenceDir: evidenceDir(),
     sponsored,
+    panelCache: filePanelCache(),
     log: (line) => out(`[${stamp()}] ${line}`),
     onRuling: (result) => {
       const path = writeJson(receiptPath(result.jobId), receiptFor(result, client, 'court'));

@@ -1,4 +1,7 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+
+import type { PanelCache } from './adjudicate.js';
+import type { PanelVerdict } from './llm.js';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,4 +57,23 @@ export function writeJson(path: string, value: unknown): string {
 
 export function receiptPath(jobId: number | bigint, at: number = Date.now(), dir?: string): string {
   return join(runsDir(dir), `job-${jobId}-${runStamp(at)}.json`);
+}
+
+/// Panel verdicts on disk, one file per exact set of inputs, so a retry after a
+/// crash or a failed relay re-signs the scores already paid for. Gitignored: the
+/// receipt is the public record; this is only a memo.
+export function filePanelCache(dir: string = join(runsDir(), 'panels')): PanelCache {
+  const path = (key: string): string => join(dir, `${key.replace(/[^0-9a-f]/gi, '').slice(0, 64)}.json`);
+  return {
+    get(key) {
+      try {
+        return JSON.parse(readFileSync(path(key), 'utf8')) as PanelVerdict;
+      } catch {
+        return undefined;
+      }
+    },
+    set(key, verdict) {
+      writeJson(path(key), verdict);
+    },
+  };
 }

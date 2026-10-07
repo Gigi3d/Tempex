@@ -18,6 +18,27 @@ export type LlmConfig = {
   timeoutMs: number;
 };
 
+/// Tokens one completion consumed, as the endpoint reported them. Kept on the
+/// receipt so the cost of every ruling can be read off its record.
+export type Usage = { inputTokens: number; outputTokens: number };
+
+export type Completion = { content: string; usage?: Usage };
+
+/// The model call. A bare string is accepted so scripted judges in tests stay
+/// one-liners; the real call returns the usage alongside the content.
+export type CompleteFn = (
+  config: LlmConfig,
+  request: { model: string; system: string; user: string; temperature: number },
+) => Promise<string | Completion>;
+
+/// OpenAI's reasoning models (the o-series and the gpt-5 family) accept only
+/// their default sampling and reject any `temperature`. Sending it anyway fails
+/// every judge, and the panel quietly falls back to the rule engine.
+export function acceptsTemperature(model: string): boolean {
+  const name = model.slice(model.lastIndexOf('/') + 1).toLowerCase();
+  return !/^(o\d|gpt-5)/.test(name);
+}
+
 export class LlmError extends Error {
   override readonly name = 'LlmError';
   readonly status?: number;
@@ -67,7 +88,7 @@ export function llmConfigFromEnv(env: NodeJS.ProcessEnv = process.env): LlmConfi
 async function post(
   config: LlmConfig,
   body: Record<string, unknown>,
-): Promise<{ content: string; raw: string }> {
+): Promise<Completion> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs);
   try {
@@ -91,12 +112,17 @@ async function post(
 
     const parsed = JSON.parse(text) as {
       choices?: { message?: { content?: string } }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
     };
     const content = parsed.choices?.[0]?.message?.content;
     if (typeof content !== 'string' || content.trim().length === 0) {
       throw new LlmError('judge endpoint returned no message content');
     }
-    return { content, raw: text };
+    const usage =
+      typeof parsed.usage?.prompt_tokens === 'number' && typeof parsed.usage?.completion_tokens === 'number'
+        ? { inputTokens: parsed.usage.prompt_tokens, outputTokens: parsed.usage.completion_tokens }
+        : undefined;
+    return { content, ...(usage ? { usage } : {}) };
   } catch (error) {
     if (error instanceof LlmError) throw error;
     if (error instanceof Error && error.name === 'AbortError') {
@@ -128,26 +154,35 @@ function extractJson(content: string): unknown {
   }
 }
 
-/// One chat completion. JSON mode first; only a rejected request shape earns a
-/// retry without it, since a bad key or a timeout would fail the same way twice.
+/// One chat completion. JSON mode first, and `temperature` only for models that
+/// take it. A rejected request shape earns a retry that drops the part the
+/// endpoint objected to: `temperature` when the error names it, else JSON mode.
+/// A bad key or a timeout would fail the same way twice, so those are not retried.
 export async function complete(
   config: LlmConfig,
   request: { model: string; system: string; user: string; temperature: number },
-): Promise<string> {
-  const base: Record<string, unknown> = {
-    model: request.model,
-    messages: [
-      { role: 'system', content: request.system },
-      { role: 'user', content: request.user },
-    ],
-    temperature: request.temperature,
-  };
-  try {
-    return (await post(config, { ...base, response_format: { type: 'json_object' } })).content;
-  } catch (error) {
-    const status = error instanceof LlmError ? error.status : undefined;
-    if (status !== 400 && status !== 422) throw error;
-    return (await post(config, base)).content;
+): Promise<Completion> {
+  let json = true;
+  let sendTemperature = acceptsTemperature(request.model);
+  for (;;) {
+    const body: Record<string, unknown> = {
+      model: request.model,
+      messages: [
+        { role: 'system', content: request.system },
+        { role: 'user', content: request.user },
+      ],
+      ...(sendTemperature ? { temperature: request.temperature } : {}),
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+    };
+    try {
+      return await post(config, body);
+    } catch (error) {
+      const status = error instanceof LlmError ? error.status : undefined;
+      if (status !== 400 && status !== 422) throw error;
+      if (sendTemperature && /temperature/i.test((error as Error).message)) sendTemperature = false;
+      else if (json) json = false;
+      else throw error;
+    }
   }
 }
 
@@ -169,6 +204,7 @@ export type PanelMember = {
   temperature: number;
   /// null when the member failed (endpoint error, unusable reply)
   scores: MemberScore[] | null;
+  usage?: Usage;
   rationale: string;
   error?: string;
 };
@@ -187,6 +223,8 @@ export type PanelVerdict = {
   criteria: PanelCriterion[];
   /// e.g. "panel 3×gpt-4o-mini"
   label: string;
+  /// tokens the whole panel consumed, summed over members that reported them
+  usage: Usage;
 };
 
 /// Whitespace-insensitive, Unicode-normalized, case-sensitive containment. A
@@ -276,7 +314,7 @@ export async function judgePanel(params: {
   /// the verified delivered text quotes are checked against; undefined when no
   /// copy verified, in which case no credit-claiming score can be accepted
   deliverable: string | undefined;
-  completeFn?: typeof complete;
+  completeFn?: CompleteFn;
 }): Promise<PanelVerdict> {
   const { config, openIds } = params;
   const call = params.completeFn ?? complete;
@@ -285,20 +323,24 @@ export async function judgePanel(params: {
   const seats = Array.from({ length: config.panelSize }, (_, seat) => {
     const model = models[seat % models.length]!;
     const repeated = config.panelSize > models.length;
-    return { seat, model, temperature: repeated ? REPEAT_TEMPERATURE : 0 };
+    // A reasoning model takes no temperature and samples at its default of 1,
+    // so its repeated seats are independent draws already.
+    const temperature = !acceptsTemperature(model) ? 1 : repeated ? REPEAT_TEMPERATURE : 0;
+    return { seat, model, temperature };
   });
 
   const members: PanelMember[] = await Promise.all(
     seats.map(async (seat): Promise<PanelMember> => {
       try {
-        const content = await call(config, {
+        const reply = await call(config, {
           model: seat.model,
           system: params.system,
           user: params.user,
           temperature: seat.temperature,
         });
+        const { content, usage } = typeof reply === 'string' ? { content: reply, usage: undefined } : reply;
         const parsed = parseMemberReply(content, openIds, haystack);
-        return { ...seat, scores: parsed.scores, rationale: parsed.rationale };
+        return { ...seat, scores: parsed.scores, rationale: parsed.rationale, ...(usage ? { usage } : {}) };
       } catch (error) {
         return { ...seat, scores: null, rationale: '', error: error instanceof Error ? error.message : String(error) };
       }
@@ -325,5 +367,12 @@ export async function judgePanel(params: {
   const counts = new Map<string, number>();
   for (const seat of seats) counts.set(seat.model, (counts.get(seat.model) ?? 0) + 1);
   const label = `panel ${[...counts].map(([model, n]) => `${n}×${model}`).join(' + ')}`;
-  return { members, criteria, label };
+  const usage = members.reduce<Usage>(
+    (sum, member) => ({
+      inputTokens: sum.inputTokens + (member.usage?.inputTokens ?? 0),
+      outputTokens: sum.outputTokens + (member.usage?.outputTokens ?? 0),
+    }),
+    { inputTokens: 0, outputTokens: 0 },
+  );
+  return { members, criteria, label, usage };
 }

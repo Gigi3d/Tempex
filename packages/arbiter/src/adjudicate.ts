@@ -18,7 +18,7 @@ import {
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
-import { complete, judgePanel, llmConfigFromEnv, type LlmConfig, type PanelVerdict } from './llm.js';
+import { judgePanel, llmConfigFromEnv, type CompleteFn, type LlmConfig, type PanelVerdict } from './llm.js';
 import { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
 import { analyze, composeRuleRationale, type RuleBand, type RuleSignals } from './rules.js';
 import { clamp, clampToBand, withinOffers } from './guardrail.js';
@@ -106,6 +106,10 @@ export type AdjudicationResult = {
   /// The judge panel's scores on the open criteria, member by member, with the
   /// quotes that were verified and the scores that were discarded.
   panel?: PanelVerdict;
+  /// Set when a panel was configured but could not rule, so the open criteria
+  /// stood at the neutral midpoint instead. Operators must see this: a dead key
+  /// would otherwise turn every ruling into a rule-engine ruling unnoticed.
+  panelFallback?: string;
   clamped: boolean;
   flags: string[];
   notes: string[];
@@ -127,7 +131,16 @@ export type AdjudicateParams = {
   writeOptions?: WriteOptions;
   log?: (line: string) => void;
   /// The model call, injectable so the panel can be exercised without a network.
-  completeFn?: typeof complete;
+  completeFn?: CompleteFn;
+  /// Remembers panel verdicts by their exact inputs, so a retry after a failed
+  /// relay re-signs the same scores instead of paying the panel again (and
+  /// possibly drawing different ones).
+  panelCache?: PanelCache;
+};
+
+export type PanelCache = {
+  get(key: string): PanelVerdict | undefined;
+  set(key: string, verdict: PanelVerdict): void;
 };
 
 /// The award a panel's scores imply: verified credit plus each open criterion's
@@ -295,6 +308,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   let model = RULE_ENGINE_MODEL;
   let requestedBps: number | undefined;
   let panel: PanelVerdict | undefined;
+  let panelFallback: string | undefined;
   let rationale: string | undefined;
   const ruleRationale = (): string =>
     composeRuleRationale({ jobId: jobIdNum, terms: evidenceCase.terms, signals, band, chosenBps: band.center });
@@ -309,24 +323,39 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
       notes.push('no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint');
     }
   } else {
+    const user = buildJudgePrompt({
+      jobId: jobIdNum,
+      job,
+      terms: evidenceCase.terms,
+      bundle: evidenceCase.bundle,
+      ...(response !== undefined ? { response } : {}),
+      ...(fetched !== undefined ? { fetched } : {}),
+      signals,
+      band,
+    });
+    // Everything the panel sees, and who sits on it: the same key means the
+    // same question to the same judges, so the stored answer stands.
+    const cacheKey = hashText(
+      [SYSTEM_PROMPT, user, llmConfig.models.join(','), String(llmConfig.panelSize)].join('\n\u0000\n'),
+    ).slice(2);
     try {
-      panel = await judgePanel({
-        config: llmConfig,
-        system: SYSTEM_PROMPT,
-        user: buildJudgePrompt({
-          jobId: jobIdNum,
-          job,
-          terms: evidenceCase.terms,
-          bundle: evidenceCase.bundle,
-          ...(response !== undefined ? { response } : {}),
-          ...(fetched !== undefined ? { fetched } : {}),
-          signals,
-          band,
-        }),
-        openIds,
-        deliverable: signals.deliverableText,
-        ...(params.completeFn !== undefined ? { completeFn: params.completeFn } : {}),
-      });
+      const cached = params.panelCache?.get(cacheKey);
+      if (cached) {
+        panel = cached;
+        notes.push('judge panel scores reused from an earlier attempt on the same inputs; the panel was not asked again');
+        log(`${panel.label}: reused cached scores`);
+      } else {
+        panel = await judgePanel({
+          config: llmConfig,
+          system: SYSTEM_PROMPT,
+          user,
+          openIds,
+          deliverable: signals.deliverableText,
+          ...(params.completeFn !== undefined ? { completeFn: params.completeFn } : {}),
+        });
+        params.panelCache?.set(cacheKey, panel);
+        log(`${panel.label} used ${panel.usage.inputTokens} input + ${panel.usage.outputTokens} output tokens`);
+      }
       engine = 'llm';
       model = panel.label;
       requestedBps = panelAward(signals, panel);
@@ -336,12 +365,15 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
       }
       const failed = panel.members.filter((m) => m.scores === null);
       for (const member of failed) notes.push(`judge ${member.seat + 1} (${member.model}) failed: ${member.error}`);
+      if (failed.length > 0) flags.push(`judge panel short-handed: ${failed.length} of ${panel.members.length} judges failed`);
       log(`${panel.label} proposed ${requestedBps} bps`);
     } catch (error) {
       const reason = error instanceof Error ? error.message : String(error);
       if (engineWanted === 'llm') throw error;
+      panelFallback = reason;
+      flags.push('judge panel unavailable: ruled by the rule engine with open criteria at the neutral midpoint');
       notes.push(`judge panel unavailable (${reason}); open criteria stand at the neutral midpoint`);
-      log(`judge panel unavailable: ${reason}`);
+      log(`WARNING judge panel unavailable: ${reason}`);
     }
   }
   rationale ??= ruleRationale();
@@ -426,6 +458,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     signals,
     ...(requestedBps !== undefined ? { requestedBps } : {}),
     ...(panel !== undefined ? { panel } : {}),
+    ...(panelFallback !== undefined ? { panelFallback } : {}),
     clamped,
     flags,
     notes,
