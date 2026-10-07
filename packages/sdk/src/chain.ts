@@ -22,6 +22,12 @@ export const TOKENS = {
 
 export const TOKEN_DECIMALS = 6;
 
+/// Where the escrow and its payment token live.
+export type TempexAddresses = {
+  escrow: Address;
+  token: Address;
+};
+
 export function explorerTx(hash: string): string {
   return `${EXPLORER_URL}/tx/${hash}`;
 }

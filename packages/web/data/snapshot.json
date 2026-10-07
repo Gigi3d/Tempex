@@ -1,10 +1,10 @@
 {
-  "bakedAt": "2026-10-07T20:48:26.654Z",
-  "beaconAt": "2026-10-07T20:48:26.608Z",
+  "bakedAt": "2026-10-07T21:05:09.313Z",
+  "beaconAt": "2026-10-07T21:05:09.157Z",
   "beacon": {
     "url": "http://127.0.0.1:8787",
     "stats": {
-      "generatedAt": "2026-10-07T20:48:26.608Z",
+      "generatedAt": "2026-10-07T21:05:09.157Z",
       "chainId": 42431,
       "network": "tempo:moderato",
       "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
@@ -15,7 +15,7 @@
       },
       "blockRange": {
         "from": "38497375",
-        "to": "38613693"
+        "to": "38615358"
       },
       "events": 50,
       "jobs": {
@@ -1048,10 +1048,10 @@
     "reputation": {
       "0x8cab45977cf5576a7d19363225e4f98d7d884bc4": {
         "address": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-        "generatedAt": "2026-10-07T20:48:26.637Z",
+        "generatedAt": "2026-10-07T21:05:09.298Z",
         "blockRange": {
           "from": "38497375",
-          "to": "38613693"
+          "to": "38615368"
         },
         "score": 720,
         "band": "trusted",
@@ -1113,7 +1113,7 @@
           "4"
         ],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38613693",
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1121,10 +1121,10 @@
       },
       "0x7798af822de1d5f0c0340895b07d804019e7ca64": {
         "address": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-        "generatedAt": "2026-10-07T20:48:26.638Z",
+        "generatedAt": "2026-10-07T21:05:09.300Z",
         "blockRange": {
           "from": "38497375",
-          "to": "38613693"
+          "to": "38615368"
         },
         "score": 547,
         "band": "settled",
@@ -1196,7 +1196,7 @@
           "4"
         ],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38613693",
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1204,10 +1204,10 @@
       },
       "0x92f3d653399fc151d58a927b9e1a33d50edcc4a8": {
         "address": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-        "generatedAt": "2026-10-07T20:48:26.640Z",
+        "generatedAt": "2026-10-07T21:05:09.301Z",
         "blockRange": {
           "from": "38497375",
-          "to": "38613693"
+          "to": "38615368"
         },
         "score": 500,
         "band": "unproven",
@@ -1254,7 +1254,7 @@
         },
         "proofJobIds": [],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38613693",
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1262,10 +1262,10 @@
       },
       "0x3425173fab110f780482af62bf603b9a7d023905": {
         "address": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-        "generatedAt": "2026-10-07T20:48:26.641Z",
+        "generatedAt": "2026-10-07T21:05:09.302Z",
         "blockRange": {
           "from": "38497375",
-          "to": "38613693"
+          "to": "38615368"
         },
         "score": 500,
         "band": "unproven",
@@ -1312,7 +1312,7 @@
         },
         "proofJobIds": [],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38613693",
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1321,7 +1321,7 @@
     },
     "quote": {
       "seller": {
-        "generatedAt": "2026-10-07T20:48:26.642Z",
+        "generatedAt": "2026-10-07T21:05:09.303Z",
         "role": "seller",
         "amount": {
           "units": "0",
@@ -1397,7 +1397,7 @@
         ]
       },
       "buyer": {
-        "generatedAt": "2026-10-07T20:48:26.644Z",
+        "generatedAt": "2026-10-07T21:05:09.305Z",
         "role": "buyer",
         "amount": {
           "units": "0",
@@ -1476,7 +1476,7 @@
     "onboard": {
       "seller": {
         "role": "seller",
-        "generatedAt": "2026-10-07T20:48:26.645Z",
+        "generatedAt": "2026-10-07T21:05:09.306Z",
         "claim": "A seller can be hired, deliver, and collect payment holding nothing but a private key.",
         "whyItWorks": [
           "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
@@ -1612,7 +1612,7 @@
       },
       "buyer": {
         "role": "buyer",
-        "generatedAt": "2026-10-07T20:48:26.647Z",
+        "generatedAt": "2026-10-07T21:05:09.307Z",
         "claim": "A buyer needs the payment itself and nothing else: no gas token, no separate fee balance.",
         "whyItWorks": [
           "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
@@ -1848,7 +1848,7 @@
     },
     "manifest": {
       "schema": "tempex/1",
-      "generatedAt": "2026-10-07T20:48:26.649Z",
+      "generatedAt": "2026-10-07T21:05:09.310Z",
       "identity": {
         "name": "Tempex Beacon",
         "version": "0.1.0",
@@ -1902,8 +1902,8 @@
       },
       "index": {
         "fromBlock": "38497375",
-        "toBlock": "38613693",
-        "head": "38613693",
+        "toBlock": "38615368",
+        "head": "38615368",
         "lagBlocks": "0",
         "events": 50,
         "jobs": 4,
@@ -2607,8 +2607,8 @@
       "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
       "index": {
         "fromBlock": "38497375",
-        "caughtUpTo": "38613693",
-        "head": "38613693",
+        "caughtUpTo": "38615368",
+        "head": "38615368",
         "lagBlocks": "0",
         "events": 50,
         "jobs": 4
@@ -2629,7 +2629,7 @@
         "canSign": false,
         "canMoveFunds": false
       },
-      "time": "2026-10-07T20:48:26.653Z"
+      "time": "2026-10-07T21:05:09.313Z"
     }
   },
   "receipt": {
@@ -3420,7 +3420,18 @@
       },
       "claim": "The delivery is incomplete: two strings are missing, prices and dates are in US formats, and the supplied glossary was not used.",
       "deliverable": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
-      "response": null
+      "response": null,
+      "artifacts": [
+        {
+          "kind": "log",
+          "label": "localization-coverage.txt",
+          "content": "locales/fr-FR.json: 6 of 8 keys translated; coupon and terms pending",
+          "contentHash": "0x2e8e825f7a082f50ba67691cd1995121b6e1d6d70875198a9a995e10d55a9e1b"
+        }
+      ],
+      "sellerStatement": "The delivered locale is attached. The core checkout and email strings are translated; formats were left for a follow-up.",
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
     },
     {
       "id": "nodelivery",
@@ -3635,7 +3646,11 @@
       },
       "claim": "Nothing was delivered. The checkout was never translated and no locale file exists.",
       "deliverable": "Status update: nothing was produced. The work was never started and no strings were translated.",
-      "response": null
+      "response": null,
+      "artifacts": [],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
     },
     {
       "id": "badfaith",
@@ -3850,7 +3865,18 @@
       },
       "claim": "Nothing was delivered. The seller never translated the checkout and the prices are wrong.",
       "deliverable": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Valider la commande\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"checkout.coupon\": \"Code promo\",\n    \"checkout.terms\": \"J'accepte les conditions générales de vente\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"12,50 €\",\n    \"checkout.shipping_fee\": \"4,00 €\"\n  },\n  \"dates\": {\n    \"order.placed\": \"7 octobre 2026\",\n    \"order.delivery\": \"9 octobre 2026\"\n  }\n}",
-      "response": null
+      "response": null,
+      "artifacts": [
+        {
+          "kind": "log",
+          "label": "delivery-manifest.txt",
+          "content": "locales/fr-FR.json: 8 of 8 keys; prices and dates in fr-FR formats.",
+          "contentHash": "0x9441378a1aa0ff3776e36dae191f60358de8ee1cfd70611438c8552d0f02df89"
+        }
+      ],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
     },
     {
       "id": "echo",
@@ -4065,7 +4091,11 @@
       },
       "claim": "The delivery is a restatement of the brief. There is no locale file and nothing was translated.",
       "deliverable": "Every checkout and email string in the brief is delivered. The strings are written in French. Prices use the French format, e.g. 12,50 €. Dates use the French long format, e.g. 7 octobre 2026. The supplied glossary terms are used. The copy reads naturally to a French shopper.",
-      "response": null
+      "response": null,
+      "artifacts": [],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
     }
   ]
 }

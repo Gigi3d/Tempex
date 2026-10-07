@@ -114,6 +114,11 @@ function bakeCorpus(): unknown[] {
       claim: evidenceCase.bundle.claim,
       deliverable: evidenceCase.bundle.deliverable?.content ?? null,
       response: evidenceCase.response ?? null,
+      // What /play needs to stage the same dispute from a browser.
+      artifacts: evidenceCase.bundle.artifacts,
+      sellerStatement: scenario.sellerStatement ?? null,
+      deliveryDeadlineSeconds: scenario.deliveryDeadlineSeconds,
+      reviewWindowSeconds: scenario.reviewWindowSeconds,
     };
   });
 }

@@ -1,0 +1,150 @@
+{
+  "tempex": "adjudication-receipt/1",
+  "command": "court",
+  "at": "2026-10-07T21:36:14.656Z",
+  "chainId": 42431,
+  "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+  "relayExplorer": "https://explore.testnet.tempo.xyz/tx/0xcb57836e3a20a5636ebb7d96038112ceb74646a78c24b1430ca6e2e9c4ef2b92",
+  "jobId": 7,
+  "engine": "rules",
+  "model": "tempex-rules/1",
+  "amount": "25000000",
+  "evidenceHash": "0xf8df71079a53e47732e96eab8be88fd264d95cbd3a4c77f4ec89fb759e2c4657",
+  "ruling": {
+    "jobId": 7,
+    "sellerAwardBps": 4750,
+    "evidenceHash": "0xf8df71079a53e47732e96eab8be88fd264d95cbd3a4c77f4ec89fb759e2c4657",
+    "rationaleHash": "0x5cc55e8d30fbe6e70f4774a65b889866a94f3acc4a5d83eee2e7949b4b4dc619",
+    "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 7).",
+    "issuedAt": 1791408971,
+    "validUntil": 1791495373,
+    "model": "tempex-rules/1"
+  },
+  "verdict": {
+    "jobId": "7",
+    "sellerAwardBps": 4750,
+    "evidenceHash": "0xf8df71079a53e47732e96eab8be88fd264d95cbd3a4c77f4ec89fb759e2c4657",
+    "rationaleHash": "0x5cc55e8d30fbe6e70f4774a65b889866a94f3acc4a5d83eee2e7949b4b4dc619",
+    "issuedAt": "1791408971",
+    "validUntil": "1791495373"
+  },
+  "signature": "0x2da4702ac71ca43b41397bd40dbbf1a49f203a7b96c726d99ea3b63dada95ce72dbaf94ac45cedf1e78966c0a22cb2e9382503491759a77c061d97920e7af6751b",
+  "digest": "0xeaadff7f2cb0acd9bcecf76804e243d549d36e79f821bd205d17d22c0cad9dcd",
+  "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "certified": true,
+  "money": {
+    "amount": "25000000",
+    "bond": "1250000",
+    "bondToSeller": "480937",
+    "arbitrationFee": "500000",
+    "arbitrationFeeBps": 200,
+    "sellerAmount": "12093437",
+    "buyerAmount": "13656563"
+  },
+  "band": {
+    "lowBps": 4250,
+    "highBps": 5250,
+    "center": 4750
+  },
+  "offers": {
+    "lowBps": 2500,
+    "highBps": 5000
+  },
+  "boundedBand": {
+    "lowBps": 4250,
+    "highBps": 5000,
+    "center": 4750
+  },
+  "signals": {
+    "criteria": [
+      {
+        "id": "keys",
+        "text": "Every checkout and email string in the brief is delivered",
+        "weight": 3,
+        "kind": "check",
+        "check": "jsonKeys",
+        "credit": 0.75,
+        "passed": false,
+        "evidence": "6 of 8 required keys present; missing checkout.coupon, checkout.terms"
+      },
+      {
+        "id": "french",
+        "text": "The strings are written in French",
+        "weight": 2,
+        "kind": "check",
+        "check": "language",
+        "credit": 1,
+        "passed": true,
+        "evidence": "written in fra"
+      },
+      {
+        "id": "prices",
+        "text": "Prices use the French format, e.g. 12,50 €",
+        "weight": 2,
+        "kind": "check",
+        "check": "regex",
+        "credit": 0,
+        "passed": false,
+        "evidence": "0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\""
+      },
+      {
+        "id": "dates",
+        "text": "Dates use the French long format, e.g. 7 octobre 2026",
+        "weight": 1,
+        "kind": "check",
+        "check": "regex",
+        "credit": 0,
+        "passed": false,
+        "evidence": "0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\""
+      },
+      {
+        "id": "glossary",
+        "text": "The supplied glossary terms are used",
+        "weight": 1,
+        "kind": "check",
+        "check": "contains",
+        "credit": 0,
+        "passed": false,
+        "evidence": "0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\""
+      },
+      {
+        "id": "tone",
+        "text": "The copy reads naturally to a French shopper",
+        "weight": 1,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      }
+    ],
+    "totalWeight": 10,
+    "checkedWeight": 9,
+    "earnedWeight": 4.25,
+    "openWeight": 1,
+    "artifactsDeclared": 1,
+    "artifactsVerifiable": 1,
+    "evidenceStrength": 1,
+    "integrity": {
+      "termsHashMatches": true,
+      "deliverableHashMatches": true
+    },
+    "scoredCopy": "uri",
+    "deliverableText": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
+    "sellerResponded": true
+  },
+  "clamped": false,
+  "flags": [],
+  "notes": [
+    "the parties' offers [2500, 5000] narrowed the rule band [4250, 5250] to [4250, 5000]",
+    "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+  ],
+  "relay": {
+    "jobId": 7,
+    "digest": "0xeaadff7f2cb0acd9bcecf76804e243d549d36e79f821bd205d17d22c0cad9dcd",
+    "sellerAwardBps": 4750,
+    "sellerAmount": "12093437",
+    "buyerAmount": "13656563",
+    "arbitrationFee": "500000",
+    "hash": "0xcb57836e3a20a5636ebb7d96038112ceb74646a78c24b1430ca6e2e9c4ef2b92"
+  }
+}

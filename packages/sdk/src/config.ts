@@ -2,7 +2,9 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Address, Hex } from 'viem';
 
-import { TOKENS } from './chain.js';
+import { TOKENS, type TempexAddresses } from './chain.js';
+
+export type { TempexAddresses } from './chain.js';
 
 export {
   CHAIN_ID,
@@ -34,11 +36,6 @@ function required(name: string): string {
   if (!value) throw new Error(`missing env var ${name} (see .env.example)`);
   return value;
 }
-
-export type TempexAddresses = {
-  escrow: Address;
-  token: Address;
-};
 
 /// Reads the deployed addresses from the environment so every package points at
 /// the same escrow. Single source of truth: .env, written by scripts/deploy-escrow.sh.

@@ -13,7 +13,7 @@ import { tempoTestnet } from 'viem/tempo/chains';
 
 import { tempexEscrowAbi } from './abi/TempexEscrow.js';
 import { tip20Abi } from './abi/TIP20.js';
-import { CHAIN_ID, RPC_URL, SPONSOR_URL, type TempexAddresses } from './config.js';
+import { CHAIN_ID, RPC_URL, SPONSOR_URL, type TempexAddresses } from './chain.js';
 import { tempexDomain, verdictDigest, type VerdictStruct } from './verdict.js';
 import {
   JOB_STATES,

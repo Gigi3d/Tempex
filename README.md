@@ -64,6 +64,7 @@ buyer                TempexEscrow                seller                arbiter
 | L3 | `packages/arbiter` | 2,075 | rules → band → prompt → LLM → clamp → certify → sign |
 | L4 | `packages/beacon` | 4,933 | 18-route front door: manifest, evidence, reputation, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
+| L6 | `packages/web` | — | The human frontend: Judge's seat (live deals from the browser), Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
 
@@ -74,7 +75,7 @@ pnpm install
 cp .env.example .env        # fill in testnet keys: cast wallet new
 pnpm test                   # forge test — 61/61
 pnpm typecheck
-pnpm test:ts                # arbiter: checks, band properties, judge panel, audit regressions
+pnpm test:ts                # arbiter: checks, band properties, judge panel, audit regressions, court; web: evidence parity
 pnpm check                  # all of the above, plus demo predict and drill
 
 pnpm demo drill             # offline: push scripted judge proposals through the band guardrail
@@ -82,6 +83,8 @@ pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.js
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
 pnpm smoke                  # live: SDK chain client + 185 beacon assertions, spends nothing
+pnpm court --sponsored      # arbiter over HTTP: POST /rule/:jobId with the evidence pinned on chain
+pnpm --filter @tempex/web dev   # the website; set TEMPEX_COURT_URL to let /play call the referee
 ```
 
 `.env.example` already points at the public Moderato deployment, so the beacon's

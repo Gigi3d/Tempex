@@ -99,6 +99,10 @@ export type CorpusCase = {
   claim: string;
   deliverable: string | null;
   response: { statement?: string } | null;
+  artifacts: { kind: string; label: string; content: string; contentHash: string }[];
+  sellerStatement: string | null;
+  deliveryDeadlineSeconds: number;
+  reviewWindowSeconds: number;
 };
 
 export type Snapshot = {

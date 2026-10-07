@@ -21,6 +21,7 @@ import {
 } from './adjudicate.js';
 import { formatBps } from './rules.js';
 import { evidenceDir, jsonText, receiptPath, repoRoot, runsDir, writeJson } from './store.js';
+import { startCourt } from './court.js';
 import { verifyArbiter } from './verify.js';
 import { watchDisputes } from './watch.js';
 
@@ -334,6 +335,45 @@ async function cmdList(flags: Record<string, FlagValue>): Promise<number> {
   return 0;
 }
 
+/// The arbiter behind an HTTP door, for the web app's Judge's seat: a browser
+/// posts the evidence it pinned on chain and gets the ruling back. Every check
+/// stays in adjudicate; the key stays in this process.
+async function cmdCourt(flags: Record<string, FlagValue>): Promise<number> {
+  const sponsored = flags['sponsored'] === true;
+  const client = arbiterClient(sponsored);
+  const port = numberFlag(flags, 'port') ?? Number(process.env['COURT_PORT'] ?? 8788);
+  const origins = (stringFlag(flags, 'origins') ?? process.env['COURT_ORIGINS'] ?? '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+  const stamp = (): string => new Date().toISOString().slice(11, 19);
+  const court = startCourt({
+    client,
+    port,
+    host: stringFlag(flags, 'host'),
+    engine: engineFlag(flags),
+    origins,
+    evidenceDir: evidenceDir(),
+    sponsored,
+    log: (line) => out(`[${stamp()}] ${line}`),
+    onRuling: (result) => {
+      const path = writeJson(receiptPath(result.jobId), receiptFor(result, client, 'court'));
+      printResult(result, path);
+    },
+  });
+  row('arbiter', client.address);
+  row('escrow', client.addresses.escrow);
+  row('court', `${court.url}  (POST /rule/:jobId, GET /health)`);
+  row('origins', origins.length > 0 ? origins.join(', ') : '(server-to-server only)');
+  if (sponsored) row('fees', `sponsored via ${SPONSOR_URL}`);
+  out('');
+  process.on('SIGINT', () => {
+    void court.close().then(() => process.exit(0));
+  });
+  await new Promise<void>(() => {});
+  return 0;
+}
+
 function usage(): void {
   out('Tempex arbiter — evidence in, signed verdict out.');
   out('');
@@ -341,11 +381,13 @@ function usage(): void {
   out('  watch [--once] [--poll] [--from <block>] [--engine auto|rules|llm] [--ttl <s>] [--no-relay] [--sponsored]');
   out('  verify [--json]');
   out('  list --fee <bps> [--uri <url>] [--sponsored] | list --delist');
+  out('  court [--port <n>] [--host <h>] [--origins <a,b>] [--engine auto|rules|llm] [--sponsored]');
   out('');
   out('  adjudicate   rule on one dispute; --dry skips the on-chain state gate, --relay settles it');
   out('  watch        rule on every dispute as it is raised; --once scans history and exits');
   out('  verify       prove this key\'s verdicts against the deployed escrow — no dispute needed');
   out('  list         offer this key as an arbiter buyers can choose, at its own fee');
+  out('  court        rule over HTTP: POST /rule/:jobId with the evidence pinned on chain');
   out('');
   out('OPENAI_API_KEY activates the LLM judge; without one the deterministic rule engine rules.');
 }
@@ -361,6 +403,8 @@ async function main(argv: string[]): Promise<number> {
       return cmdVerify(flags);
     case 'list':
       return cmdList(flags);
+    case 'court':
+      return cmdCourt(flags);
     case '':
     case 'help':
       usage();

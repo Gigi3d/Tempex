@@ -20,12 +20,12 @@ export function Header() {
   return (
     <header className="border-b hairline bg-ink/80 backdrop-blur sticky top-0 z-30">
       <div className="wrap flex h-16 items-center gap-6">
-        <Link href="/" aria-label="Tempex home">
+        <Link href="/" aria-label="Tempex home" className="shrink-0">
           <Wordmark />
         </Link>
-        <nav aria-label="Main" className="ml-auto flex items-center gap-1 overflow-x-auto text-[14px] text-fg-2">
+        <nav aria-label="Main" className="ml-auto flex min-w-0 items-center gap-0 overflow-x-auto text-[14px] text-fg-2 [mask-image:linear-gradient(to_right,black_80%,transparent)] md:gap-1 md:[mask-image:none]">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="px-3 py-2 hover:text-fg transition-colors">
+            <Link key={item.href} href={item.href} className="shrink-0 px-2 py-2 transition-colors hover:text-fg md:px-3">
               {item.label}
             </Link>
           ))}
