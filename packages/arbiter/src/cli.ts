@@ -119,15 +119,14 @@ function wrap(text: string, width = 92): string[] {
 
 function printResult(result: AdjudicationResult, receipt: string | null): void {
   const { ruling, money, band } = result;
-  const coverage =
-    result.signals.coverage === null ? 'n/a' : result.signals.coverage.toFixed(2);
 
   out('');
   row('job', `${result.jobId} — disputed, ${formatToken(money.amount)} escrowed`);
   row(
     'band',
-    `${band.lowBps}-${band.highBps} bps (centre ${band.center}) — coverage ${coverage}, ` +
-      `evidence ${result.signals.evidenceStrength.toFixed(2)}, claim ${result.signals.corroboration}`,
+    `${band.lowBps}-${band.highBps} bps (centre ${band.center}) — checks earned ` +
+      `${result.signals.earnedWeight.toFixed(2)} of ${result.signals.checkedWeight}, ` +
+      `${result.signals.openWeight} of ${result.signals.totalWeight} weight left to judgement`,
   );
   row(
     'engine',

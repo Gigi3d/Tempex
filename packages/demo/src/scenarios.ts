@@ -3,33 +3,30 @@ import {
   hashCanonical,
   hashText,
   tokenAmount,
+  type Criterion,
   type EvidenceArtifact,
   type EvidenceBundle,
   type EvidenceCase,
   type Job,
   type JobTerms,
 } from '@tempex/sdk';
-import type { RuleSignals } from '@tempex/arbiter';
 import type { Address, Hex } from 'viem';
 
-/// The four disputes this demo can stage. Three of them exercise a different
-/// corner of the rule engine's judgement; the fourth exists to prove the band
-/// protects a seller who actually delivered.
-export type ScenarioId = 'underdelivered' | 'nodelivery' | 'badfaith' | 'admission';
+/// The four disputes this demo can stage, all over the same French localization
+/// brief, so the only thing that changes between them is what was delivered.
+export type ScenarioId = 'underdelivered' | 'nodelivery' | 'badfaith' | 'echo';
 
 /// What the rule engine must say about a scenario, worked out by hand from the
-/// engine's own constants before anything was run.
+/// terms' checks and weights before anything was run.
 ///
 /// This is the point of the corpus: the expected band lives in the repository, so
 /// a run that produces a different one is a failure the runner reports rather
 /// than a number the presenter narrates. `packages/demo predict` asserts all of
 /// it offline; the live runner asserts the headline scenario against the chain.
 export type ScenarioExpectation = {
-  coverage: number;
-  corroboration: RuleSignals['corroboration'];
-  /// terms the artifact raises only to say it did not deliver them
-  admitted: string[];
-  /// the ruling the rule engine signs: the centre of the band, unclamped
+  /// each criterion's credit from its check, or null for one left open
+  credits: Record<string, number | null>;
+  /// the ruling the rule engine signs: the centre of the band, before offers
   center: number;
   band: readonly [number, number];
 };
@@ -45,8 +42,8 @@ export type Scenario = {
   deliveryDeadlineSeconds: number;
   reviewWindowSeconds: number;
   deliverableSpec: string;
-  criteria: string[];
-  /// The delivered text. This is the bytes whose hash the seller commits to.
+  criteria: Criterion[];
+  /// The delivered bytes. This is what the seller commits to by hash.
   deliverable: string;
   artifacts: EvidenceArtifact[];
   claim: string;
@@ -78,186 +75,212 @@ function artifact(
 
 const ZERO_HASH = `0x${'0'.repeat(64)}` as Hex;
 
-/// The headline dispute.
+/// The keys the brief asks for. A delivery is checked against this list, not
+/// against the words of a criterion.
+const REQUIRED_KEYS = [
+  'cart.title',
+  'checkout.title',
+  'checkout.submit',
+  'checkout.shipping',
+  'checkout.coupon',
+  'checkout.terms',
+  'email.subject',
+  'email.body',
+];
+
+const FRENCH_MONTHS = 'janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre';
+
+/// The brief every scenario shares. Five criteria are checks, decided exactly
+/// from the delivered JSON; the sixth is a judgement no code can make. Weights
+/// total 10, so one unit of weight is 1000 bps.
+const LOCALIZATION_SPEC =
+  'Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.';
+const LOCALIZATION_CRITERIA: Criterion[] = [
+  {
+    id: 'keys',
+    text: 'Every checkout and email string in the brief is delivered',
+    weight: 3,
+    check: { type: 'jsonKeys', at: '/strings', keys: REQUIRED_KEYS },
+  },
+  {
+    id: 'french',
+    text: 'The strings are written in French',
+    weight: 2,
+    check: { type: 'language', at: '/strings', is: 'fr' },
+  },
+  {
+    id: 'prices',
+    text: 'Prices use the French format, e.g. 12,50 €',
+    weight: 2,
+    check: { type: 'regex', at: '/prices', pattern: '^\\d+,\\d{2} €$' },
+  },
+  {
+    id: 'dates',
+    text: 'Dates use the French long format, e.g. 7 octobre 2026',
+    weight: 1,
+    check: { type: 'regex', at: '/dates', pattern: `^\\d{1,2} (${FRENCH_MONTHS}) \\d{4}$` },
+  },
+  {
+    id: 'glossary',
+    text: 'The supplied glossary terms are used',
+    weight: 1,
+    check: { type: 'contains', at: '/strings', all: ['Valider la commande', 'Code promo'] },
+  },
+  {
+    id: 'tone',
+    text: 'The copy reads naturally to a French shopper',
+    weight: 1,
+  },
+];
+
+const locale = (body: Record<string, unknown>): string =>
+  JSON.stringify({ locale: 'fr-FR', ...body }, null, 2);
+
+/// The headline dispute, run live.
 ///
-/// A buyer paid for a French localization and received a handoff note that covers
-/// two of the four agreed criteria and names what it skipped. The word "Not" is
-/// load-bearing: everything after it is a term the seller raised in order to say
-/// it is absent, so the artifact cannot vote for its own completeness.
-///
-/// Hand-computed from the engine's constants: criteria scores 0.50 / 0.00 / 0.00 /
-/// 1.00 mean 0.375, centre 3750 bps, a grounded claim earns the -500 nudge, and
-/// the deliverable hash binds to the chain so the band is the tight +/-1200.
+/// Six of the eight strings are delivered, in French; prices and dates were left
+/// in US formats and the glossary was not used. Worked by hand: keys 6/8 of
+/// weight 3 earns 2.25, French earns 2, prices, dates and glossary earn 0, so 4.25
+/// of 10 is verified and the judgement criterion (weight 1) is open: band
+/// 4250-5250, centre 4750. The parties' offers (2500, 5000) leave that intact.
 const underdelivered: Scenario = {
   id: 'underdelivered',
   title: 'Localization sprint, partly delivered',
   premise:
-    'A buyer paid 25 alphaUSD for a French localization. The seller delivered a handoff note that says, in its own words, which parts were not done.',
+    'A buyer paid 25 alphaUSD for a French checkout locale. Most strings arrived in French, but prices and dates are in US formats and the glossary was ignored.',
   amount: '25.00',
   deliveryDeadlineSeconds: 3_600,
   reviewWindowSeconds: 3_600,
-  deliverableSpec:
-    'Translate the checkout flow into French for the fr-FR locale, following the glossary supplied with the brief.',
-  criteria: [
-    'Checkout strings translated to French',
-    'Prices and dates in European formats',
-    'Supplied glossary terms preserved',
-    'Order confirmation email localized',
-  ],
-  deliverable:
-    'Handoff note: the cart, checkout and payment screens were rewritten in French, and the order confirmation email is localized.\n' +
-    'Not delivered: prices and dates in European formats; the supplied glossary.',
+  deliverableSpec: LOCALIZATION_SPEC,
+  criteria: LOCALIZATION_CRITERIA,
+  deliverable: locale({
+    strings: {
+      'cart.title': 'Votre panier',
+      'checkout.title': 'Paiement',
+      'checkout.submit': 'Payer maintenant',
+      'checkout.shipping': 'Adresse de livraison',
+      'email.subject': 'Confirmation de votre commande',
+      'email.body': 'Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.',
+    },
+    prices: { 'checkout.total': '$12.50', 'checkout.shipping_fee': '$4.00' },
+    dates: { 'order.placed': 'October 7, 2026' },
+  }),
   artifacts: [
-    artifact(
-      'log',
-      'localization-coverage.txt',
-      'locales/fr-FR.json: 412 keys parsed, 411 present, 1 missing (pricing.legal.notice)',
-    ),
+    artifact('log', 'localization-coverage.txt', 'locales/fr-FR.json: 6 of 8 keys translated; coupon and terms pending'),
   ],
   claim:
-    'The delivery is incomplete: the prices and dates are in US formats, the supplied glossary is missing, and the checkout strings were never translated.',
+    'The delivery is incomplete: two strings are missing, prices and dates are in US formats, and the supplied glossary was not used.',
+  sellerStatement:
+    'The delivered locale is attached. The core checkout and email strings are translated; formats were left for a follow-up.',
   expect: {
-    coverage: 0.375,
-    corroboration: 'grounded',
-    admitted: ['date', 'european', 'format', 'glossary', 'price', 'supplied'],
-    center: 3_250,
-    band: [2_050, 4_450],
+    credits: { keys: 0.75, french: 1, prices: 0, dates: 0, glossary: 0, tone: null },
+    center: 4_750,
+    band: [4_250, 5_250],
   },
   // The buyer concedes a quarter was earned; the seller holds out for half. The
-  // rule band's centre, 3250, sits inside both, so the offers bound the arbiter
-  // without moving the ruling.
+  // band sits inside both, so the offers bound the arbiter without moving it.
   buyerOfferBps: 2_500,
   sellerAskBps: 5_000,
   live: true,
-  drill: [-8_000, 0, 3_100, 5_000, 10_000],
+  drill: [-8_000, 0, 4_500, 5_000, 10_000],
 };
 
-/// Paid, then nothing shipped. Coverage floors at zero and the band reaches down
-/// to it, but the arbitration fee still applies to the full escrow, so the zero
-/// case is not quite a full refund — which is a fee-schedule question, not a
-/// judgement one, and the receipt says both.
+/// Paid, then nothing shipped. The deliverable is a status note, not a locale
+/// file, so every check fails on it: 0 of 10 is verified and only the judgement
+/// criterion is open. Band 0-1000, centre 500.
 const nodelivery: Scenario = {
   id: 'nodelivery',
   title: 'Paid, then nothing shipped',
   premise:
-    'The seller took the job and delivered a status update explaining that no work was done. The buyer disputes immediately.',
+    'The seller took the job and delivered a status note saying no work was done. The buyer disputes immediately.',
   amount: '40.00',
   deliveryDeadlineSeconds: 3_600,
   reviewWindowSeconds: 3_600,
-  deliverableSpec: 'Translate the checkout flow into French for the fr-FR locale.',
-  criteria: [
-    'Checkout strings translated to French',
-    'Prices and dates in European formats',
-    'Order confirmation email localized',
-  ],
-  deliverable:
-    'Status update: nothing was produced. The work was never started and no strings were translated.',
+  deliverableSpec: LOCALIZATION_SPEC,
+  criteria: LOCALIZATION_CRITERIA,
+  deliverable: 'Status update: nothing was produced. The work was never started and no strings were translated.',
   artifacts: [],
-  claim:
-    'Nothing was delivered. The checkout was never translated and no prices or dates were localized.',
+  claim: 'Nothing was delivered. The checkout was never translated and no locale file exists.',
   expect: {
-    coverage: 0,
-    corroboration: 'grounded',
-    admitted: ['string', 'translated'],
-    center: 0,
-    band: [0, 1_200],
+    credits: { keys: 0, french: 0, prices: 0, dates: 0, glossary: 0, tone: null },
+    center: 500,
+    band: [0, 1_000],
   },
   live: false,
-  drill: [0, 5_000],
+  drill: [0, 500, 5_000],
 };
 
 /// The dispute the escrow is designed to survive: a buyer who received exactly
-/// what the terms asked for and disputes anyway. Every criterion scores 1.00, the
-/// engine records the claim as contradicted by the text, and the band is pushed
-/// up to 8800-10000 bps. A seller who delivered is protected from a buyer who
-/// would rather not pay, using only the buyer's own pinned evidence.
+/// what the terms asked for and disputes anyway. Every check passes, so 9 of 10
+/// is verified on the delivered bytes alone, whatever the buyer claims. Band
+/// 9000-10000, centre 9500.
 const badfaith: Scenario = {
   id: 'badfaith',
   title: 'A dispute over work that was delivered',
   premise:
-    'Every criterion is met and the deliverable says so. The buyer disputes anyway; the arbiter rules against the complaint.',
+    'Every checkable criterion is met by the delivered file. The buyer disputes anyway; the checks rule against the complaint.',
   amount: '18.00',
   deliveryDeadlineSeconds: 3_600,
   reviewWindowSeconds: 3_600,
-  deliverableSpec: 'Translate the checkout flow into French for the fr-FR locale.',
-  criteria: [
-    'Checkout strings translated to French',
-    'Prices and dates in European formats',
-    'Order confirmation email localized',
-  ],
-  deliverable:
-    'Delivery complete: checkout strings are translated to French, prices and dates use European formats, and the order confirmation email is localized.',
+  deliverableSpec: LOCALIZATION_SPEC,
+  criteria: LOCALIZATION_CRITERIA,
+  deliverable: locale({
+    strings: {
+      'cart.title': 'Votre panier',
+      'checkout.title': 'Paiement',
+      'checkout.submit': 'Valider la commande',
+      'checkout.shipping': 'Adresse de livraison',
+      'checkout.coupon': 'Code promo',
+      'checkout.terms': "J'accepte les conditions générales de vente",
+      'email.subject': 'Confirmation de votre commande',
+      'email.body': 'Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.',
+    },
+    prices: { 'checkout.total': '12,50 €', 'checkout.shipping_fee': '4,00 €' },
+    dates: { 'order.placed': '7 octobre 2026', 'order.delivery': '9 octobre 2026' },
+  }),
   artifacts: [
-    artifact(
-      'log',
-      'delivery-manifest.txt',
-      'Build 412 - 3 of 3 acceptance criteria verified; locale fr-FR; 512 keys; zero missing.',
-    ),
+    artifact('log', 'delivery-manifest.txt', 'locales/fr-FR.json: 8 of 8 keys; prices and dates in fr-FR formats.'),
   ],
-  claim:
-    'Nothing was delivered. The seller never translated the checkout and the prices are wrong.',
+  claim: 'Nothing was delivered. The seller never translated the checkout and the prices are wrong.',
   expect: {
-    coverage: 1,
-    corroboration: 'contradicted',
-    admitted: [],
-    center: 10_000,
-    band: [8_800, 10_000],
+    credits: { keys: 1, french: 1, prices: 1, dates: 1, glossary: 1, tone: null },
+    center: 9_500,
+    band: [9_000, 10_000],
   },
   live: false,
-  drill: [0, 5_000],
+  drill: [0, 9_600, 10_000],
 };
 
-/// The case that motivates negation awareness, and the reason `admitted` exists.
-///
-/// The glossary criterion scores 0.75 — three of its four terms appear plainly, so
-/// a keyword matcher calls it delivered. But the fourth, "preserved", appears only
-/// inside a negation ("Nothing was preserved..."). The engine strips it out of
-/// coverage, keeps it as an admission, and when the buyer's oddly-worded complaint
-/// does not name any term the deliverable *missed*, the seller's own sentence is
-/// what corroborates the complaint.
-///
-/// Without the admitted path this dispute falls to 'unknown' and the complaint is
-/// treated as noise. With it, the ruling is grounded in the artifact's own record.
-const admission: Scenario = {
-  id: 'admission',
-  title: 'The complaint the artifact itself corroborates',
+/// The attack keyword scoring could not survive: the seller delivers the
+/// acceptance criteria themselves, pasted back as prose. A keyword matcher gave
+/// this full marks. Checks read the delivered bytes, not their vocabulary, so it
+/// earns nothing: band 0-1000, centre 500, the same as delivering nothing.
+const echo: Scenario = {
+  id: 'echo',
+  title: 'The criteria, pasted back as the delivery',
   premise:
-    'The buyer complains in words that never name what was missed. The seller\'s own note says "nothing was preserved", and that sentence is what grounds the ruling.',
+    'The seller delivers a note that repeats every acceptance criterion word for word, and no locale file.',
   amount: '12.50',
   deliveryDeadlineSeconds: 3_600,
   reviewWindowSeconds: 3_600,
-  deliverableSpec:
-    'Produce the French checkout screens and confirm the supplied glossary survived the rewrite intact.',
-  criteria: [
-    'Checkout strings translated to French',
-    'Supplied glossary terms preserved',
-    'Order confirmation email localized',
-  ],
+  deliverableSpec: LOCALIZATION_SPEC,
+  criteria: LOCALIZATION_CRITERIA,
   deliverable:
-    'The cart and checkout screens were rewritten in French. ' +
-    'The supplied glossary ships with 120 terms. ' +
-    'The order confirmation email is localized. ' +
-    'Nothing was preserved from the original layout.',
+    'Every checkout and email string in the brief is delivered. The strings are written in French. ' +
+    'Prices use the French format, e.g. 12,50 €. Dates use the French long format, e.g. 7 octobre 2026. ' +
+    'The supplied glossary terms are used. The copy reads naturally to a French shopper.',
   artifacts: [],
-  claim:
-    'The deliverable is incomplete. The checkout flow was never finished, and the preserved terminology from the supplied glossary is missing.',
+  claim: 'The delivery is a restatement of the brief. There is no locale file and nothing was translated.',
   expect: {
-    coverage: 0.75,
-    corroboration: 'grounded',
-    admitted: ['preserved'],
-    center: 7_000,
-    band: [5_800, 8_200],
+    credits: { keys: 0, french: 0, prices: 0, dates: 0, glossary: 0, tone: null },
+    center: 500,
+    band: [0, 1_000],
   },
   live: false,
-  drill: [3_000, 10_000],
+  drill: [0, 1_000, 10_000],
 };
 
-export const SCENARIOS: readonly Scenario[] = [
-  underdelivered,
-  nodelivery,
-  badfaith,
-  admission,
-];
+export const SCENARIOS: readonly Scenario[] = [underdelivered, nodelivery, badfaith, echo];
 
 export function scenarioById(id: string): Scenario {
   const found = SCENARIOS.find((scenario) => scenario.id === id);
@@ -277,7 +300,7 @@ export function termsFor(scenario: Scenario, parties: DemoParties): JobTerms {
   return {
     title: scenario.title,
     deliverableSpec: scenario.deliverableSpec,
-    acceptanceCriteria: [...scenario.criteria],
+    acceptanceCriteria: structuredClone(scenario.criteria),
     amount: scenario.amount,
     currency: 'AlphaUSD',
     buyer: parties.buyer,

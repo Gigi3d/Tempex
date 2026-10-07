@@ -1,7 +1,7 @@
 import type { Address, Hex } from 'viem';
 
 import { tokenAmount } from './config.js';
-import { hashCanonical, type JobTerms } from './evidence.js';
+import { hashCanonical, type Criterion, type JobTerms } from './evidence.js';
 
 /// A deal paid in tranches. Each milestone becomes its own escrow job, with its
 /// own criteria, amount and deadline, so delivering, accepting or disputing one
@@ -15,7 +15,7 @@ export type MilestonePlan = {
   currency?: string;
   milestones: {
     title: string;
-    acceptanceCriteria: string[];
+    acceptanceCriteria: Criterion[];
     /// whole tokens, e.g. "250.00"
     amount: string;
     /// unix seconds; must strictly increase from one milestone to the next

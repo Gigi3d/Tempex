@@ -260,9 +260,7 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     );
   }
   log(
-    `objective band ${band.lowBps}-${band.highBps} bps (centre ${band.center}); coverage ${
-      signals.coverage === null ? 'n/a' : signals.coverage.toFixed(2)
-    }, evidence strength ${signals.evidenceStrength.toFixed(2)}, claim ${signals.corroboration}`,
+    `band ${band.lowBps}-${band.highBps} bps (centre ${band.center}): checks earned ${signals.earnedWeight.toFixed(2)} of ${signals.checkedWeight} checked weight, ${signals.openWeight} of ${signals.totalWeight} left to judgement`,
   );
 
   // ---- judgement: the model when configured, the rule engine otherwise ----

@@ -41,9 +41,13 @@ export type PredictedMoney = {
 };
 
 export type PredictedCriterion = {
-  criterion: string;
-  score: number;
-  missing: string[];
+  id: string;
+  text: string;
+  weight: number;
+  kind: 'check' | 'judge' | 'open';
+  /// credit from the check, null when the criterion is left open
+  credit: number | null;
+  evidence: string;
 };
 
 export type Prediction = {
@@ -55,14 +59,13 @@ export type Prediction = {
   mismatches: string[];
   /// The analysis refused to rule at all, which no scenario should trigger.
   blocking: string[];
-  coverage: number | null;
-  corroboration: string;
-  admitted: string[];
   center: number;
   band: [number, number];
-  bandHalfWidth: number;
+  /// verified credit and open weight, out of the total
+  earnedWeight: number;
+  openWeight: number;
+  totalWeight: number;
   criteria: PredictedCriterion[];
-  weakest: string | null;
   evidenceStrength: number;
   /// The decision the rule engine would sign: the band's centre.
   rulingBps: number;
@@ -98,21 +101,18 @@ export function predictScenario(
   const expected = scenario.expect;
   const mismatches: string[] = [];
 
-  const coverage = signals.coverage;
-  if (coverage === null || Math.abs(coverage - expected.coverage) > 1e-9) {
-    mismatches.push(
-      `coverage ${coverage === null ? 'null' : coverage.toFixed(4)} != expected ${expected.coverage.toFixed(4)}`,
-    );
+  const credits: Record<string, number | null> = {};
+  for (const c of signals.criteria) credits[c.id] = c.kind === 'check' ? c.credit! : null;
+  for (const [id, want] of Object.entries(expected.credits)) {
+    const got = credits[id];
+    if (got === undefined) {
+      mismatches.push(`criterion ${id} is in the expectation but not in the terms`);
+    } else if (want === null ? got !== null : got === null || Math.abs(got - want) > 1e-9) {
+      mismatches.push(`criterion ${id} credit ${got === null ? 'open' : got.toFixed(4)} != expected ${want === null ? 'open' : want.toFixed(4)}`);
+    }
   }
-  if (signals.corroboration !== expected.corroboration) {
-    mismatches.push(
-      `claim ${signals.corroboration} != expected ${expected.corroboration}`,
-    );
-  }
-  if (signals.admitted.join(',') !== expected.admitted.join(',')) {
-    mismatches.push(
-      `admitted [${signals.admitted.join(', ')}] != expected [${expected.admitted.join(', ')}]`,
-    );
+  for (const id of Object.keys(credits)) {
+    if (!(id in expected.credits)) mismatches.push(`criterion ${id} has no expectation in the corpus`);
   }
   if (band.center !== expected.center) {
     mismatches.push(`centre ${band.center} bps != expected ${expected.center} bps`);
@@ -138,18 +138,19 @@ export function predictScenario(
     ok: mismatches.length === 0 && blocking.length === 0,
     mismatches,
     blocking,
-    coverage,
-    corroboration: signals.corroboration,
-    admitted: signals.admitted,
     center: band.center,
     band: [band.lowBps, band.highBps],
-    bandHalfWidth: band.highBps - band.center,
+    earnedWeight: signals.earnedWeight,
+    openWeight: signals.openWeight,
+    totalWeight: signals.totalWeight,
     criteria: signals.criteria.map((c) => ({
-      criterion: c.criterion,
-      score: c.score,
-      missing: c.missing,
+      id: c.id,
+      text: c.text,
+      weight: c.weight,
+      kind: c.kind,
+      credit: c.kind === 'check' ? c.credit! : null,
+      evidence: c.evidence,
     })),
-    weakest: signals.weakest?.criterion ?? null,
     evidenceStrength: signals.evidenceStrength,
     rulingBps,
     money: {
@@ -173,23 +174,19 @@ export function predictAll(parties: DemoParties = PREDICT_PARTIES): Prediction[]
 export function renderPredictions(predictions: readonly Prediction[]): string {
   const out: string[] = [];
   for (const p of predictions) {
-    const coverage = p.coverage === null ? 'n/a' : p.coverage.toFixed(3);
     out.push(`${p.ok ? 'PASS' : 'FAIL'}  ${p.id} — ${p.title}`);
     out.push(
-      `      coverage ${coverage} · claim ${p.corroboration} · evidence ${p.evidenceStrength.toFixed(2)} · ` +
-        `band ${p.band[0]}-${p.band[1]} bps (±${p.bandHalfWidth})`,
+      `      verified ${p.earnedWeight.toFixed(2)} of ${p.totalWeight}, open ${p.openWeight} · ` +
+        `band ${p.band[0]}-${p.band[1]} bps`,
     );
     out.push(
       `      ruling ${p.rulingBps} bps (${formatBps(p.rulingBps)} to the seller) of ${formatToken(p.money.amount)} ` +
         `→ seller ${formatToken(p.money.sellerAmount)}, buyer ${formatToken(p.money.buyerAmount)}, ` +
         `arbitration fee ${formatToken(p.money.arbitrationFee)}`,
     );
-    if (p.admitted.length > 0) {
-      out.push(`      admitted in the artifact's own words: ${p.admitted.join(', ')}`);
-    }
     for (const c of p.criteria) {
-      const missing = c.missing.length === 0 ? 'nothing missing' : `missing ${c.missing.join(', ')}`;
-      out.push(`        ${c.score.toFixed(2)}  ${JSON.stringify(c.criterion)} — ${missing}`);
+      const mark = c.credit === null ? 'open' : c.credit.toFixed(2);
+      out.push(`        ${mark.padEnd(4)}  ${c.id} (w${c.weight}) ${JSON.stringify(c.text)} — ${c.evidence}`);
     }
     for (const problem of p.blocking) out.push(`      BLOCKED  ${problem}`);
     for (const mismatch of p.mismatches) out.push(`      MISMATCH ${mismatch}`);

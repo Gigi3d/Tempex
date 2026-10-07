@@ -16,9 +16,11 @@ export type {
 export { judgeWithLlm, llmConfigFromEnv, LlmError } from './llm.js';
 export type { LlmConfig, LlmOutcome, LlmRuling } from './llm.js';
 export { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
-export { analyze, classifyTerms, composeRuleRationale, formatBps, salientTerms } from './rules.js';
+export { analyze, composeRuleRationale, formatBps } from './rules.js';
+export { checkProblem, runCheck } from './checks.js';
+export type { CheckResult as CriterionCheckResult } from './checks.js';
 export type {
-  CriterionScore,
+  CriterionResult,
   RuleAnalysis,
   RuleBand,
   RuleSignals,

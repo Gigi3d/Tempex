@@ -37,10 +37,68 @@ export function jobMemo(jobId: bigint): Hex {
   return `0x${jobId.toString(16).padStart(64, '0')}` as Hex;
 }
 
+/// How one acceptance criterion is verified, agreed in the terms before any work
+/// starts. Every check is a pure function of the delivered bytes, so anyone can
+/// re-run it and get the same answer. `at` is an RFC 6901 JSON pointer into the
+/// deliverable; omitted, the check reads the whole deliverable as text.
+export type CriterionCheck =
+  /// the selection parses as JSON and, when given, satisfies a JSON Schema
+  | { type: 'json'; at?: string; schema?: Record<string, unknown> }
+  /// these dotted keys exist in the selected object; credit is the share present
+  | { type: 'jsonKeys'; at?: string; keys: string[]; nonEmpty?: boolean }
+  /// how many words, lines or items the selection holds
+  | { type: 'count'; at?: string; unit: 'words' | 'lines' | 'items'; min?: number; max?: number }
+  /// the selection's text is written in this language (ISO 639-1 or 639-3)
+  | { type: 'language'; at?: string; is: string; minLength?: number }
+  /// selected string values (optionally only keys matching a glob) match a
+  /// pattern; credit is the share that match
+  | { type: 'regex'; at?: string; keys?: string; pattern: string; flags?: string }
+  /// the selection's text contains each of these literal strings
+  | { type: 'contains'; at?: string; all: string[]; caseSensitive?: boolean };
+
+/// An acceptance criterion. A plain string, or an object without a `check`, is a
+/// judgement criterion: no code can decide it, so it is left to the judge and
+/// bounded by the parties' offers. An object with a `check` is decided exactly.
+export type Criterion =
+  | string
+  | { id?: string; text: string; weight?: number; check?: CriterionCheck };
+
+/// A criterion with its defaults filled in: an id, a text, and a weight.
+export type NormalizedCriterion = {
+  id: string;
+  text: string;
+  weight: number;
+  check?: CriterionCheck;
+};
+
+/// Fills in each criterion's id (`c1`, `c2`, …) and weight (1). Throws on a
+/// weight that is not a positive finite number or on a duplicate id, both of
+/// which would make the band ambiguous.
+export function normalizeCriteria(criteria: readonly Criterion[]): NormalizedCriterion[] {
+  const seen = new Set<string>();
+  return criteria.map((criterion, index) => {
+    const normalized: NormalizedCriterion =
+      typeof criterion === 'string'
+        ? { id: `c${index + 1}`, text: criterion, weight: 1 }
+        : {
+            id: criterion.id ?? `c${index + 1}`,
+            text: criterion.text,
+            weight: criterion.weight ?? 1,
+            ...(criterion.check !== undefined ? { check: criterion.check } : {}),
+          };
+    if (!Number.isFinite(normalized.weight) || normalized.weight <= 0) {
+      throw new Error(`criterion ${normalized.id} has weight ${normalized.weight}; weights must be positive`);
+    }
+    if (seen.has(normalized.id)) throw new Error(`criterion id ${normalized.id} is used twice`);
+    seen.add(normalized.id);
+    return normalized;
+  });
+}
+
 export type JobTerms = {
   title: string;
   deliverableSpec: string;
-  acceptanceCriteria: string[];
+  acceptanceCriteria: Criterion[];
   amount: string;
   currency?: string;
   buyer: string;

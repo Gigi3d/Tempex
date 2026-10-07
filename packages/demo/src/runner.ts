@@ -357,8 +357,8 @@ class DemoRun {
 
     const rehearsal = this.scenario.expect;
     this.transcript.prose(
-      `the offline rehearsal already knows this case: coverage ${rehearsal.coverage.toFixed(3)}, ` +
-        `claim ${rehearsal.corroboration}, band ${rehearsal.band[0]}-${rehearsal.band[1]} bps. ` +
+      `the offline rehearsal already knows this case: ${Object.entries(rehearsal.credits).map(([id, c]) => `${id} ${c === null ? 'open' : c.toFixed(2)}`).join(', ')}; ` +
+        `band ${rehearsal.band[0]}-${rehearsal.band[1]} bps. ` +
         'The live run below has to reproduce it.',
       'corpus',
     );
@@ -621,13 +621,13 @@ class DemoRun {
 
     const { band, signals, ruling, money } = result;
     const expected = this.scenario.expect;
-    this.expect(
-      'coverage',
-      expected.coverage.toFixed(6),
-      (signals.coverage ?? Number.NaN).toFixed(6),
-    );
-    this.expect('claim reading', expected.corroboration, signals.corroboration);
-    this.expect('admitted terms', expected.admitted.join(','), signals.admitted.join(','));
+    // Every criterion's credit, decided by its agreed check on the delivered
+    // bytes, must match what the corpus worked out by hand.
+    for (const criterion of signals.criteria) {
+      const want = expected.credits[criterion.id];
+      const got = criterion.kind === 'check' ? criterion.credit!.toFixed(4) : 'open';
+      this.expect(`criterion ${criterion.id}`, want === undefined ? 'listed in the corpus' : want === null ? 'open' : want.toFixed(4), got);
+    }
     this.expect(
       'band',
       `${expected.band[0]}-${expected.band[1]}`,
@@ -642,14 +642,18 @@ class DemoRun {
         ? `${result.model} — a model judged inside the band`
         : `${result.model} — deterministic, no model in the loop`,
     );
-    this.transcript.row(
-      'signals',
-      `coverage ${signals.coverage === null ? 'n/a' : signals.coverage.toFixed(3)} · ` +
-        `evidence ${signals.evidenceStrength.toFixed(2)} · claim ${signals.corroboration}`,
-    );
-    if (signals.admitted.length > 0) {
-      this.transcript.row('admitted', `${signals.admitted.join(', ')} — named only to say they are absent`);
+    for (const criterion of signals.criteria) {
+      this.transcript.row(
+        criterion.id,
+        criterion.kind === 'check'
+          ? `${criterion.credit!.toFixed(2)} of weight ${criterion.weight} — ${criterion.check}: ${criterion.evidence}`
+          : `open, weight ${criterion.weight} — ${criterion.evidence}`,
+      );
     }
+    this.transcript.row(
+      'verified',
+      `${signals.earnedWeight.toFixed(2)} of ${signals.totalWeight} weight decided by checks on the delivered bytes; ${signals.openWeight} left to judgement`,
+    );
     this.transcript.prose(ruling.rationale, 'rationale');
     this.transcript.row('band', `${band.lowBps}-${band.highBps} bps around ${band.center}`);
     this.transcript.row(

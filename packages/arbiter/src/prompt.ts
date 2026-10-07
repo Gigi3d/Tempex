@@ -56,14 +56,15 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
     lines.push(`- Delivered at: ${new Date(job.deliveredAt * 1000).toISOString()}`);
   }
   lines.push('');
-  lines.push('## Acceptance criteria, with coverage scored against the delivered text');
-  if (signals.criteria.length === 0) {
-    lines.push('- (none could be scored against the delivered text)');
-  }
-  for (const [index, criterion] of signals.criteria.entries()) {
-    const missing = criterion.missing.length > 0 ? ` missing terms: ${criterion.missing.join(', ')}` : ' all terms present';
+  lines.push('## Acceptance criteria');
+  lines.push(
+    'Checked criteria were decided by code from the delivered bytes; their result is final. Open criteria are yours to judge.',
+  );
+  for (const criterion of signals.criteria) {
     lines.push(
-      `${index + 1}. ${JSON.stringify(criterion.criterion)} — coverage ${criterion.score.toFixed(2)};${missing}`,
+      criterion.kind === 'check'
+        ? `- ${criterion.id} [checked, weight ${criterion.weight}] ${JSON.stringify(criterion.text)}: earned ${criterion.credit!.toFixed(2)} (${criterion.evidence})`
+        : `- ${criterion.id} [open, weight ${criterion.weight}] ${JSON.stringify(criterion.text)}: ${criterion.evidence}`,
     );
   }
   lines.push('');
@@ -124,7 +125,7 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
   lines.push('');
   lines.push('## Deterministic signals');
   lines.push(
-    `- Mean criterion coverage: ${signals.coverage === null ? 'not scoreable' : signals.coverage.toFixed(2)}`,
+    `- Checks earned ${signals.earnedWeight.toFixed(2)} of ${signals.checkedWeight} checked weight; ${signals.openWeight} of ${signals.totalWeight} weight is open`,
   );
   lines.push(
     `- Evidence strength: ${signals.artifactsVerifiable} of ${signals.artifactsDeclared} declared artifacts verify against their own content hashes`,
@@ -132,7 +133,6 @@ export function buildJudgePrompt(input: JudgePromptInput): string {
   lines.push(
     `- Scored deliverable text reproduces the on-chain delivery hash: ${signals.integrity.deliverableHashMatches ? `yes (${signals.scoredCopy}'s copy)` : 'no'}`,
   );
-  lines.push(`- Claim corroboration: ${signals.corroboration}`);
   lines.push('');
   lines.push('## Guardrail');
   if (job.disputedAt > 0) {

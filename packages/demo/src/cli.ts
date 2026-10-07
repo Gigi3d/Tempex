@@ -132,7 +132,7 @@ function scenarios(): void {
     out(`    ${scenario.premise}`);
     out(`    ${scenario.amount} alphaUSD delivered against ${scenario.criteria.length} criteria`);
     out(
-      `    must rule: coverage ${expect.coverage.toFixed(3)}, claim ${expect.corroboration}, ` +
+      `    must rule: ${Object.entries(expect.credits).map(([id, c]) => `${id} ${c === null ? 'open' : c.toFixed(2)}`).join(', ')}; ` +
         `band ${expect.band[0]}-${expect.band[1]} bps around ${expect.center} (${formatBps(expect.center)})`,
     );
     out('');
