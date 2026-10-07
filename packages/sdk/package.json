@@ -11,7 +11,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "deploy:escrow": "tsx scripts/deploy.ts"
   },
   "dependencies": {
     "viem": "^2.38.5"

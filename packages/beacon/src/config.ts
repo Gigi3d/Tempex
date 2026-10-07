@@ -15,7 +15,7 @@ import {
 
 /// Block the escrow was deployed at. Nothing before it can mention Tempex, so the
 /// indexer treats it as the genesis of its own history and never scans further back.
-export const DEPLOYMENT_BLOCK = 37_010_916n;
+export const DEPLOYMENT_BLOCK = 38_497_375n;
 
 /// Default price of a paid discovery query, in alphaUSD.
 ///
