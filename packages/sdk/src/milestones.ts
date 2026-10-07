@@ -1,7 +1,7 @@
 import type { Address, Hex } from 'viem';
 
-import { tokenAmount } from './config.js';
-import { hashCanonical, type Criterion, type JobTerms } from './evidence.js';
+import { tokenAmount } from './chain.js';
+import { hashCanonical, type Criterion, type JobTerms } from './canonical.js';
 
 /// A deal paid in tranches. Each milestone becomes its own escrow job, with its
 /// own criteria, amount and deadline, so delivering, accepting or disputing one

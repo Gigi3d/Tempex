@@ -3,11 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "description": "Tempex arbiter: evidence bundle -> bounded ruling -> EIP-712 verdict signed for the escrow",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./guardrail": "./src/guardrail.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -15,6 +17,7 @@
     "adjudicate": "tsx src/cli.ts adjudicate",
     "watch": "tsx src/cli.ts watch",
     "verify": "tsx src/cli.ts verify",
+    "court": "tsx src/cli.ts court",
     "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {

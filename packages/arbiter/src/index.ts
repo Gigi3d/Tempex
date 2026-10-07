@@ -39,3 +39,4 @@ export { verifyArbiter } from './verify.js';
 export type { CheckResult, VerifyReport } from './verify.js';
 export { watchDisputes } from './watch.js';
 export type { WatchHandle, WatchOptions } from './watch.js';
+export { startCourt, type CourtOptions } from './court.js';

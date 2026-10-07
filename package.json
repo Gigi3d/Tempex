@@ -9,11 +9,12 @@
     "abi": "bash scripts/gen-abi.sh",
     "typecheck": "pnpm -r typecheck",
     "arbiter": "pnpm --filter @tempex/arbiter start",
+    "court": "pnpm --filter @tempex/arbiter court",
     "demo": "pnpm --filter @tempex/demo start",
     "beacon": "pnpm --filter @tempex/beacon start",
     "smoke": "pnpm --filter @tempex/sdk smoke && pnpm --filter @tempex/beacon smoke",
     "deploy:escrow": "forge build --root contracts && pnpm --filter @tempex/sdk deploy:escrow",
-    "test:ts": "pnpm --filter @tempex/arbiter test",
+    "test:ts": "pnpm --filter @tempex/arbiter test && pnpm --filter @tempex/web test",
     "check": "pnpm test && pnpm typecheck && pnpm test:ts && pnpm demo predict && pnpm demo drill"
   },
   "devDependencies": {

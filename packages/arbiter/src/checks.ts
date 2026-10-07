@@ -1,7 +1,7 @@
 import Ajv from 'ajv';
 import { franc } from 'franc';
 
-import type { CriterionCheck } from '@tempex/sdk';
+import type { CriterionCheck } from '@tempex/sdk/browser';
 
 /// What one check concluded about the delivered work.
 ///

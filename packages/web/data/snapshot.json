@@ -1,0 +1,4101 @@
+{
+  "bakedAt": "2026-10-07T21:05:09.313Z",
+  "beaconAt": "2026-10-07T21:05:09.157Z",
+  "beacon": {
+    "url": "http://127.0.0.1:8787",
+    "stats": {
+      "generatedAt": "2026-10-07T21:05:09.157Z",
+      "chainId": 42431,
+      "network": "tempo:moderato",
+      "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+      "token": {
+        "address": "0x20c0000000000000000000000000000000000001",
+        "symbol": "AlphaUSD",
+        "decimals": 6
+      },
+      "blockRange": {
+        "from": "38497375",
+        "to": "38615358"
+      },
+      "events": 50,
+      "jobs": {
+        "total": 4,
+        "created": 0,
+        "funded": 1,
+        "delivered": 0,
+        "accepted": 0,
+        "disputed": 3,
+        "resolved": 3,
+        "refunded": 0,
+        "cancelled": 0,
+        "settlementRate": 0.75,
+        "disputeRate": 0.75
+      },
+      "money": {
+        "escrowed": {
+          "units": "100000000",
+          "value": "100"
+        },
+        "paidToSellers": {
+          "units": "32327811",
+          "value": "32.327811"
+        },
+        "refundedToBuyers": {
+          "units": "44922189",
+          "value": "44.922189"
+        },
+        "arbitrationFees": {
+          "units": "1500000",
+          "value": "1.5"
+        },
+        "platformFees": {
+          "units": "0",
+          "value": "0"
+        },
+        "withdrawn": {
+          "units": "78450000",
+          "value": "78.45"
+        },
+        "stillInEscrow": {
+          "units": "22750000",
+          "value": "22.75"
+        }
+      },
+      "arbitration": {
+        "verdicts": 3,
+        "avgSellerAwardBps": 4250,
+        "minSellerAwardBps": 3250,
+        "maxSellerAwardBps": 4750,
+        "bounded": true,
+        "timings": [
+          {
+            "jobId": "1",
+            "disputedAt": 1791336697,
+            "verdictAt": 1791336699,
+            "seconds": 2,
+            "blocks": 4,
+            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
+          },
+          {
+            "jobId": "3",
+            "disputedAt": 1791339114,
+            "verdictAt": 1791339124,
+            "seconds": 10,
+            "blocks": 17,
+            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7"
+          },
+          {
+            "jobId": "4",
+            "disputedAt": 1791339141,
+            "verdictAt": 1791339143,
+            "seconds": 2,
+            "blocks": 3,
+            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5"
+          }
+        ]
+      },
+      "participants": {
+        "buyers": 1,
+        "sellers": 1,
+        "unique": 2
+      },
+      "proofs": [
+        {
+          "jobId": "1",
+          "stage": "created",
+          "block": 38497958,
+          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+        },
+        {
+          "jobId": "1",
+          "stage": "funded",
+          "block": 38497958,
+          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+        },
+        {
+          "jobId": "1",
+          "stage": "delivered",
+          "block": 38497960,
+          "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc"
+        },
+        {
+          "jobId": "1",
+          "stage": "disputed",
+          "block": 38497962,
+          "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7"
+        },
+        {
+          "jobId": "1",
+          "stage": "resolved",
+          "block": 38497966,
+          "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
+        },
+        {
+          "jobId": "2",
+          "stage": "created",
+          "block": 38497992,
+          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
+        },
+        {
+          "jobId": "2",
+          "stage": "funded",
+          "block": 38497992,
+          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
+        },
+        {
+          "jobId": "3",
+          "stage": "created",
+          "block": 38502004,
+          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+        },
+        {
+          "jobId": "3",
+          "stage": "funded",
+          "block": 38502004,
+          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+        },
+        {
+          "jobId": "3",
+          "stage": "delivered",
+          "block": 38502005,
+          "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335"
+        },
+        {
+          "jobId": "3",
+          "stage": "disputed",
+          "block": 38502007,
+          "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca"
+        },
+        {
+          "jobId": "3",
+          "stage": "resolved",
+          "block": 38502024,
+          "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7"
+        },
+        {
+          "jobId": "4",
+          "stage": "created",
+          "block": 38502049,
+          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+        },
+        {
+          "jobId": "4",
+          "stage": "funded",
+          "block": 38502049,
+          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+        },
+        {
+          "jobId": "4",
+          "stage": "delivered",
+          "block": 38502050,
+          "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971"
+        },
+        {
+          "jobId": "4",
+          "stage": "disputed",
+          "block": 38502052,
+          "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76"
+        },
+        {
+          "jobId": "4",
+          "stage": "resolved",
+          "block": 38502055,
+          "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5"
+        }
+      ]
+    },
+    "jobs": {
+      "count": 4,
+      "indexed": 4,
+      "order": "newest first",
+      "jobs": [
+        {
+          "jobId": "4",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791342739,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+          },
+          "terms": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38502050,
+            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791339140,
+            "reviewDeadline": 1791342740,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+          },
+          "dispute": {
+            "block": 38502052,
+            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+            "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+            "disputedAt": 1791339141,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791943941
+          },
+          "response": {
+            "block": 38502053,
+            "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
+            "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+            "respondedAt": 1791339142,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38502055,
+            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+            "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+            "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+          }
+        },
+        {
+          "jobId": "3",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791342712,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+          },
+          "terms": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38502005,
+            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791339113,
+            "reviewDeadline": 1791342713,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+          },
+          "dispute": {
+            "block": 38502007,
+            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
+            "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+            "disputedAt": 1791339114,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791943914
+          },
+          "response": {
+            "block": 38502008,
+            "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
+            "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
+            "respondedAt": 1791339115,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38502024,
+            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+            "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
+            "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
+          }
+        },
+        {
+          "jobId": "2",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0xabababababababababababababababababababababababababababababababab",
+          "deliveryDeadline": 1791941515,
+          "reviewWindow": 259200,
+          "stage": "funded",
+          "created": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
+          },
+          "terms": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 10000
+          },
+          "funded": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "amount": "25000000"
+          }
+        },
+        {
+          "jobId": "1",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+          "deliveryDeadline": 1791340293,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+          },
+          "terms": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38497960,
+            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+            "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+            "deliveredAt": 1791336695,
+            "reviewDeadline": 1791340295,
+            "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
+          },
+          "dispute": {
+            "block": 38497962,
+            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+            "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+            "disputedAt": 1791336697,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791941497
+          },
+          "response": {
+            "block": 38497964,
+            "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+            "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
+            "respondedAt": 1791336698,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38497966,
+            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+            "sellerAwardBps": 3250,
+            "sellerAmount": "8140937",
+            "buyerAmount": "17609063",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+            "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+            "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+          }
+        }
+      ]
+    },
+    "detail": {
+      "1": {
+        "jobId": "1",
+        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "amount": "25000000",
+        "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+        "deliveryDeadline": 1791340293,
+        "reviewWindow": 3600,
+        "stage": "resolved",
+        "created": {
+          "block": 38497958,
+          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+        },
+        "terms": {
+          "block": 38497958,
+          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "platformFeeBps": 50,
+          "arbitrationFeeBps": 200,
+          "protocolCutBps": 2000
+        },
+        "funded": {
+          "block": 38497958,
+          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+          "amount": "25000000"
+        },
+        "delivered": {
+          "block": 38497960,
+          "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+          "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+          "deliveredAt": 1791336695,
+          "reviewDeadline": 1791340295,
+          "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
+        },
+        "dispute": {
+          "block": 38497962,
+          "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+          "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+          "disputedAt": 1791336697,
+          "buyerOfferBps": 2500,
+          "responseDeadline": 1791941497
+        },
+        "response": {
+          "block": 38497964,
+          "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+          "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
+          "respondedAt": 1791336698,
+          "sellerAskBps": 5000
+        },
+        "verdict": {
+          "block": 38497966,
+          "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+          "sellerAwardBps": 3250,
+          "sellerAmount": "8140937",
+          "buyerAmount": "17609063",
+          "arbitrationFee": "500000",
+          "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+          "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+          "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+        }
+      },
+      "2": {
+        "jobId": "2",
+        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "amount": "25000000",
+        "termsHash": "0xabababababababababababababababababababababababababababababababab",
+        "deliveryDeadline": 1791941515,
+        "reviewWindow": 259200,
+        "stage": "funded",
+        "created": {
+          "block": 38497992,
+          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
+        },
+        "terms": {
+          "block": 38497992,
+          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+          "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+          "platformFeeBps": 50,
+          "arbitrationFeeBps": 200,
+          "protocolCutBps": 10000
+        },
+        "funded": {
+          "block": 38497992,
+          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+          "amount": "25000000"
+        }
+      },
+      "3": {
+        "jobId": "3",
+        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "amount": "25000000",
+        "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+        "deliveryDeadline": 1791342712,
+        "reviewWindow": 3600,
+        "stage": "resolved",
+        "created": {
+          "block": 38502004,
+          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+        },
+        "terms": {
+          "block": 38502004,
+          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "platformFeeBps": 50,
+          "arbitrationFeeBps": 200,
+          "protocolCutBps": 2000
+        },
+        "funded": {
+          "block": 38502004,
+          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+          "amount": "25000000"
+        },
+        "delivered": {
+          "block": 38502005,
+          "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+          "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+          "deliveredAt": 1791339113,
+          "reviewDeadline": 1791342713,
+          "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+        },
+        "dispute": {
+          "block": 38502007,
+          "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
+          "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+          "disputedAt": 1791339114,
+          "buyerOfferBps": 2500,
+          "responseDeadline": 1791943914
+        },
+        "response": {
+          "block": 38502008,
+          "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
+          "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
+          "respondedAt": 1791339115,
+          "sellerAskBps": 5000
+        },
+        "verdict": {
+          "block": 38502024,
+          "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+          "sellerAwardBps": 4750,
+          "sellerAmount": "12093437",
+          "buyerAmount": "13656563",
+          "arbitrationFee": "500000",
+          "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+          "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
+          "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
+        }
+      },
+      "4": {
+        "jobId": "4",
+        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "amount": "25000000",
+        "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+        "deliveryDeadline": 1791342739,
+        "reviewWindow": 3600,
+        "stage": "resolved",
+        "created": {
+          "block": 38502049,
+          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+        },
+        "terms": {
+          "block": 38502049,
+          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "platformFeeBps": 50,
+          "arbitrationFeeBps": 200,
+          "protocolCutBps": 2000
+        },
+        "funded": {
+          "block": 38502049,
+          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+          "amount": "25000000"
+        },
+        "delivered": {
+          "block": 38502050,
+          "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+          "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+          "deliveredAt": 1791339140,
+          "reviewDeadline": 1791342740,
+          "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+        },
+        "dispute": {
+          "block": 38502052,
+          "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "disputedAt": 1791339141,
+          "buyerOfferBps": 2500,
+          "responseDeadline": 1791943941
+        },
+        "response": {
+          "block": 38502053,
+          "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
+          "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+          "respondedAt": 1791339142,
+          "sellerAskBps": 5000
+        },
+        "verdict": {
+          "block": 38502055,
+          "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+          "sellerAwardBps": 4750,
+          "sellerAmount": "12093437",
+          "buyerAmount": "13656563",
+          "arbitrationFee": "500000",
+          "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+          "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+        }
+      }
+    },
+    "proofs": {
+      "1": {
+        "jobId": "1",
+        "stage": "resolved",
+        "job": {
+          "jobId": "1",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
+          "deliveryDeadline": 1791340293,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+          },
+          "terms": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38497960,
+            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+            "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
+            "deliveredAt": 1791336695,
+            "reviewDeadline": 1791340295,
+            "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
+          },
+          "dispute": {
+            "block": 38497962,
+            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+            "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+            "disputedAt": 1791336697,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791941497
+          },
+          "response": {
+            "block": 38497964,
+            "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+            "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
+            "respondedAt": 1791336698,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38497966,
+            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+            "sellerAwardBps": 3250,
+            "sellerAmount": "8140937",
+            "buyerAmount": "17609063",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
+            "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
+            "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+          }
+        },
+        "timeline": [
+          {
+            "event": "JobCreated",
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0"
+          },
+          {
+            "event": "JobFunded",
+            "block": 38497958,
+            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "detail": "25000000 units moved into the escrow"
+          },
+          {
+            "event": "JobDelivered",
+            "block": 38497960,
+            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+            "detail": "deliverable 0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e, review until 1791340295"
+          },
+          {
+            "event": "DisputeRaised",
+            "block": 38497962,
+            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+            "detail": "dispute evidence 0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1"
+          },
+          {
+            "event": "VerdictResolved",
+            "block": 38497966,
+            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
+            "detail": "seller awarded 3250 bps (8140937), buyer 17609063, arbitration fee 500000"
+          }
+        ],
+        "replay": [
+          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
+          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38497958 toBlock=38497966, and fold the events in block/logIndex order.",
+          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
+          "For money movement, the funding transfer carries memo == 1, and a withdrawal carries the escrow's WITHDRAW_MEMO."
+        ]
+      },
+      "2": {
+        "jobId": "2",
+        "stage": "funded",
+        "job": {
+          "jobId": "2",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0xabababababababababababababababababababababababababababababababab",
+          "deliveryDeadline": 1791941515,
+          "reviewWindow": 259200,
+          "stage": "funded",
+          "created": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
+          },
+          "terms": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 10000
+          },
+          "funded": {
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "amount": "25000000"
+          }
+        },
+        "timeline": [
+          {
+            "event": "JobCreated",
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0xabababababababababababababababababababababababababababababababab"
+          },
+          {
+            "event": "JobFunded",
+            "block": 38497992,
+            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
+            "detail": "25000000 units moved into the escrow"
+          }
+        ],
+        "replay": [
+          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
+          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38497992 toBlock=38497992, and fold the events in block/logIndex order.",
+          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
+          "For money movement, the funding transfer carries memo == 2, and a withdrawal carries the escrow's WITHDRAW_MEMO."
+        ]
+      },
+      "3": {
+        "jobId": "3",
+        "stage": "resolved",
+        "job": {
+          "jobId": "3",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791342712,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+          },
+          "terms": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38502005,
+            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791339113,
+            "reviewDeadline": 1791342713,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+          },
+          "dispute": {
+            "block": 38502007,
+            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
+            "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+            "disputedAt": 1791339114,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791943914
+          },
+          "response": {
+            "block": 38502008,
+            "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
+            "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
+            "respondedAt": 1791339115,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38502024,
+            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
+            "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
+            "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
+          }
+        },
+        "timeline": [
+          {
+            "event": "JobCreated",
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250"
+          },
+          {
+            "event": "JobFunded",
+            "block": 38502004,
+            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+            "detail": "25000000 units moved into the escrow"
+          },
+          {
+            "event": "JobDelivered",
+            "block": 38502005,
+            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+            "detail": "deliverable 0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6, review until 1791342713"
+          },
+          {
+            "event": "DisputeRaised",
+            "block": 38502007,
+            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
+            "detail": "dispute evidence 0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d"
+          },
+          {
+            "event": "VerdictResolved",
+            "block": 38502024,
+            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+            "detail": "seller awarded 4750 bps (12093437), buyer 13656563, arbitration fee 500000"
+          }
+        ],
+        "replay": [
+          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
+          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38502004 toBlock=38502024, and fold the events in block/logIndex order.",
+          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
+          "For money movement, the funding transfer carries memo == 3, and a withdrawal carries the escrow's WITHDRAW_MEMO."
+        ]
+      },
+      "4": {
+        "jobId": "4",
+        "stage": "resolved",
+        "job": {
+          "jobId": "4",
+          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+          "amount": "25000000",
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791342739,
+          "reviewWindow": 3600,
+          "stage": "resolved",
+          "created": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+          },
+          "terms": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+            "platformFeeBps": 50,
+            "arbitrationFeeBps": 200,
+            "protocolCutBps": 2000
+          },
+          "funded": {
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "amount": "25000000"
+          },
+          "delivered": {
+            "block": 38502050,
+            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791339140,
+            "reviewDeadline": 1791342740,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
+          },
+          "dispute": {
+            "block": 38502052,
+            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+            "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+            "disputedAt": 1791339141,
+            "buyerOfferBps": 2500,
+            "responseDeadline": 1791943941
+          },
+          "response": {
+            "block": 38502053,
+            "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
+            "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+            "respondedAt": 1791339142,
+            "sellerAskBps": 5000
+          },
+          "verdict": {
+            "block": 38502055,
+            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
+            "arbitrationFee": "500000",
+            "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+            "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+            "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+          }
+        },
+        "timeline": [
+          {
+            "event": "JobCreated",
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250"
+          },
+          {
+            "event": "JobFunded",
+            "block": 38502049,
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "detail": "25000000 units moved into the escrow"
+          },
+          {
+            "event": "JobDelivered",
+            "block": 38502050,
+            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+            "detail": "deliverable 0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6, review until 1791342740"
+          },
+          {
+            "event": "DisputeRaised",
+            "block": 38502052,
+            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+            "detail": "dispute evidence 0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0"
+          },
+          {
+            "event": "VerdictResolved",
+            "block": 38502055,
+            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+            "detail": "seller awarded 4750 bps (12093437), buyer 13656563, arbitration fee 500000"
+          }
+        ],
+        "replay": [
+          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
+          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38502049 toBlock=38502055, and fold the events in block/logIndex order.",
+          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
+          "For money movement, the funding transfer carries memo == 4, and a withdrawal carries the escrow's WITHDRAW_MEMO."
+        ]
+      }
+    },
+    "arbiters": {
+      "house": {
+        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "active": true,
+        "feeBps": 200,
+        "metadataURI": null,
+        "record": {
+          "jobs": 1,
+          "disputes": 0,
+          "ruled": 0,
+          "lapsed": 0,
+          "openDisputes": 0,
+          "averageSellerAwardBps": null
+        }
+      },
+      "listed": [
+        {
+          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "active": true,
+          "feeBps": 200,
+          "metadataURI": "tempex-demo: the rule engine in packages/arbiter",
+          "record": {
+            "jobs": 3,
+            "disputes": 3,
+            "ruled": 3,
+            "lapsed": 0,
+            "openDisputes": 0,
+            "averageSellerAwardBps": 4250
+          }
+        }
+      ],
+      "note": "Every figure is folded from escrow events: JobTermsLocked says which arbiter a job locked, VerdictResolved and DisputeLapsed say how it ended. A lapsed dispute is one the arbiter never ruled on in time."
+    },
+    "reputation": {
+      "0x8cab45977cf5576a7d19363225e4f98d7d884bc4": {
+        "address": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "generatedAt": "2026-10-07T21:05:09.298Z",
+        "blockRange": {
+          "from": "38497375",
+          "to": "38615368"
+        },
+        "score": 720,
+        "band": "trusted",
+        "factors": [
+          {
+            "label": "baseline",
+            "points": 500,
+            "detail": "every address starts neutral; escrow and arbitration stand in for history"
+          },
+          {
+            "label": "settled-as-buyer",
+            "points": 120,
+            "detail": "3 job(s) closed as buyer, +40 each, capped at +160"
+          },
+          {
+            "label": "volume",
+            "points": 100,
+            "detail": "+1 per whole token settled through escrow, capped at +100"
+          }
+        ],
+        "asBuyer": {
+          "jobs": 4,
+          "escrowed": {
+            "units": "100000000",
+            "value": "100"
+          },
+          "accepted": 0,
+          "disputed": 3,
+          "refunded": 0
+        },
+        "asSeller": {
+          "jobs": 0,
+          "earned": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "verdicts": 0,
+          "avgAwardBps": null,
+          "withdrawn": {
+            "units": "44922189",
+            "value": "44.922189"
+          }
+        },
+        "counters": {
+          "settled": 3,
+          "open": 1,
+          "disputesRaised": 3,
+          "disputesAgainst": 0,
+          "withdrawals": 3,
+          "firstBlock": 38497958,
+          "lastBlock": 38502049
+        },
+        "proofJobIds": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "recipe": [
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "keep JobCreated where buyer or seller is this address",
+          "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
+          "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
+        ]
+      },
+      "0x7798af822de1d5f0c0340895b07d804019e7ca64": {
+        "address": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "generatedAt": "2026-10-07T21:05:09.300Z",
+        "blockRange": {
+          "from": "38497375",
+          "to": "38615368"
+        },
+        "score": 547,
+        "band": "settled",
+        "factors": [
+          {
+            "label": "baseline",
+            "points": 500,
+            "detail": "every address starts neutral; escrow and arbitration stand in for history"
+          },
+          {
+            "label": "settled-as-seller",
+            "points": 180,
+            "detail": "3 job(s) delivered and paid out, +60 each, capped at +240"
+          },
+          {
+            "label": "verdict-favour",
+            "points": -15,
+            "detail": "arbiters awarded this seller 4250 bps on average; above 5000 earns, below costs"
+          },
+          {
+            "label": "disputed-as-seller",
+            "points": -150,
+            "detail": "3 dispute(s) raised against this seller, -50 each"
+          },
+          {
+            "label": "volume",
+            "points": 32,
+            "detail": "+1 per whole token settled through escrow, capped at +100"
+          }
+        ],
+        "asBuyer": {
+          "jobs": 0,
+          "escrowed": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "refunded": 0
+        },
+        "asSeller": {
+          "jobs": 4,
+          "earned": {
+            "units": "32327811",
+            "value": "32.327811"
+          },
+          "accepted": 0,
+          "disputed": 3,
+          "verdicts": 3,
+          "avgAwardBps": 4250,
+          "withdrawn": {
+            "units": "32327811",
+            "value": "32.327811"
+          }
+        },
+        "counters": {
+          "settled": 3,
+          "open": 1,
+          "disputesRaised": 0,
+          "disputesAgainst": 3,
+          "withdrawals": 3,
+          "firstBlock": 38497958,
+          "lastBlock": 38502049
+        },
+        "proofJobIds": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "recipe": [
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "keep JobCreated where buyer or seller is this address",
+          "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
+          "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
+        ]
+      },
+      "0x92f3d653399fc151d58a927b9e1a33d50edcc4a8": {
+        "address": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "generatedAt": "2026-10-07T21:05:09.301Z",
+        "blockRange": {
+          "from": "38497375",
+          "to": "38615368"
+        },
+        "score": 500,
+        "band": "unproven",
+        "factors": [
+          {
+            "label": "baseline",
+            "points": 500,
+            "detail": "every address starts neutral; escrow and arbitration stand in for history"
+          }
+        ],
+        "asBuyer": {
+          "jobs": 0,
+          "escrowed": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "refunded": 0
+        },
+        "asSeller": {
+          "jobs": 0,
+          "earned": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "verdicts": 0,
+          "avgAwardBps": null,
+          "withdrawn": {
+            "units": "0",
+            "value": "0"
+          }
+        },
+        "counters": {
+          "settled": 0,
+          "open": 0,
+          "disputesRaised": 0,
+          "disputesAgainst": 0,
+          "withdrawals": 0,
+          "firstBlock": null,
+          "lastBlock": null
+        },
+        "proofJobIds": [],
+        "recipe": [
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "keep JobCreated where buyer or seller is this address",
+          "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
+          "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
+        ]
+      },
+      "0x3425173fab110f780482af62bf603b9a7d023905": {
+        "address": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "generatedAt": "2026-10-07T21:05:09.302Z",
+        "blockRange": {
+          "from": "38497375",
+          "to": "38615368"
+        },
+        "score": 500,
+        "band": "unproven",
+        "factors": [
+          {
+            "label": "baseline",
+            "points": 500,
+            "detail": "every address starts neutral; escrow and arbitration stand in for history"
+          }
+        ],
+        "asBuyer": {
+          "jobs": 0,
+          "escrowed": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "refunded": 0
+        },
+        "asSeller": {
+          "jobs": 0,
+          "earned": {
+            "units": "0",
+            "value": "0"
+          },
+          "accepted": 0,
+          "disputed": 0,
+          "verdicts": 0,
+          "avgAwardBps": null,
+          "withdrawn": {
+            "units": "1200000",
+            "value": "1.2"
+          }
+        },
+        "counters": {
+          "settled": 0,
+          "open": 0,
+          "disputesRaised": 0,
+          "disputesAgainst": 0,
+          "withdrawals": 3,
+          "firstBlock": null,
+          "lastBlock": null
+        },
+        "proofJobIds": [],
+        "recipe": [
+          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "keep JobCreated where buyer or seller is this address",
+          "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
+          "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
+        ]
+      }
+    },
+    "quote": {
+      "seller": {
+        "generatedAt": "2026-10-07T21:05:09.303Z",
+        "role": "seller",
+        "amount": {
+          "units": "0",
+          "value": "0"
+        },
+        "fee": {
+          "token": "0x20c0000000000000000000000000000000000001",
+          "sponsored": true,
+          "sponsorUrl": "https://sponsor.moderato.tempo.xyz",
+          "measured": {
+            "units": "511",
+            "value": "0.000511"
+          },
+          "measuredOn": {
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "block": 38502049,
+            "jobId": "4"
+          }
+        },
+        "total": {
+          "units": "0",
+          "value": "0"
+        },
+        "breakdown": [
+          {
+            "line": "account creation",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "a keypair is an account on Tempo; no activation transaction exists"
+          },
+          {
+            "line": "beacon registration",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "a signature over a challenge; the beacon stores no key"
+          },
+          {
+            "line": "transaction fee",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "routed to the hosted fee payer at https://sponsor.moderato.tempo.xyz"
+          },
+          {
+            "line": "principal",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "the seller receives this; it is never a cost to the seller"
+          },
+          {
+            "line": "platform fee on settlement",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "deducted from the escrowed amount at payout, capped on-chain at 500 bps"
+          },
+          {
+            "line": "arbitration fee, only if disputed",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "deducted from the disputed amount at verdict, capped on-chain at 1000 bps"
+          }
+        ]
+      },
+      "buyer": {
+        "generatedAt": "2026-10-07T21:05:09.305Z",
+        "role": "buyer",
+        "amount": {
+          "units": "0",
+          "value": "0"
+        },
+        "fee": {
+          "token": "0x20c0000000000000000000000000000000000001",
+          "sponsored": true,
+          "sponsorUrl": "https://sponsor.moderato.tempo.xyz",
+          "measured": {
+            "units": "511",
+            "value": "0.000511"
+          },
+          "measuredOn": {
+            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+            "block": 38502049,
+            "jobId": "4"
+          }
+        },
+        "total": {
+          "units": "0",
+          "value": "0"
+        },
+        "breakdown": [
+          {
+            "line": "account creation",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "a keypair is an account on Tempo; no activation transaction exists"
+          },
+          {
+            "line": "beacon registration",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "a signature over a challenge; the beacon stores no key"
+          },
+          {
+            "line": "transaction fee",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "routed to the hosted fee payer at https://sponsor.moderato.tempo.xyz"
+          },
+          {
+            "line": "escrowed principal",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "held by the escrow, returned or paid out by rule — not a fee"
+          },
+          {
+            "line": "platform fee on settlement",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "deducted from the escrowed amount at payout, capped on-chain at 500 bps"
+          },
+          {
+            "line": "arbitration fee, only if disputed",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "deducted from the disputed amount at verdict, capped on-chain at 1000 bps"
+          }
+        ]
+      }
+    },
+    "onboard": {
+      "seller": {
+        "role": "seller",
+        "generatedAt": "2026-10-07T21:05:09.306Z",
+        "claim": "A seller can be hired, deliver, and collect payment holding nothing but a private key.",
+        "whyItWorks": [
+          "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
+          "The escrow is pull-based. Sellers are credited, never paid directly, so a seller never needs funds to receive funds.",
+          "An address is not an account registration. It exists as soon as the keypair does, and needs no transaction to activate.",
+          "This beacon is configured with a fee payer at https://sponsor.moderato.tempo.xyz, so every blueprint it issues defaults to `sponsored: true`."
+        ],
+        "steps": [
+          {
+            "id": 1,
+            "who": "agent",
+            "action": "Generate a keypair locally",
+            "detail": "A Tempo account is a secp256k1 keypair. There is no signup, no email, no KYC, and no transaction to create it — the address exists the moment the key does.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "command": "cast wallet new   # or Account.fromSecp256k1(privateKey) from @tempex/sdk"
+          },
+          {
+            "id": 2,
+            "who": "beacon",
+            "action": "Check readiness",
+            "detail": "The beacon reads the chain for this address and reports exactly what is missing. For a seller the answer is nothing.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/onboard/ready?address=<address>&role=seller"
+          },
+          {
+            "id": 3,
+            "who": "beacon",
+            "action": "Register so buyers can find you",
+            "detail": "Sign a challenge with the new key. The signature proves control of the address; the beacon stores no key and cannot act as you.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/registry/challenge then http://127.0.0.1:8787/registry/register"
+          },
+          {
+            "id": 4,
+            "who": "chain",
+            "action": "Get hired and deliver",
+            "detail": "The buyer escrows the payment when it opens the job. The seller sends `deliver(jobId, deliverableHash)` and waits.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/tx/deliver?jobId=<id>&deliverableHash=<bytes32>"
+          },
+          {
+            "id": 5,
+            "who": "fee-payer",
+            "action": "Withdraw, with the fee sponsored",
+            "detail": "Payouts are pull-based: the escrow credits the seller, and `withdraw()` sends the balance out. The transaction fee goes to the hosted fee payer, so a seller with a zero balance still collects in full.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/tx/withdraw"
+          }
+        ],
+        "costs": {
+          "keypair": {
+            "units": "0",
+            "value": "0"
+          },
+          "registration": {
+            "units": "0",
+            "value": "0"
+          },
+          "firstTransaction": {
+            "units": "0",
+            "value": "0"
+          },
+          "unsponsoredFee": {
+            "units": "511",
+            "value": "0.000511"
+          },
+          "principal": "none — the buyer escrows the payment",
+          "totalToStart": {
+            "units": "0",
+            "value": "0"
+          }
+        },
+        "custody": "The beacon never sees a private key and cannot sign anything. It issues calldata blueprints and reads the chain; the agent signs and submits with its own key.",
+        "guarantees": [
+          "No custody: job principal is only ever moved by `withdraw()` from the credited account, `resolve()` with a verdict signed by the registered arbiter, `accept()`/`autoAccept()`, or `refundExpired()` after the delivery deadline.",
+          "No owner override: the owner can change the arbiter, treasury, and fee schedule, but fees are capped on-chain at 500 bps platform and 1000 bps arbitration, and no function lets the owner take a job principal.",
+          "Bounded rulings: a verdict outside 0-10000 bps reverts, and every ruling is an EIP-712 signature over the job id, award, evidence hash, rationale hash, and validity window.",
+          "Portable reputation: an address history is recomputable from escrow logs by anyone, so switching beacon costs nothing."
+        ],
+        "policy": {
+          "id": "standard",
+          "name": "Standard delivery",
+          "forThisDeal": "A deliverable an agent can produce and hash in one sitting: a report, a dataset, a translation, an API answer.",
+          "deliveryDeadlineSeconds": 3600,
+          "reviewWindowSeconds": 3600,
+          "evidenceRequired": [
+            "the deliverable itself, hashed",
+            "the acceptance criteria from the terms, one line each",
+            "a metric per criterion where a metric exists"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "delivered in full, buyer disputes anyway",
+              "expectedBand": "seller-favour, 8000-10000 bps"
+            },
+            {
+              "situation": "partially delivered, shortfall admitted in the artifact",
+              "expectedBand": "pro-rata, 3000-7000 bps"
+            },
+            {
+              "situation": "nothing delivered before the deadline",
+              "expectedBand": "buyer-favour, 0-1500 bps"
+            }
+          ],
+          "derivedFrom": "packages/demo/src/scenarios.ts — underdelivered, badfaith"
+        },
+        "endpoints": {
+          "ready": "http://127.0.0.1:8787/onboard/ready",
+          "quote": "http://127.0.0.1:8787/onboard/quote",
+          "policies": "http://127.0.0.1:8787/onboard/policies",
+          "register": "http://127.0.0.1:8787/registry/register"
+        }
+      },
+      "buyer": {
+        "role": "buyer",
+        "generatedAt": "2026-10-07T21:05:09.307Z",
+        "claim": "A buyer needs the payment itself and nothing else: no gas token, no separate fee balance.",
+        "whyItWorks": [
+          "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
+          "The escrow is pull-based. Sellers are credited, never paid directly, so a seller never needs funds to receive funds.",
+          "An address is not an account registration. It exists as soon as the keypair does, and needs no transaction to activate.",
+          "This beacon is configured with a fee payer at https://sponsor.moderato.tempo.xyz, so every blueprint it issues defaults to `sponsored: true`."
+        ],
+        "steps": [
+          {
+            "id": 1,
+            "who": "agent",
+            "action": "Generate a keypair locally",
+            "detail": "A Tempo account is a secp256k1 keypair. There is no signup, no email, no KYC, and no transaction to create it — the address exists the moment the key does.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "command": "cast wallet new   # or Account.fromSecp256k1(privateKey) from @tempex/sdk"
+          },
+          {
+            "id": 2,
+            "who": "beacon",
+            "action": "Check readiness",
+            "detail": "The beacon reads the chain for this address and reports exactly what is missing. For a seller the answer is nothing.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/onboard/ready?address=<address>&role=buyer"
+          },
+          {
+            "id": 3,
+            "who": "faucet",
+            "action": "Fund the principal",
+            "detail": "A buyer escrows real money, so it needs a balance. On Moderato the faucet mints testnet alphaUSD; on mainnet this is a treasury or an on-ramp. This is the only step that costs anything, and it is the payment itself — not a fee to Tempex.",
+            "requiresBalance": true,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "command": "TempexClient.fundWithFaucet()   # client.faucet.fund on viem/tempo"
+          },
+          {
+            "id": 4,
+            "who": "chain",
+            "action": "Approve, create and fund in one batch",
+            "detail": "The escrow pulls the job amount with `transferFromWithMemo`, so the buyer approves once. Create-and-fund is a single transaction with two calls: a job can never exist unfunded.",
+            "requiresBalance": true,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/tx/create-and-fund?seller=<address>&amount=<units>&termsHash=<bytes32>"
+          },
+          {
+            "id": 5,
+            "who": "agent",
+            "action": "Review, then accept or dispute",
+            "detail": "Accept and the escrow pays out immediately. Do nothing and `autoAccept` releases it when the review window closes. Dispute with an evidence hash and the arbiter rules inside a bounded band.",
+            "requiresBalance": false,
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "endpoint": "http://127.0.0.1:8787/tx/accept?jobId=<id> or http://127.0.0.1:8787/tx/dispute?jobId=<id>&disputeHash=<bytes32>"
+          }
+        ],
+        "costs": {
+          "keypair": {
+            "units": "0",
+            "value": "0"
+          },
+          "registration": {
+            "units": "0",
+            "value": "0"
+          },
+          "firstTransaction": {
+            "units": "0",
+            "value": "0"
+          },
+          "unsponsoredFee": {
+            "units": "511",
+            "value": "0.000511"
+          },
+          "principal": "the job amount itself (0)",
+          "totalToStart": {
+            "units": "0",
+            "value": "0"
+          }
+        },
+        "custody": "The beacon never sees a private key and cannot sign anything. It issues calldata blueprints and reads the chain; the agent signs and submits with its own key.",
+        "guarantees": [
+          "No custody: job principal is only ever moved by `withdraw()` from the credited account, `resolve()` with a verdict signed by the registered arbiter, `accept()`/`autoAccept()`, or `refundExpired()` after the delivery deadline.",
+          "No owner override: the owner can change the arbiter, treasury, and fee schedule, but fees are capped on-chain at 500 bps platform and 1000 bps arbitration, and no function lets the owner take a job principal.",
+          "Bounded rulings: a verdict outside 0-10000 bps reverts, and every ruling is an EIP-712 signature over the job id, award, evidence hash, rationale hash, and validity window.",
+          "Portable reputation: an address history is recomputable from escrow logs by anyone, so switching beacon costs nothing."
+        ],
+        "policy": {
+          "id": "standard",
+          "name": "Standard delivery",
+          "forThisDeal": "A deliverable an agent can produce and hash in one sitting: a report, a dataset, a translation, an API answer.",
+          "deliveryDeadlineSeconds": 3600,
+          "reviewWindowSeconds": 3600,
+          "evidenceRequired": [
+            "the deliverable itself, hashed",
+            "the acceptance criteria from the terms, one line each",
+            "a metric per criterion where a metric exists"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "delivered in full, buyer disputes anyway",
+              "expectedBand": "seller-favour, 8000-10000 bps"
+            },
+            {
+              "situation": "partially delivered, shortfall admitted in the artifact",
+              "expectedBand": "pro-rata, 3000-7000 bps"
+            },
+            {
+              "situation": "nothing delivered before the deadline",
+              "expectedBand": "buyer-favour, 0-1500 bps"
+            }
+          ],
+          "derivedFrom": "packages/demo/src/scenarios.ts — underdelivered, badfaith"
+        },
+        "endpoints": {
+          "ready": "http://127.0.0.1:8787/onboard/ready",
+          "quote": "http://127.0.0.1:8787/onboard/quote",
+          "policies": "http://127.0.0.1:8787/onboard/policies",
+          "register": "http://127.0.0.1:8787/registry/register"
+        }
+      }
+    },
+    "policy": {
+      "policies": [
+        {
+          "id": "standard",
+          "name": "Standard delivery",
+          "forThisDeal": "A deliverable an agent can produce and hash in one sitting: a report, a dataset, a translation, an API answer.",
+          "deliveryDeadlineSeconds": 3600,
+          "reviewWindowSeconds": 3600,
+          "evidenceRequired": [
+            "the deliverable itself, hashed",
+            "the acceptance criteria from the terms, one line each",
+            "a metric per criterion where a metric exists"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "delivered in full, buyer disputes anyway",
+              "expectedBand": "seller-favour, 8000-10000 bps"
+            },
+            {
+              "situation": "partially delivered, shortfall admitted in the artifact",
+              "expectedBand": "pro-rata, 3000-7000 bps"
+            },
+            {
+              "situation": "nothing delivered before the deadline",
+              "expectedBand": "buyer-favour, 0-1500 bps"
+            }
+          ],
+          "derivedFrom": "packages/demo/src/scenarios.ts — underdelivered, badfaith"
+        },
+        {
+          "id": "strict-deadline",
+          "name": "Time-critical",
+          "forThisDeal": "Work whose value collapses if it is late: a price feed, a booking, a bid.",
+          "deliveryDeadlineSeconds": 600,
+          "reviewWindowSeconds": 600,
+          "evidenceRequired": [
+            "timestamps from the producing system, not from the seller",
+            "the deliverable, hashed at production time"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "late delivery",
+              "expectedBand": "buyer-favour; lateness is objective and weighted heavily"
+            },
+            {
+              "situation": "on time but short",
+              "expectedBand": "pro-rata on completeness"
+            }
+          ],
+          "derivedFrom": "packages/arbiter/src/rules.ts — deadline signals"
+        },
+        {
+          "id": "high-value",
+          "name": "High value, narrow band",
+          "forThisDeal": "Anything large enough that a 10% error matters. More criteria, more artifacts, tighter band.",
+          "deliveryDeadlineSeconds": 86400,
+          "reviewWindowSeconds": 43200,
+          "evidenceRequired": [
+            "every acceptance criterion backed by a named artifact",
+            "reproduction steps or a verifiable source URI",
+            "a metric with its unit and its measurement time"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "evidence complete on both sides",
+              "expectedBand": "narrow, decided on the criteria"
+            },
+            {
+              "situation": "one side has no artifacts",
+              "expectedBand": "against the side with no evidence"
+            }
+          ],
+          "derivedFrom": "packages/demo/src/scenarios.ts — admission"
+        },
+        {
+          "id": "micropayment",
+          "name": "Micropayment / per-call",
+          "forThisDeal": "An x402 or MPP call priced per request. Amounts too small to arbitrate individually are batched into one job.",
+          "deliveryDeadlineSeconds": 300,
+          "reviewWindowSeconds": 300,
+          "evidenceRequired": [
+            "the request and response pair, hashed",
+            "the count and unit price from the metering log"
+          ],
+          "disputeOutcomes": [
+            {
+              "situation": "stale or malformed responses",
+              "expectedBand": "pro-rata on the fraction of calls that met the spec"
+            },
+            {
+              "situation": "service returned nothing",
+              "expectedBand": "buyer-favour, full refund of the batch"
+            }
+          ],
+          "derivedFrom": "packages/demo/src/scenarios.ts — nodelivery"
+        }
+      ],
+      "use": "Pass {\"policy\":\"<id>\"} to POST /blueprint/create-and-fund, or read deliveryDeadlineSeconds and reviewWindowSeconds and set the timestamps yourself."
+    },
+    "manifest": {
+      "schema": "tempex/1",
+      "generatedAt": "2026-10-07T21:05:09.310Z",
+      "identity": {
+        "name": "Tempex Beacon",
+        "version": "0.1.0",
+        "tagline": "The default referee for agent commerce. No humans required.",
+        "description": "Tempex settles deals between agents that have never met and cannot sue each other. Money goes into an escrow on Tempo, delivery is hashed onto the chain, and a dispute is decided by a referee whose verdict the contract itself validates by signature. This beacon is the read-only front door: it indexes the escrow, derives reputation from it, prices discovery, and hands back calldata an agent signs with its own key.",
+        "host": "http://127.0.0.1:8787",
+        "network": "tempo:moderato",
+        "chainId": 42431,
+        "rpcUrl": "https://rpc.moderato.tempo.xyz",
+        "wsUrl": "wss://rpc.moderato.tempo.xyz",
+        "explorerUrl": "https://explore.testnet.tempo.xyz",
+        "sponsorUrl": "https://sponsor.moderato.tempo.xyz",
+        "repository": "https://github.com/Gigi3d/Tempex"
+      },
+      "protocol": {
+        "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "owner": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "paymentToken": {
+          "address": "0x20c0000000000000000000000000000000000001",
+          "symbol": "AlphaUSD",
+          "decimals": 6
+        },
+        "fees": {
+          "platformBps": 50,
+          "arbitrationBps": 200,
+          "caps": {
+            "platformBps": 500,
+            "arbitrationBps": 1000
+          },
+          "denominator": 10000,
+          "note": "The owner can move fees within the caps and no further: setFees reverts above 500 bps platform or 1000 bps arbitration. Both caps are public constants, readable at the selectors below."
+        },
+        "counters": {
+          "jobCount": "4",
+          "nextJobId": "5"
+        },
+        "custody": {
+          "beaconHoldsKeys": false,
+          "escrowIsUpgradeable": false,
+          "ownerCanTakeJobPrincipal": false,
+          "ownerPowers": [
+            "setArbiter(address) — choose the default referee for jobs created afterwards; every existing job keeps the arbiter it locked at creation",
+            "setTreasury(address) — redirect future platform fees",
+            "setFees(uint16,uint16) — within the on-chain caps, for jobs created afterwards only",
+            "transferOwnership(address) + acceptOwnership() (two-step) / renounceOwnership()"
+          ],
+          "withdrawalMemo": "0x74656d7065782e77697468647261770000000000000000000000000000000000"
+        }
+      },
+      "index": {
+        "fromBlock": "38497375",
+        "toBlock": "38615368",
+        "head": "38615368",
+        "lagBlocks": "0",
+        "events": 50,
+        "jobs": 4,
+        "storage": "memory, rebuilt from eth_getLogs on every start",
+        "note": "There is no database. Every number this beacon serves is a fold over events it re-read from the chain, so it cannot drift, and anyone can reproduce it with the same scan."
+      },
+      "costs": {
+        "onboarding": {
+          "units": "0",
+          "value": "0"
+        },
+        "registration": {
+          "units": "0",
+          "value": "0"
+        },
+        "transactionFee": {
+          "sponsored": {
+            "units": "0",
+            "value": "0"
+          },
+          "unsponsored": {
+            "units": "511",
+            "value": "0.000511"
+          },
+          "measuredOn": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+        },
+        "platformFee": "50 bps of the escrowed amount, deducted at payout, capped at 500 bps",
+        "arbitrationFee": "200 bps, charged only when a dispute is resolved, capped at 1000 bps",
+        "discovery": {
+          "enabled": true,
+          "scheme": "tempo-tx",
+          "price": {
+            "units": "10000",
+            "value": "0.01"
+          },
+          "payTo": ""
+        },
+        "note": "A seller can be hired, deliver, and collect holding nothing but a private key: Tempo has no gas token, the hosted fee payer signs the fee, and the escrow credits rather than pushes, so the first transaction a brand-new address ever sends can be the withdrawal of its first payment."
+      },
+      "claims": [
+        {
+          "claim": "Onboarding costs nothing. An address with a zero balance can earn and withdraw.",
+          "check": "GET /onboard?role=seller, then confirm the escrow's credits are pull-based: eth_call 0x001c8C3391E591C9CBDFdFE4227e585b86041157 0xfe5ff468 with your address, and read withdraw() in the source."
+        },
+        {
+          "claim": "The referee cannot be forged, and cannot rule outside 0-10000 bps.",
+          "check": "resolve() recovers the EIP-712 signer and requires it to equal the arbiter the job locked at creation; read it from getJob(jobId) or the job's JobTermsLocked event and compare against its VerdictResolved verdictDigest."
+        },
+        {
+          "claim": "The owner cannot take job principal.",
+          "check": "Read contracts/src/TempexEscrow.sol: the only owner functions are setArbiter, setTreasury, setFees and ownership transfer. No function moves a job's amount to the owner."
+        },
+        {
+          "claim": "Fees are capped on-chain, not by policy.",
+          "check": "eth_call 0x8d01513c and 0x92689733; setFees reverts above them."
+        },
+        {
+          "claim": "Reputation is derived, not assigned, and any third party can recompute it.",
+          "check": "GET /reputation/:address returns the itemised factors and a recipe; re-run the same scan from block 38497375 and you get the same score."
+        },
+        {
+          "claim": "Discovery ranking cannot be bought.",
+          "check": "rankEntries sorts by on-chain score, then settled count, then registration age. Paying the discovery fee buys a query, never a position."
+        },
+        {
+          "claim": "Every statistic is backed by receipts.",
+          "check": "GET /stats returns proofs[] with a block and transaction hash for the most recent jobs; fetch any of them from https://explore.testnet.tempo.xyz."
+        }
+      ],
+      "verification": {
+        "recipe": [
+          "1. Point an RPC client at https://rpc.moderato.tempo.xyz (chainId 42431).",
+          "2. Read the escrow's governance: eth_call to 0x001c8C3391E591C9CBDFdFE4227e585b86041157 for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
+          "3. Rebuild the index: eth_getLogs from block 38497375 to head, address 0x001c8C3391E591C9CBDFdFE4227e585b86041157, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
+          "4. Compare your fold against GET /stats and GET /jobs. Any difference is a bug in one of us, and the chain settles which.",
+          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0x001c8C3391E591C9CBDFdFE4227e585b86041157; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
+          "6. Check the money: for any job, the TIP-20 TransferWithMemo into the escrow carries memo == jobId, and payouts credit sellers via credits() with memo 0x74656d7065782e77697468647261770000000000000000000000000000000000 on withdrawal.",
+          "7. Check the fee: pull any transaction receipt and find the Transfer to Tempo's fee manager. That is the whole fee mechanism — there is no gas token.",
+          "8. Check this beacon holds nothing: it has no signing key, no custody, and no write path to the escrow. Every endpoint is a read or a calldata build."
+        ],
+        "selectors": {
+          "arbiter": "0xfe25e00a",
+          "treasury": "0x61d027b3",
+          "owner": "0x8da5cb5b",
+          "paymentToken": "0x3013ce29",
+          "platformFeeBps": "0x22dcd13e",
+          "arbitrationFeeBps": "0xc00b3813",
+          "maxPlatformFeeBps": "0x8d01513c",
+          "maxArbitrationFeeBps": "0x92689733",
+          "jobCount": "0x4c5d8a0f",
+          "nextJobId": "0xb0c2aa5e",
+          "credits": "0xfe5ff468",
+          "getJob": "0xbf22c457",
+          "eip712Domain": "0x84b0196e",
+          "verdictDigest": "0x117d5ee9"
+        }
+      },
+      "endpoints": {
+        "root": "http://127.0.0.1:8787/",
+        ".well-known.tempex.json": "http://127.0.0.1:8787/.well-known/tempex.json",
+        ".well-known.agent.json": "http://127.0.0.1:8787/.well-known/agent.json",
+        "health": "http://127.0.0.1:8787/health",
+        "stats": "http://127.0.0.1:8787/stats",
+        "jobs": "http://127.0.0.1:8787/jobs",
+        "jobs.:jobId": "http://127.0.0.1:8787/jobs/:jobId",
+        "proof.:jobId": "http://127.0.0.1:8787/proof/:jobId",
+        "reputation.:address": "http://127.0.0.1:8787/reputation/:address",
+        "arbiters": "http://127.0.0.1:8787/arbiters",
+        "policy": "http://127.0.0.1:8787/policy",
+        "onboard": "http://127.0.0.1:8787/onboard",
+        "ready": "http://127.0.0.1:8787/ready",
+        "quote": "http://127.0.0.1:8787/quote",
+        "discover": "http://127.0.0.1:8787/discover",
+        "registry": "http://127.0.0.1:8787/registry"
+      },
+      "routes": [
+        {
+          "path": "/",
+          "method": "GET",
+          "summary": "Landing: who this beacon is, and the two documents to read first.",
+          "paid": false
+        },
+        {
+          "path": "/.well-known/tempex.json",
+          "method": "GET",
+          "summary": "This document: identity, protocol state, costs, tools, and how to verify all of it.",
+          "paid": false
+        },
+        {
+          "path": "/.well-known/agent.json",
+          "method": "GET",
+          "summary": "Agent card (A2A-style): skills, modes, and the endpoint to call.",
+          "paid": false
+        },
+        {
+          "path": "/health",
+          "method": "GET",
+          "summary": "Liveness plus how far the index has caught up to the head of the chain.",
+          "paid": false
+        },
+        {
+          "path": "/stats",
+          "method": "GET",
+          "summary": "Whole-network evidence: jobs by stage, money moved, verdict bounds, measured arbitration latency.",
+          "paid": false
+        },
+        {
+          "path": "/jobs",
+          "method": "GET",
+          "summary": "Every job the escrow has ever seen, folded from events. Supports ?stage= and ?limit=.",
+          "paid": false
+        },
+        {
+          "path": "/jobs/:jobId",
+          "method": "GET",
+          "summary": "One job, with the block and transaction behind each of its state changes.",
+          "paid": false
+        },
+        {
+          "path": "/proof/:jobId",
+          "method": "GET",
+          "summary": "The receipts for one job plus the exact calls needed to re-derive them.",
+          "paid": false
+        },
+        {
+          "path": "/reputation/:address",
+          "method": "GET",
+          "summary": "An itemised, recomputable reputation score for any address.",
+          "paid": false
+        },
+        {
+          "path": "/arbiters",
+          "method": "GET",
+          "summary": "The arbiter market: the house arbiter and every listed one, with fees and a track record folded from escrow events.",
+          "paid": false
+        },
+        {
+          "path": "/policy",
+          "method": "GET",
+          "summary": "Deal-policy templates: deadlines, review windows, evidence requirements, expected verdict bands.",
+          "paid": false
+        },
+        {
+          "path": "/onboard",
+          "method": "GET",
+          "summary": "What it takes to start trading, per role, with the zero-balance claim stated and justified.",
+          "paid": false
+        },
+        {
+          "path": "/ready",
+          "method": "GET",
+          "summary": "Can this address trade right now? Reads nonce, balance, allowance, and escrow credit.",
+          "paid": false
+        },
+        {
+          "path": "/quote",
+          "method": "GET",
+          "summary": "All-in cost of a job, line by line, with the fee measured from a real receipt.",
+          "paid": false
+        },
+        {
+          "path": "/blueprint/:action",
+          "method": "POST",
+          "summary": "Encoded calldata for one intent. The beacon builds it; the agent signs it.",
+          "paid": false
+        },
+        {
+          "path": "/discover",
+          "method": "GET",
+          "summary": "Find registered agents by capability, ranked by on-chain reputation.",
+          "paid": true
+        },
+        {
+          "path": "/registry/challenge",
+          "method": "POST",
+          "summary": "Ask for a registration challenge bound to this beacon, this escrow, and an expiry.",
+          "paid": false
+        },
+        {
+          "path": "/registry",
+          "method": "POST",
+          "summary": "Register an agent by signing the challenge. The signature is the only credential.",
+          "paid": false
+        },
+        {
+          "path": "/registry",
+          "method": "GET",
+          "summary": "The signed registry file, portable to any other beacon.",
+          "paid": false
+        }
+      ],
+      "tools": [
+        {
+          "name": "tempex_network_stats",
+          "description": "Every job, payment, refund and verdict the escrow has produced, aggregated with the receipts behind each number.",
+          "route": "/stats",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": false
+          },
+          "returns": "NetworkStats: job counts by stage, money totals, verdict bounds, measured dispute-to-verdict latency, proofs.",
+          "when": "You are deciding whether this protocol is real."
+        },
+        {
+          "name": "tempex_reputation",
+          "description": "Reputation for any address, decomposed into the factors that produced it and a recipe for recomputing it independently.",
+          "route": "/reputation/:address",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "description": "Any Tempo address."
+              }
+            },
+            "required": [
+              "address"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "Reputation: score 0-1000, band, itemised factors, buyer/seller history, proof job ids.",
+          "when": "You are deciding whether to trust a counterparty you have never met."
+        },
+        {
+          "name": "tempex_job",
+          "description": "The full on-chain state of one escrow job, including the transaction behind every state change.",
+          "route": "/jobs/:jobId",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "jobId": {
+                "type": "string",
+                "description": "Decimal job id."
+              }
+            },
+            "required": [
+              "jobId"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "JobRecord: parties, amount, deadlines, stage, delivery, verdict, refund, and the block/tx for each.",
+          "when": "You need to know exactly where a deal stands."
+        },
+        {
+          "name": "tempex_onboarding_plan",
+          "description": "The steps, costs and guarantees for starting to trade, for a buyer or a seller, computed from live chain state.",
+          "route": "/onboard",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "seller",
+                  "buyer"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "description": "Optional principal to escrow, in whole token units (e.g. \"25\")."
+              },
+              "policy": {
+                "type": "string",
+                "description": "Policy template id; defaults to \"standard\"."
+              }
+            },
+            "required": [
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "OnboardingPlan: claim, whyItWorks, steps with per-step balance requirements, costs, custody statement, guarantees.",
+          "when": "You have a key and no balance and want to know what you can already do."
+        },
+        {
+          "name": "tempex_readiness",
+          "description": "Whether a specific address can transact right now, and the encoded transactions that fix whatever is missing.",
+          "route": "/ready",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "seller",
+                  "buyer"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "description": "Required for buyers: the principal they intend to escrow."
+              }
+            },
+            "required": [
+              "address",
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "ReadinessReport: verdict, blockers, on-chain balances/allowance/credit, and ready-to-sign next actions.",
+          "when": "You are about to transact and want to fail before you broadcast, not after."
+        },
+        {
+          "name": "tempex_quote",
+          "description": "The all-in cost of a job, itemised, with the transaction fee measured from a real receipt rather than estimated.",
+          "route": "/quote",
+          "method": "GET",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "seller",
+                  "buyer"
+                ]
+              },
+              "amount": {
+                "type": "string",
+                "description": "Principal in whole token units."
+              }
+            },
+            "required": [
+              "role"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "Quote: total, breakdown lines, fee measurement with the transaction it was measured on.",
+          "when": "You need a number you can put in a budget and defend."
+        },
+        {
+          "name": "tempex_blueprint",
+          "description": "Encoded calldata for one escrow intent, with fee treatment and prerequisites. The beacon never signs; you do.",
+          "route": "/blueprint/:action",
+          "method": "POST",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "create-and-fund",
+                  "approve",
+                  "deliver",
+                  "accept",
+                  "auto-accept",
+                  "dispute",
+                  "respond",
+                  "resolve",
+                  "refund-expired",
+                  "settle-lapsed",
+                  "create-milestones",
+                  "list-arbiter",
+                  "delist-arbiter",
+                  "withdraw"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "description": "Action-specific arguments; see the decoded call in the response."
+              },
+              "sponsored": {
+                "type": "boolean",
+                "description": "Default true: route the fee to Tempo’s hosted fee payer."
+              }
+            },
+            "required": [
+              "action"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "Blueprint: calls[], decoded calls, writeOptions, fee, prerequisites, and how to submit.",
+          "when": "You want to act on Tempex without depending on a SDK."
+        },
+        {
+          "name": "tempex_discover",
+          "description": "Registered agents matching a capability, ranked by on-chain reputation rather than by who paid or registered first.",
+          "route": "/discover",
+          "method": "GET",
+          "paid": true,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "capability": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "seller",
+                  "buyer",
+                  "arbiter",
+                  "relay"
+                ]
+              },
+              "minScore": {
+                "type": "number",
+                "description": "Floor on the 0-1000 reputation score."
+              },
+              "limit": {
+                "type": "number"
+              }
+            },
+            "additionalProperties": false
+          },
+          "returns": "RegistryListing[] with rank and reputation, or a 402 body describing how to pay.",
+          "when": "You need a counterparty and want the ranking to be something nobody can buy."
+        },
+        {
+          "name": "tempex_register",
+          "description": "List an agent. Two calls: fetch a challenge, then submit it signed with personal_sign.",
+          "route": "/registry",
+          "method": "POST",
+          "paid": false,
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "agent": {
+                "type": "string",
+                "description": "One paragraph another agent reads to decide whether to hire you."
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "seller",
+                  "buyer",
+                  "arbiter",
+                  "relay"
+                ]
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "policy": {
+                "type": "object"
+              },
+              "accepts": {
+                "type": "object"
+              }
+            },
+            "required": [
+              "address",
+              "name",
+              "agent",
+              "role",
+              "capabilities"
+            ],
+            "additionalProperties": false
+          },
+          "returns": "The stored RegistryEntry, carrying your signature so any beacon can re-verify it.",
+          "when": "You want to be found, and to be judged by the same escrow everyone else is."
+        }
+      ],
+      "policies": [
+        {
+          "id": "standard",
+          "forThisDeal": "A deliverable an agent can produce and hash in one sitting: a report, a dataset, a translation, an API answer."
+        },
+        {
+          "id": "strict-deadline",
+          "forThisDeal": "Work whose value collapses if it is late: a price feed, a booking, a bid."
+        },
+        {
+          "id": "high-value",
+          "forThisDeal": "Anything large enough that a 10% error matters. More criteria, more artifacts, tighter band."
+        },
+        {
+          "id": "micropayment",
+          "forThisDeal": "An x402 or MPP call priced per request. Amounts too small to arbitrate individually are batched into one job."
+        }
+      ],
+      "registry": {
+        "listings": 0,
+        "portable": true,
+        "signatureScheme": "personal_sign over a beacon-bound, expiring challenge (EIP-191)",
+        "file": "/home/user/tempex/packages/beacon/registry.json",
+        "note": "A listing carries its own signature, so any beacon can import and re-verify the file. Registration is not an account: it is a claim about an address, signed by that address."
+      }
+    },
+    "agent": {
+      "name": "Tempex Beacon",
+      "description": "The default referee for agent commerce. No humans required.",
+      "url": "http://127.0.0.1:8787",
+      "version": "0.1.0",
+      "protocol": "tempex/1",
+      "provider": {
+        "organization": "Tempex",
+        "url": "https://github.com/Gigi3d/Tempex"
+      },
+      "capabilities": {
+        "streaming": false,
+        "pushNotifications": false,
+        "stateTransitionHistory": true,
+        "settlement": true,
+        "arbitration": true,
+        "custody": false
+      },
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ],
+      "network": {
+        "name": "tempo:moderato",
+        "chainId": 42431,
+        "rpcUrl": "https://rpc.moderato.tempo.xyz",
+        "explorerUrl": "https://explore.testnet.tempo.xyz",
+        "feePayer": "https://sponsor.moderato.tempo.xyz"
+      },
+      "contracts": {
+        "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "paymentToken": "0x20c0000000000000000000000000000000000001"
+      },
+      "skills": [
+        {
+          "id": "settle",
+          "name": "Escrowed settlement",
+          "description": "Hold payment in a contract until delivery is accepted, auto-accepted after a review window, or refunded past a deadline.",
+          "tags": [
+            "escrow",
+            "settlement",
+            "payments",
+            "stablecoin"
+          ],
+          "examples": [
+            "Escrow 25 alphaUSD for a translation job due in an hour",
+            "Release job 12 to the seller",
+            "Refund job 12, the deadline passed"
+          ]
+        },
+        {
+          "id": "arbitrate",
+          "name": "Binding arbitration",
+          "description": "Hand a disputed delivery to a referee whose EIP-712 verdict the contract validates and executes, splitting the escrow within 0-10000 bps.",
+          "tags": [
+            "arbitration",
+            "disputes",
+            "eip712",
+            "referee"
+          ],
+          "examples": [
+            "Dispute job 12 with this evidence bundle",
+            "Relay the arbiter verdict for job 12"
+          ]
+        },
+        {
+          "id": "trust",
+          "name": "Derived reputation",
+          "description": "Score any address from its settlement history alone, with every factor itemised and a recipe for recomputing it.",
+          "tags": [
+            "reputation",
+            "trust",
+            "identity",
+            "scoring"
+          ],
+          "examples": [
+            "How trustworthy is 0xabc…?",
+            "Rank sellers who do translation work"
+          ]
+        },
+        {
+          "id": "discover",
+          "name": "Agent discovery",
+          "description": "A signed registry of agents that accept Tempex arbitration, ranked by on-chain history rather than by payment.",
+          "tags": [
+            "discovery",
+            "registry",
+            "marketplace",
+            "a2a"
+          ],
+          "examples": [
+            "Find me a seller who can summarise legal text",
+            "List agents with a score above 700"
+          ]
+        },
+        {
+          "id": "onboard",
+          "name": "Zero-balance onboarding",
+          "description": "Plans, readiness checks, cost quotes and encoded calldata so an agent with a key and no funds can start trading immediately.",
+          "tags": [
+            "onboarding",
+            "sponsored",
+            "calldata",
+            "fee-payer"
+          ],
+          "examples": [
+            "What do I need to start selling?",
+            "Can 0xabc… fund a 25 unit job right now?",
+            "Give me the calldata to withdraw"
+          ]
+        }
+      ],
+      "payment": {
+        "scheme": "tempo-tx",
+        "appliesTo": [
+          "/discover"
+        ],
+        "requirement": {
+          "enabled": true,
+          "scheme": "tempo-tx",
+          "price": {
+            "units": "10000",
+            "value": "0.01"
+          },
+          "payTo": ""
+        },
+        "header": "X-Payment",
+        "quoteHeader": "X-Payment-Quote"
+      },
+      "documentation": {
+        "manifest": "http://127.0.0.1:8787/.well-known/tempex.json",
+        "repository": "https://github.com/Gigi3d/Tempex",
+        "verification": [
+          "1. Point an RPC client at https://rpc.moderato.tempo.xyz (chainId 42431).",
+          "2. Read the escrow's governance: eth_call to 0x001c8C3391E591C9CBDFdFE4227e585b86041157 for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
+          "3. Rebuild the index: eth_getLogs from block 38497375 to head, address 0x001c8C3391E591C9CBDFdFE4227e585b86041157, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
+          "4. Compare your fold against GET /stats and GET /jobs. Any difference is a bug in one of us, and the chain settles which.",
+          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0x001c8C3391E591C9CBDFdFE4227e585b86041157; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
+          "6. Check the money: for any job, the TIP-20 TransferWithMemo into the escrow carries memo == jobId, and payouts credit sellers via credits() with memo 0x74656d7065782e77697468647261770000000000000000000000000000000000 on withdrawal.",
+          "7. Check the fee: pull any transaction receipt and find the Transfer to Tempo's fee manager. That is the whole fee mechanism — there is no gas token.",
+          "8. Check this beacon holds nothing: it has no signing key, no custody, and no write path to the escrow. Every endpoint is a read or a calldata build."
+        ]
+      }
+    },
+    "health": {
+      "ok": true,
+      "name": "Tempex Beacon",
+      "version": "0.1.0",
+      "network": "tempo:moderato",
+      "chainId": 42431,
+      "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+      "index": {
+        "fromBlock": "38497375",
+        "caughtUpTo": "38615368",
+        "head": "38615368",
+        "lagBlocks": "0",
+        "events": 50,
+        "jobs": 4
+      },
+      "registry": {
+        "listings": 0
+      },
+      "discovery": {
+        "enabled": true,
+        "scheme": "tempo-tx",
+        "price": {
+          "units": "10000",
+          "value": "0.01"
+        }
+      },
+      "custody": {
+        "keys": false,
+        "canSign": false,
+        "canMoveFunds": false
+      },
+      "time": "2026-10-07T21:05:09.313Z"
+    }
+  },
+  "receipt": {
+    "file": "runs/demo-underdelivered-2026-10-07T02-12-27-827Z.json",
+    "tempex": "demo-receipt/1",
+    "scenario": "underdelivered",
+    "title": "Localization sprint, partly delivered",
+    "premise": "A buyer paid 25 alphaUSD for a French checkout locale. Most strings arrived in French, but prices and dates are in US formats and the glossary was ignored.",
+    "at": "2026-10-07T02:12:27.827Z",
+    "chainId": 42431,
+    "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+    "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+    "sponsored": false,
+    "ran": [
+      "case",
+      "approve",
+      "open",
+      "deliver",
+      "dispute",
+      "rule",
+      "relay",
+      "settle"
+    ],
+    "skipped": [],
+    "ok": true,
+    "failures": [],
+    "expectations": [
+      {
+        "check": "job amount",
+        "expected": "25000000",
+        "actual": "25000000",
+        "passed": true
+      },
+      {
+        "check": "job termsHash",
+        "expected": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+        "actual": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+        "passed": true
+      },
+      {
+        "check": "job arbiter",
+        "expected": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "actual": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "passed": true
+      },
+      {
+        "check": "deliverable URI",
+        "expected": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9",
+        "actual": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9",
+        "passed": true
+      },
+      {
+        "check": "job deliverableHash",
+        "expected": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+        "actual": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+        "passed": true
+      },
+      {
+        "check": "job disputeHash",
+        "expected": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "actual": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "passed": true
+      },
+      {
+        "check": "disputeHash from disk",
+        "expected": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "actual": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "passed": true
+      },
+      {
+        "check": "job responseHash",
+        "expected": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+        "actual": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+        "passed": true
+      },
+      {
+        "check": "buyer offer",
+        "expected": "2500",
+        "actual": "2500",
+        "passed": true
+      },
+      {
+        "check": "seller ask",
+        "expected": "5000",
+        "actual": "5000",
+        "passed": true
+      },
+      {
+        "check": "criterion keys",
+        "expected": "0.7500",
+        "actual": "0.7500",
+        "passed": true
+      },
+      {
+        "check": "criterion french",
+        "expected": "1.0000",
+        "actual": "1.0000",
+        "passed": true
+      },
+      {
+        "check": "criterion prices",
+        "expected": "0.0000",
+        "actual": "0.0000",
+        "passed": true
+      },
+      {
+        "check": "criterion dates",
+        "expected": "0.0000",
+        "actual": "0.0000",
+        "passed": true
+      },
+      {
+        "check": "criterion glossary",
+        "expected": "0.0000",
+        "actual": "0.0000",
+        "passed": true
+      },
+      {
+        "check": "criterion tone",
+        "expected": "open",
+        "actual": "open",
+        "passed": true
+      },
+      {
+        "check": "band",
+        "expected": "4250-5250",
+        "actual": "4250-5250",
+        "passed": true
+      },
+      {
+        "check": "band centre",
+        "expected": "4750",
+        "actual": "4750",
+        "passed": true
+      },
+      {
+        "check": "certified",
+        "expected": "true",
+        "actual": "true",
+        "passed": true
+      },
+      {
+        "check": "escrow digest",
+        "expected": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "actual": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "passed": true
+      },
+      {
+        "check": "escrow awardBps",
+        "expected": "4750",
+        "actual": "4750",
+        "passed": true
+      },
+      {
+        "check": "escrow sellerAmount",
+        "expected": "12093437",
+        "actual": "12093437",
+        "passed": true
+      },
+      {
+        "check": "escrow buyerAmount",
+        "expected": "13656563",
+        "actual": "13656563",
+        "passed": true
+      },
+      {
+        "check": "escrow arbitrationFee",
+        "expected": "500000",
+        "actual": "500000",
+        "passed": true
+      },
+      {
+        "check": "job verdictHash",
+        "expected": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "actual": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "passed": true
+      },
+      {
+        "check": "seller payout",
+        "expected": "12093437",
+        "actual": "12093437",
+        "passed": true
+      },
+      {
+        "check": "seller wallet delta",
+        "expected": "12093408",
+        "actual": "12093408",
+        "passed": true
+      },
+      {
+        "check": "buyer payout",
+        "expected": "13656563",
+        "actual": "13656563",
+        "passed": true
+      },
+      {
+        "check": "buyer wallet delta",
+        "expected": "13656534",
+        "actual": "13656534",
+        "passed": true
+      },
+      {
+        "check": "arbiter payout",
+        "expected": "400000",
+        "actual": "400000",
+        "passed": true
+      },
+      {
+        "check": "arbiter wallet delta",
+        "expected": "399971",
+        "actual": "399971",
+        "passed": true
+      }
+    ],
+    "parties": {
+      "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+      "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64"
+    },
+    "session": {
+      "tempex": "demo-session/1",
+      "scenario": "underdelivered",
+      "title": "Localization sprint, partly delivered",
+      "session": "underdelivered",
+      "startedAt": "2026-10-07T02:12:18.507Z",
+      "updatedAt": "2026-10-07T02:12:27.826Z",
+      "submittedAt": "2026-10-07T02:12:18.507Z",
+      "predictedJobId": "4",
+      "jobId": "4",
+      "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+      "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+      "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+      "amount": "25000000",
+      "stages": {
+        "case": {
+          "predictedJobId": "4",
+          "jobId": "",
+          "submittedAt": "2026-10-07T02:12:18.507Z",
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "amount": "25000000",
+          "termsPath": "/home/user/tempex/evidence/job-4.terms.json",
+          "bundlePath": "/home/user/tempex/evidence/job-4.evidence.json"
+        },
+        "approve": {
+          "hash": "0xcf3e8cb885f9f9d0cc1200b7b01bbcd1dcf1e223aed090cfcb6a367bf430027a",
+          "amount": "25000000"
+        },
+        "open": {
+          "hash": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
+          "jobId": "4",
+          "deliveryDeadline": "1791342739",
+          "reviewWindow": "3600"
+        },
+        "deliver": {
+          "hash": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+          "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
+        },
+        "dispute": {
+          "hash": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
+          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "rederived": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "response": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
+          "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6"
+        },
+        "rule": {
+          "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+          "signature": "0x2f9235fda4e8dd73558eb8ae1014dac1d8c1f1dcc72abe233463f2fddd3c818f518dda0d157a7450fac619bc933a5de2ca8d22178c7fa9fc7497addea7448a201b",
+          "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+          "certified": "true",
+          "engine": "rules",
+          "model": "tempex-rules/1",
+          "sellerAwardBps": "4750",
+          "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+          "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 4).",
+          "issuedAt": "1791339142",
+          "validUntil": "1791425543",
+          "amount": "25000000",
+          "bond": "1250000",
+          "bondToSeller": "480937",
+          "arbitrationFee": "500000",
+          "arbitrationFeeBps": "200",
+          "sellerAmount": "12093437",
+          "buyerAmount": "13656563",
+          "band": "4250-5250"
+        },
+        "relay": {
+          "hash": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+          "relayer": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
+          "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+          "sellerAmount": "12093437",
+          "buyerAmount": "13656563",
+          "arbitrationFee": "500000",
+          "verdictHash": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+        },
+        "settle": {
+          "at": "2026-10-07T02:12:27.826Z"
+        }
+      }
+    },
+    "sessionPath": "/home/user/tempex/runs/demo-underdelivered.json",
+    "corpus": {
+      "credits": {
+        "keys": 0.75,
+        "french": 1,
+        "prices": 0,
+        "dates": 0,
+        "glossary": 0,
+        "tone": null
+      },
+      "center": 4750,
+      "band": [
+        4250,
+        5250
+      ]
+    },
+    "adjudication": {
+      "jobId": 4,
+      "engine": "rules",
+      "model": "tempex-rules/1",
+      "amount": "25000000",
+      "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+      "ruling": {
+        "jobId": 4,
+        "sellerAwardBps": 4750,
+        "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+        "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 4).",
+        "issuedAt": 1791339142,
+        "validUntil": 1791425543,
+        "model": "tempex-rules/1"
+      },
+      "verdict": {
+        "jobId": "4",
+        "sellerAwardBps": 4750,
+        "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
+        "issuedAt": "1791339142",
+        "validUntil": "1791425543"
+      },
+      "signature": "0x2f9235fda4e8dd73558eb8ae1014dac1d8c1f1dcc72abe233463f2fddd3c818f518dda0d157a7450fac619bc933a5de2ca8d22178c7fa9fc7497addea7448a201b",
+      "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+      "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+      "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+      "certified": true,
+      "money": {
+        "amount": "25000000",
+        "bond": "1250000",
+        "bondToSeller": "480937",
+        "arbitrationFee": "500000",
+        "arbitrationFeeBps": 200,
+        "sellerAmount": "12093437",
+        "buyerAmount": "13656563"
+      },
+      "band": {
+        "lowBps": 4250,
+        "highBps": 5250,
+        "center": 4750
+      },
+      "offers": {
+        "lowBps": 2500,
+        "highBps": 5000
+      },
+      "boundedBand": {
+        "lowBps": 4250,
+        "highBps": 5000,
+        "center": 4750
+      },
+      "signals": {
+        "criteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "kind": "check",
+            "check": "jsonKeys",
+            "credit": 0.75,
+            "passed": false,
+            "evidence": "6 of 8 required keys present; missing checkout.coupon, checkout.terms"
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "kind": "check",
+            "check": "language",
+            "credit": 1,
+            "passed": true,
+            "evidence": "written in fra"
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "kind": "check",
+            "check": "regex",
+            "credit": 0,
+            "passed": false,
+            "evidence": "0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\""
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "kind": "check",
+            "check": "regex",
+            "credit": 0,
+            "passed": false,
+            "evidence": "0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\""
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "kind": "check",
+            "check": "contains",
+            "credit": 0,
+            "passed": false,
+            "evidence": "0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\""
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1,
+            "kind": "judge",
+            "evidence": "a judgement criterion: no check can decide it"
+          }
+        ],
+        "totalWeight": 10,
+        "checkedWeight": 9,
+        "earnedWeight": 4.25,
+        "openWeight": 1,
+        "artifactsDeclared": 1,
+        "artifactsVerifiable": 1,
+        "evidenceStrength": 1,
+        "integrity": {
+          "termsHashMatches": true,
+          "deliverableHashMatches": true
+        },
+        "scoredCopy": "uri",
+        "deliverableText": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
+        "sellerResponded": true
+      },
+      "clamped": false,
+      "flags": [],
+      "notes": [
+        "the parties' offers [2500, 5000] narrowed the rule band [4250, 5250] to [4250, 5000]",
+        "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+      ]
+    },
+    "evidence": {
+      "terms": {
+        "acceptanceCriteria": [
+          {
+            "check": {
+              "at": "/strings",
+              "keys": [
+                "cart.title",
+                "checkout.title",
+                "checkout.submit",
+                "checkout.shipping",
+                "checkout.coupon",
+                "checkout.terms",
+                "email.subject",
+                "email.body"
+              ],
+              "type": "jsonKeys"
+            },
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3
+          },
+          {
+            "check": {
+              "at": "/strings",
+              "is": "fr",
+              "type": "language"
+            },
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2
+          },
+          {
+            "check": {
+              "at": "/prices",
+              "pattern": "^\\d+,\\d{2} €$",
+              "type": "regex"
+            },
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2
+          },
+          {
+            "check": {
+              "at": "/dates",
+              "pattern": "^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$",
+              "type": "regex"
+            },
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1
+          },
+          {
+            "check": {
+              "all": [
+                "Valider la commande",
+                "Code promo"
+              ],
+              "at": "/strings",
+              "type": "contains"
+            },
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1
+          }
+        ],
+        "amount": "25.00",
+        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
+        "currency": "AlphaUSD",
+        "deliverableSpec": "Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.",
+        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
+        "title": "Localization sprint, partly delivered"
+      },
+      "bundle": {
+        "artifacts": [
+          {
+            "content": "locales/fr-FR.json: 6 of 8 keys translated; coupon and terms pending",
+            "contentHash": "0x2e8e825f7a082f50ba67691cd1995121b6e1d6d70875198a9a995e10d55a9e1b",
+            "kind": "log",
+            "label": "localization-coverage.txt"
+          }
+        ],
+        "claim": "The delivery is incomplete: two strings are missing, prices and dates are in US formats, and the supplied glossary was not used.",
+        "deliverable": {
+          "content": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
+          "contentHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
+        },
+        "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+        "jobId": 4,
+        "submittedAt": "2026-10-07T02:12:18.507Z",
+        "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+        "version": 1
+      },
+      "response": {
+        "artifacts": [],
+        "deliverable": {
+          "content": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
+          "contentHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
+        },
+        "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "jobId": 4,
+        "statement": "The delivered locale is attached. The core checkout and email strings are translated; formats were left for a follow-up.",
+        "submittedAt": "2026-10-07T02:12:18.507Z",
+        "version": 1
+      }
+    }
+  },
+  "corpus": [
+    {
+      "id": "underdelivered",
+      "title": "Localization sprint, partly delivered",
+      "premise": "A buyer paid 25 alphaUSD for a French checkout locale. Most strings arrived in French, but prices and dates are in US formats and the glossary was ignored.",
+      "expect": {
+        "credits": {
+          "keys": 0.75,
+          "french": 1,
+          "prices": 0,
+          "dates": 0,
+          "glossary": 0,
+          "tone": null
+        },
+        "center": 4750,
+        "band": [
+          4250,
+          5250
+        ]
+      },
+      "offers": {
+        "buyerOfferBps": 2500,
+        "sellerAskBps": 5000
+      },
+      "prediction": {
+        "id": "underdelivered",
+        "title": "Localization sprint, partly delivered",
+        "premise": "A buyer paid 25 alphaUSD for a French checkout locale. Most strings arrived in French, but prices and dates are in US formats and the glossary was ignored.",
+        "ok": true,
+        "mismatches": [],
+        "blocking": [],
+        "center": 4750,
+        "band": [
+          4250,
+          5250
+        ],
+        "earnedWeight": 4.25,
+        "openWeight": 1,
+        "totalWeight": 10,
+        "criteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "kind": "check",
+            "credit": 0.75,
+            "evidence": "6 of 8 required keys present; missing checkout.coupon, checkout.terms"
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "written in fra"
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\""
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\""
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\""
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1,
+            "kind": "judge",
+            "credit": null,
+            "evidence": "a judgement criterion: no check can decide it"
+          }
+        ],
+        "evidenceStrength": 1,
+        "rulingBps": 4750,
+        "money": {
+          "amount": "25000000",
+          "bond": "1250000",
+          "arbitrationFee": "500000",
+          "arbitrationFeeBps": 200,
+          "sellerAmount": "12093437",
+          "buyerAmount": "13656563"
+        },
+        "expected": {
+          "credits": {
+            "keys": 0.75,
+            "french": 1,
+            "prices": 0,
+            "dates": 0,
+            "glossary": 0,
+            "tone": null
+          },
+          "center": 4750,
+          "band": [
+            4250,
+            5250
+          ]
+        }
+      },
+      "drill": [
+        {
+          "requested": -8000,
+          "bps": 4250,
+          "clamped": true,
+          "reading": "below the band — the judge leans to the buyer; the floor holds it to 4250 bps"
+        },
+        {
+          "requested": 0,
+          "bps": 4250,
+          "clamped": true,
+          "reading": "below the band — the judge leans to the buyer; the floor holds it to 4250 bps"
+        },
+        {
+          "requested": 4500,
+          "bps": 4500,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 5000,
+          "bps": 5000,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 10000,
+          "bps": 5250,
+          "clamped": true,
+          "reading": "above the band — the judge leans to the seller; the ceiling holds it to 5250 bps"
+        }
+      ],
+      "terms": {
+        "title": "Localization sprint, partly delivered",
+        "deliverableSpec": "Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.",
+        "acceptanceCriteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "check": {
+              "type": "jsonKeys",
+              "at": "/strings",
+              "keys": [
+                "cart.title",
+                "checkout.title",
+                "checkout.submit",
+                "checkout.shipping",
+                "checkout.coupon",
+                "checkout.terms",
+                "email.subject",
+                "email.body"
+              ]
+            }
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "check": {
+              "type": "language",
+              "at": "/strings",
+              "is": "fr"
+            }
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "check": {
+              "type": "regex",
+              "at": "/prices",
+              "pattern": "^\\d+,\\d{2} €$"
+            }
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "check": {
+              "type": "regex",
+              "at": "/dates",
+              "pattern": "^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$"
+            }
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "check": {
+              "type": "contains",
+              "at": "/strings",
+              "all": [
+                "Valider la commande",
+                "Code promo"
+              ]
+            }
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1
+          }
+        ],
+        "amount": "25.00",
+        "currency": "AlphaUSD",
+        "buyer": "0x00000000000000000000000000000000000000B0",
+        "seller": "0x000000000000000000000000000000000000005e"
+      },
+      "claim": "The delivery is incomplete: two strings are missing, prices and dates are in US formats, and the supplied glossary was not used.",
+      "deliverable": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
+      "response": null,
+      "artifacts": [
+        {
+          "kind": "log",
+          "label": "localization-coverage.txt",
+          "content": "locales/fr-FR.json: 6 of 8 keys translated; coupon and terms pending",
+          "contentHash": "0x2e8e825f7a082f50ba67691cd1995121b6e1d6d70875198a9a995e10d55a9e1b"
+        }
+      ],
+      "sellerStatement": "The delivered locale is attached. The core checkout and email strings are translated; formats were left for a follow-up.",
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
+    },
+    {
+      "id": "nodelivery",
+      "title": "Paid, then nothing shipped",
+      "premise": "The seller took the job and delivered a status note saying no work was done. The buyer disputes immediately.",
+      "expect": {
+        "credits": {
+          "keys": 0,
+          "french": 0,
+          "prices": 0,
+          "dates": 0,
+          "glossary": 0,
+          "tone": null
+        },
+        "center": 500,
+        "band": [
+          0,
+          1000
+        ]
+      },
+      "offers": {
+        "buyerOfferBps": null,
+        "sellerAskBps": null
+      },
+      "prediction": {
+        "id": "nodelivery",
+        "title": "Paid, then nothing shipped",
+        "premise": "The seller took the job and delivered a status note saying no work was done. The buyer disputes immediately.",
+        "ok": true,
+        "mismatches": [],
+        "blocking": [],
+        "center": 500,
+        "band": [
+          0,
+          1000
+        ],
+        "earnedWeight": 0,
+        "openWeight": 1,
+        "totalWeight": 10,
+        "criteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1,
+            "kind": "judge",
+            "credit": null,
+            "evidence": "a judgement criterion: no check can decide it"
+          }
+        ],
+        "evidenceStrength": 1,
+        "rulingBps": 500,
+        "money": {
+          "amount": "40000000",
+          "bond": "2000000",
+          "arbitrationFee": "800000",
+          "arbitrationFeeBps": 200,
+          "sellerAmount": "1338000",
+          "buyerAmount": "39862000"
+        },
+        "expected": {
+          "credits": {
+            "keys": 0,
+            "french": 0,
+            "prices": 0,
+            "dates": 0,
+            "glossary": 0,
+            "tone": null
+          },
+          "center": 500,
+          "band": [
+            0,
+            1000
+          ]
+        }
+      },
+      "drill": [
+        {
+          "requested": 0,
+          "bps": 0,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 500,
+          "bps": 500,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 5000,
+          "bps": 1000,
+          "clamped": true,
+          "reading": "above the band — the judge leans to the seller; the ceiling holds it to 1000 bps"
+        }
+      ],
+      "terms": {
+        "title": "Paid, then nothing shipped",
+        "deliverableSpec": "Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.",
+        "acceptanceCriteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "check": {
+              "type": "jsonKeys",
+              "at": "/strings",
+              "keys": [
+                "cart.title",
+                "checkout.title",
+                "checkout.submit",
+                "checkout.shipping",
+                "checkout.coupon",
+                "checkout.terms",
+                "email.subject",
+                "email.body"
+              ]
+            }
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "check": {
+              "type": "language",
+              "at": "/strings",
+              "is": "fr"
+            }
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "check": {
+              "type": "regex",
+              "at": "/prices",
+              "pattern": "^\\d+,\\d{2} €$"
+            }
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "check": {
+              "type": "regex",
+              "at": "/dates",
+              "pattern": "^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$"
+            }
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "check": {
+              "type": "contains",
+              "at": "/strings",
+              "all": [
+                "Valider la commande",
+                "Code promo"
+              ]
+            }
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1
+          }
+        ],
+        "amount": "40.00",
+        "currency": "AlphaUSD",
+        "buyer": "0x00000000000000000000000000000000000000B0",
+        "seller": "0x000000000000000000000000000000000000005e"
+      },
+      "claim": "Nothing was delivered. The checkout was never translated and no locale file exists.",
+      "deliverable": "Status update: nothing was produced. The work was never started and no strings were translated.",
+      "response": null,
+      "artifacts": [],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
+    },
+    {
+      "id": "badfaith",
+      "title": "A dispute over work that was delivered",
+      "premise": "Every checkable criterion is met by the delivered file. The buyer disputes anyway; the checks rule against the complaint.",
+      "expect": {
+        "credits": {
+          "keys": 1,
+          "french": 1,
+          "prices": 1,
+          "dates": 1,
+          "glossary": 1,
+          "tone": null
+        },
+        "center": 9500,
+        "band": [
+          9000,
+          10000
+        ]
+      },
+      "offers": {
+        "buyerOfferBps": null,
+        "sellerAskBps": null
+      },
+      "prediction": {
+        "id": "badfaith",
+        "title": "A dispute over work that was delivered",
+        "premise": "Every checkable criterion is met by the delivered file. The buyer disputes anyway; the checks rule against the complaint.",
+        "ok": true,
+        "mismatches": [],
+        "blocking": [],
+        "center": 9500,
+        "band": [
+          9000,
+          10000
+        ],
+        "earnedWeight": 9,
+        "openWeight": 1,
+        "totalWeight": 10,
+        "criteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "8 of 8 required keys present"
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "written in fra"
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "2 of 2 values match /^\\d+,\\d{2} €$/"
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "2 of 2 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/"
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "kind": "check",
+            "credit": 1,
+            "evidence": "2 of 2 required strings present"
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1,
+            "kind": "judge",
+            "credit": null,
+            "evidence": "a judgement criterion: no check can decide it"
+          }
+        ],
+        "evidenceStrength": 1,
+        "rulingBps": 9500,
+        "money": {
+          "amount": "18000000",
+          "bond": "900000",
+          "arbitrationFee": "360000",
+          "arbitrationFeeBps": 200,
+          "sellerAmount": "17612100",
+          "buyerAmount": "927900"
+        },
+        "expected": {
+          "credits": {
+            "keys": 1,
+            "french": 1,
+            "prices": 1,
+            "dates": 1,
+            "glossary": 1,
+            "tone": null
+          },
+          "center": 9500,
+          "band": [
+            9000,
+            10000
+          ]
+        }
+      },
+      "drill": [
+        {
+          "requested": 0,
+          "bps": 9000,
+          "clamped": true,
+          "reading": "below the band — the judge leans to the buyer; the floor holds it to 9000 bps"
+        },
+        {
+          "requested": 9600,
+          "bps": 9600,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 10000,
+          "bps": 10000,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        }
+      ],
+      "terms": {
+        "title": "A dispute over work that was delivered",
+        "deliverableSpec": "Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.",
+        "acceptanceCriteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "check": {
+              "type": "jsonKeys",
+              "at": "/strings",
+              "keys": [
+                "cart.title",
+                "checkout.title",
+                "checkout.submit",
+                "checkout.shipping",
+                "checkout.coupon",
+                "checkout.terms",
+                "email.subject",
+                "email.body"
+              ]
+            }
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "check": {
+              "type": "language",
+              "at": "/strings",
+              "is": "fr"
+            }
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "check": {
+              "type": "regex",
+              "at": "/prices",
+              "pattern": "^\\d+,\\d{2} €$"
+            }
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "check": {
+              "type": "regex",
+              "at": "/dates",
+              "pattern": "^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$"
+            }
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "check": {
+              "type": "contains",
+              "at": "/strings",
+              "all": [
+                "Valider la commande",
+                "Code promo"
+              ]
+            }
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1
+          }
+        ],
+        "amount": "18.00",
+        "currency": "AlphaUSD",
+        "buyer": "0x00000000000000000000000000000000000000B0",
+        "seller": "0x000000000000000000000000000000000000005e"
+      },
+      "claim": "Nothing was delivered. The seller never translated the checkout and the prices are wrong.",
+      "deliverable": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Valider la commande\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"checkout.coupon\": \"Code promo\",\n    \"checkout.terms\": \"J'accepte les conditions générales de vente\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"12,50 €\",\n    \"checkout.shipping_fee\": \"4,00 €\"\n  },\n  \"dates\": {\n    \"order.placed\": \"7 octobre 2026\",\n    \"order.delivery\": \"9 octobre 2026\"\n  }\n}",
+      "response": null,
+      "artifacts": [
+        {
+          "kind": "log",
+          "label": "delivery-manifest.txt",
+          "content": "locales/fr-FR.json: 8 of 8 keys; prices and dates in fr-FR formats.",
+          "contentHash": "0x9441378a1aa0ff3776e36dae191f60358de8ee1cfd70611438c8552d0f02df89"
+        }
+      ],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
+    },
+    {
+      "id": "echo",
+      "title": "The criteria, pasted back as the delivery",
+      "premise": "The seller delivers a note that repeats every acceptance criterion word for word, and no locale file.",
+      "expect": {
+        "credits": {
+          "keys": 0,
+          "french": 0,
+          "prices": 0,
+          "dates": 0,
+          "glossary": 0,
+          "tone": null
+        },
+        "center": 500,
+        "band": [
+          0,
+          1000
+        ]
+      },
+      "offers": {
+        "buyerOfferBps": null,
+        "sellerAskBps": null
+      },
+      "prediction": {
+        "id": "echo",
+        "title": "The criteria, pasted back as the delivery",
+        "premise": "The seller delivers a note that repeats every acceptance criterion word for word, and no locale file.",
+        "ok": true,
+        "mismatches": [],
+        "blocking": [],
+        "center": 500,
+        "band": [
+          0,
+          1000
+        ],
+        "earnedWeight": 0,
+        "openWeight": 1,
+        "totalWeight": 10,
+        "criteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "kind": "check",
+            "credit": 0,
+            "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1,
+            "kind": "judge",
+            "credit": null,
+            "evidence": "a judgement criterion: no check can decide it"
+          }
+        ],
+        "evidenceStrength": 1,
+        "rulingBps": 500,
+        "money": {
+          "amount": "12500000",
+          "bond": "625000",
+          "arbitrationFee": "250000",
+          "arbitrationFeeBps": 200,
+          "sellerAmount": "418125",
+          "buyerAmount": "12456875"
+        },
+        "expected": {
+          "credits": {
+            "keys": 0,
+            "french": 0,
+            "prices": 0,
+            "dates": 0,
+            "glossary": 0,
+            "tone": null
+          },
+          "center": 500,
+          "band": [
+            0,
+            1000
+          ]
+        }
+      },
+      "drill": [
+        {
+          "requested": 0,
+          "bps": 0,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 1000,
+          "bps": 1000,
+          "clamped": false,
+          "reading": "inside the band — passes through unclamped, the judge is not overruled"
+        },
+        {
+          "requested": 10000,
+          "bps": 1000,
+          "clamped": true,
+          "reading": "above the band — the judge leans to the seller; the ceiling holds it to 1000 bps"
+        }
+      ],
+      "terms": {
+        "title": "The criteria, pasted back as the delivery",
+        "deliverableSpec": "Deliver locales/fr-FR.json for the checkout flow: every key in the brief, in French, prices and dates in French formats, using the supplied glossary.",
+        "acceptanceCriteria": [
+          {
+            "id": "keys",
+            "text": "Every checkout and email string in the brief is delivered",
+            "weight": 3,
+            "check": {
+              "type": "jsonKeys",
+              "at": "/strings",
+              "keys": [
+                "cart.title",
+                "checkout.title",
+                "checkout.submit",
+                "checkout.shipping",
+                "checkout.coupon",
+                "checkout.terms",
+                "email.subject",
+                "email.body"
+              ]
+            }
+          },
+          {
+            "id": "french",
+            "text": "The strings are written in French",
+            "weight": 2,
+            "check": {
+              "type": "language",
+              "at": "/strings",
+              "is": "fr"
+            }
+          },
+          {
+            "id": "prices",
+            "text": "Prices use the French format, e.g. 12,50 €",
+            "weight": 2,
+            "check": {
+              "type": "regex",
+              "at": "/prices",
+              "pattern": "^\\d+,\\d{2} €$"
+            }
+          },
+          {
+            "id": "dates",
+            "text": "Dates use the French long format, e.g. 7 octobre 2026",
+            "weight": 1,
+            "check": {
+              "type": "regex",
+              "at": "/dates",
+              "pattern": "^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$"
+            }
+          },
+          {
+            "id": "glossary",
+            "text": "The supplied glossary terms are used",
+            "weight": 1,
+            "check": {
+              "type": "contains",
+              "at": "/strings",
+              "all": [
+                "Valider la commande",
+                "Code promo"
+              ]
+            }
+          },
+          {
+            "id": "tone",
+            "text": "The copy reads naturally to a French shopper",
+            "weight": 1
+          }
+        ],
+        "amount": "12.50",
+        "currency": "AlphaUSD",
+        "buyer": "0x00000000000000000000000000000000000000B0",
+        "seller": "0x000000000000000000000000000000000000005e"
+      },
+      "claim": "The delivery is a restatement of the brief. There is no locale file and nothing was translated.",
+      "deliverable": "Every checkout and email string in the brief is delivered. The strings are written in French. Prices use the French format, e.g. 12,50 €. Dates use the French long format, e.g. 7 octobre 2026. The supplied glossary terms are used. The copy reads naturally to a French shopper.",
+      "response": null,
+      "artifacts": [],
+      "sellerStatement": null,
+      "deliveryDeadlineSeconds": 3600,
+      "reviewWindowSeconds": 3600
+    }
+  ]
+}
