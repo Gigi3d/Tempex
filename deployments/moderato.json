@@ -103,5 +103,23 @@
         "Explorer host matters: https://explore.tempo.xyz/tx/<hash> returns 404 for Moderato transactions; https://explore.testnet.tempo.xyz/tx/<hash> resolves (verified against the deploy tx)."
       ]
     }
+  },
+  "liveProof": {
+    "run": "pnpm demo run --fresh --listed-arbiter (scenario underdelivered)",
+    "receipt": "runs/demo-underdelivered-2026-10-07T01-31-43-924Z.json",
+    "result": "8/8 stages, 28/28 corpus expectations held against the live chain",
+    "jobId": 1,
+    "steps": {
+      "listArbiter": "0x30c8756787b1611cf02afa11b26f6faba7240368832dab447cb73ba6c0e99d1d",
+      "createJobWithArbiter+fund": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+      "deliver (data: uri)": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
+      "dispute (bond + offer 2500)": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
+      "respond (ask 5000)": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
+      "resolve (relayed by a non-arbiter key)": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
+    },
+    "outcome": "3250 bps inside offers [2500, 5000] and band [2500, 4450]; seller 8.140937, buyer 17.609063 (bond 1.25 settled, 0.353437 forfeited to the seller), arbitration fee 0.5: 0.4 to the listed arbiter, 0.1 credited to the treasury",
+    "beaconSmoke": "runs/beacon-smoke-2026-10-07T01-32-06-689Z.json: 189 assertions, 0 units spent",
+    "sdkSmoke": "job 2: createJob + fund batched in one transaction, memo bytes32(2), EIP-712 digest agrees with the contract; left Funded and refundable by anyone after its deadline",
+    "keys": "the proof run used throwaway testnet keys funded by the faucet; none of them hold a role in the escrow"
   }
 }
