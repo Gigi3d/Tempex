@@ -13,8 +13,9 @@ export type {
   RelayReceipt,
   VerdictMoney,
 } from './adjudicate.js';
-export { judgeWithLlm, llmConfigFromEnv, LlmError } from './llm.js';
-export type { LlmConfig, LlmOutcome, LlmRuling } from './llm.js';
+export { complete, judgePanel, llmConfigFromEnv, LlmError } from './llm.js';
+export { panelAward } from './adjudicate.js';
+export type { LlmConfig, MemberScore, PanelCriterion, PanelMember, PanelVerdict } from './llm.js';
 export { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
 export { analyze, composeRuleRationale, formatBps } from './rules.js';
 export { checkProblem, runCheck } from './checks.js';
