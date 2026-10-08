@@ -426,8 +426,11 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
   log(`digest ${local} ${matches ? '== ' : '!= '} on-chain ${onChain}`);
   log(`signature recovers to ${recovered}${signerIsArbiter ? ' (registered arbiter)' : ' (NOT the arbiter)'}`);
 
-  // ---- the ruling in money, using the fee rate this job locked at creation ----
-  const settlement = disputeSettlement({ amount, arbitrationFeeBps, sellerAwardBps: chosenBps });
+  // ---- the ruling in money, using the fee this job locked at creation ----
+  // Read from the escrow itself: since v3 a job may also lock a minimum fee,
+  // and the escrow's arithmetic is the one that pays out.
+  const arbitrationFee = await client.arbitrationFee(jobId);
+  const settlement = disputeSettlement({ amount, arbitrationFeeBps, sellerAwardBps: chosenBps, arbitrationFee });
   const money: VerdictMoney = {
     amount,
     bond: settlement.bond,

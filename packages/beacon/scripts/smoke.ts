@@ -277,8 +277,12 @@ async function main(): Promise<void> {
   pass(`verdictDigest selector ${verdictSelector}`);
 
   assert(manifest.protocol.custody.beaconHoldsKeys === false, 'manifest states the beacon holds no keys');
-  assert(manifest.protocol.custody.escrowIsUpgradeable === false, 'manifest states the escrow is not upgradeable');
-  assert(manifest.protocol.custody.ownerCanTakeJobPrincipal === false, 'manifest states the owner cannot take principal');
+  // An upgradeable escrow must say so, name the key that can upgrade it, and
+  // admit that key could move principal; a v2 escrow must say none of that.
+  const custody = manifest.protocol.custody;
+  assert(custody.escrowIsUpgradeable === (custody.implementation !== null), 'manifest states upgradeability exactly when it names an implementation');
+  assert(custody.ownerCanTakeJobPrincipal === custody.escrowIsUpgradeable, 'manifest admits the upgrade key could take principal');
+  assert(!custody.escrowIsUpgradeable || custody.upgradeKey === manifest.protocol.owner, 'manifest names the owner as the upgrade key');
   pass('custody claims are stated, and the owner powers list is published next to them');
 
   assert(

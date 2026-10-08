@@ -122,6 +122,7 @@ describe('adjudicate with a judge', () => {
     evidenceClosedAt: async () => 1,
     deliverableURI: async () => '',
     verdictEncoding: async () => ({ local: '0x', onChain: '0x', matches: true }),
+    arbitrationFee: async () => 500_000n,
     viem: { readContract: async ({ functionName }: { functionName: string }) => (functionName === 'arbiter' ? account.address : 200) },
   } as unknown as TempexClient;
   const run = (llm: LlmConfig, cacheDir?: string) =>

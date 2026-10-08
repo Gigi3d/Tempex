@@ -458,6 +458,9 @@ export function quote(params: {
   decimals: number;
   measured: Money | null;
   measuredOn: { tx: Hex; block: number; jobId: string } | null;
+  /// v3 launch guards, when the escrow has them
+  guards?: { maxJobAmount: bigint; arbitrationFeeFloor: bigint; newJobsPaused: boolean } | null;
+  arbitrationFeeBps?: number;
 }): Quote {
   const { config, role, amount, decimals } = params;
   const sponsored = config.sponsorUrl !== null;
@@ -510,8 +513,22 @@ export function quote(params: {
       {
         line: 'arbitration fee, only if disputed',
         cost: FREE,
-        note: 'deducted from the disputed amount at verdict, capped on-chain at 1000 bps',
+        note:
+          params.guards && params.guards.arbitrationFeeFloor > 0n
+            ? `deducted from the disputed amount at verdict: ${params.arbitrationFeeBps ?? 0} bps of the job, at least ${money(params.guards.arbitrationFeeFloor, decimals).value} (the floor this job would lock), never more than the job amount; the rate is capped on-chain at 1000 bps`
+            : 'deducted from the disputed amount at verdict, capped on-chain at 1000 bps',
       },
+      ...(params.guards
+        ? [
+            {
+              line: 'launch limits',
+              cost: FREE,
+              note: params.guards.newJobsPaused
+                ? 'new jobs are paused: the escrow accepts no new job until the owner lifts the pause'
+                : `the escrow funds jobs up to ${params.guards.maxJobAmount === (1n << 256n) - 1n ? 'any size' : money(params.guards.maxJobAmount, decimals).value} each${params.guards.maxJobAmount !== (1n << 256n) - 1n && amount > params.guards.maxJobAmount ? '; this amount is above that cap and would be refused' : ''}`,
+            },
+          ]
+        : []),
     ],
   };
 }

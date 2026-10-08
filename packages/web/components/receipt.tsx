@@ -17,6 +17,7 @@ export function ReceiptCard({ job, adjudication, beaconUrl }: { job: JobRecord; 
     amount: BigInt(job.amount),
     arbitrationFeeBps: job.terms.arbitrationFeeBps,
     sellerAwardBps: verdict.sellerAwardBps,
+    arbitrationFeeFloor: BigInt(job.terms.arbitrationFeeFloor ?? '0'),
   });
   const agrees =
     settlement.sellerAmount.toString() === verdict.sellerAmount && settlement.buyerAmount.toString() === verdict.buyerAmount;

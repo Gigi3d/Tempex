@@ -282,11 +282,25 @@ export type Manifest = {
     counters: { jobCount: string; nextJobId: string };
     custody: {
       beaconHoldsKeys: false;
-      escrowIsUpgradeable: false;
-      ownerCanTakeJobPrincipal: false;
+      escrowIsUpgradeable: boolean;
+      /// true for an upgradeable escrow: new code could move escrowed funds
+      ownerCanTakeJobPrincipal: boolean;
+      /// the key that can replace the escrow's code, when it can be replaced
+      upgradeKey: Address | null;
+      implementation: Address | null;
+      version: string | null;
       ownerPowers: string[];
       withdrawalMemo: Hex;
     };
+    guards: {
+      newJobsPaused: boolean;
+      maxJobAmount: string;
+      maxOpenValue: string;
+      openValue: string;
+      arbitrationFeeFloor: string;
+      referralShareBps: number;
+      note: string;
+    } | null;
   };
   index: {
     fromBlock: string;
@@ -389,9 +403,22 @@ export function buildManifest(params: ManifestParams): Manifest {
       counters: { jobCount: escrow.jobCount.toString(), nextJobId: escrow.nextJobId.toString() },
       custody: {
         beaconHoldsKeys: false,
-        escrowIsUpgradeable: false,
-        ownerCanTakeJobPrincipal: false,
+        escrowIsUpgradeable: escrow.upgrade !== null,
+        ownerCanTakeJobPrincipal: escrow.upgrade !== null,
+        upgradeKey: escrow.upgrade !== null ? escrow.owner : null,
+        implementation: escrow.upgrade?.implementation ?? null,
+        version: escrow.upgrade?.version ?? null,
         ownerPowers: [
+          ...(escrow.upgrade !== null
+            ? [
+                'upgradeToAndCall(address,bytes) — replace the escrow\'s code. This is unrestricted: new code could change any rule, including how escrowed funds move. It is one key today (see upgradeKey), to become a multisig behind a timelock before the escrow holds meaningful value',
+                'setNewJobsPaused(bool) — stop new jobs from being created or funded; jobs already in flight keep every exit',
+                'setLimits(uint256,uint256) — cap the size of one job and the value held by all open jobs, for jobs funded afterwards',
+                'setArbitrationFeeFloor(uint256) — minimum arbitration fee, locked by jobs created afterwards',
+                `setReferralShare(uint16) — referrers' share of protocol fees, up to ${escrow.guards?.maxReferralShareBps ?? 5000} bps, locked by jobs created afterwards`,
+                'setProtocolCut(uint16) — the treasury\'s share of listed arbiters\' fees, for jobs created afterwards',
+              ]
+            : []),
           'setArbiter(address) — choose the default referee for jobs created afterwards; every existing job keeps the arbiter it locked at creation',
           'setTreasury(address) — redirect future platform fees',
           'setFees(uint16,uint16) — within the on-chain caps, for jobs created afterwards only',
@@ -399,6 +426,18 @@ export function buildManifest(params: ManifestParams): Manifest {
         ],
         withdrawalMemo: escrow.withdrawMemo,
       },
+      guards:
+        escrow.guards === null
+          ? null
+          : {
+              newJobsPaused: escrow.guards.newJobsPaused,
+              maxJobAmount: escrow.guards.maxJobAmount.toString(),
+              maxOpenValue: escrow.guards.maxOpenValue.toString(),
+              openValue: escrow.guards.openValue.toString(),
+              arbitrationFeeFloor: escrow.guards.arbitrationFeeFloor.toString(),
+              referralShareBps: escrow.guards.referralShareBps,
+              note: 'Token base units (6 decimals). A cap of 2^256-1 means no cap. A job above maxJobAmount, or one that would take openValue past maxOpenValue, cannot be funded; while newJobsPaused, no job can be created or funded. None of this touches a job already funded. The arbitration fee is the larger of the locked rate and the locked floor, never more than the job amount; createJobWithReferrer pays the named referrer referralShareBps of the protocol\'s fees on that job.',
+            },
     },
     index: {
       fromBlock: index.fromBlock.toString(),

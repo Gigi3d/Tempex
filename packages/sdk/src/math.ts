@@ -81,6 +81,22 @@ export function disputeBond(amount: bigint): bigint {
   return (amount * BigInt(DISPUTE_BOND_BPS)) / 10_000n;
 }
 
+/// The fee a ruling charges. A mirror of `TempexEscrow.arbitrationFee`: the
+/// job's locked rate, raised to its locked floor when the rate is not zero, and
+/// never more than the job amount. Escrows before v3 have no floor (0).
+export function arbitrationFeeFor(params: {
+  amount: bigint;
+  arbitrationFeeBps: number;
+  arbitrationFeeFloor?: bigint;
+}): bigint {
+  if (params.arbitrationFeeBps === 0) return 0n;
+  let fee = (params.amount * BigInt(params.arbitrationFeeBps)) / 10_000n;
+  const floor = params.arbitrationFeeFloor ?? 0n;
+  if (fee < floor) fee = floor;
+  if (fee > params.amount) fee = params.amount;
+  return fee;
+}
+
 /// What a ruling pays each side, bond included. A line-for-line mirror of
 /// `TempexEscrow.disputeSettlement`, so a receipt can predict the exact credits
 /// before the verdict is relayed: loser pays the fee, the buyer's share comes out
@@ -89,6 +105,10 @@ export function disputeSettlement(params: {
   amount: bigint;
   arbitrationFeeBps: number;
   sellerAwardBps: number;
+  /// the job's locked minimum fee (v3 escrows); ignored when `arbitrationFee` is given
+  arbitrationFeeFloor?: bigint;
+  /// the exact fee, as `TempexEscrow.arbitrationFee(jobId)` reports it
+  arbitrationFee?: bigint;
 }): {
   bond: bigint;
   arbitrationFee: bigint;
@@ -100,7 +120,13 @@ export function disputeSettlement(params: {
   const award = BigInt(params.sellerAwardBps);
   const { amount } = params;
   const bond = disputeBond(amount);
-  const fee = (amount * BigInt(params.arbitrationFeeBps)) / BPS;
+  const fee =
+    params.arbitrationFee ??
+    arbitrationFeeFor({
+      amount,
+      arbitrationFeeBps: params.arbitrationFeeBps,
+      ...(params.arbitrationFeeFloor !== undefined ? { arbitrationFeeFloor: params.arbitrationFeeFloor } : {}),
+    });
   const sellerGross = (amount * award) / BPS;
   let sellerFee = (fee * (BPS - award)) / BPS;
   let buyerFee = fee - sellerFee;

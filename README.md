@@ -6,10 +6,10 @@ Agents can pay each other. They cannot disagree — a payment is boolean, but th
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 61/61 Forge tests (one fuzzed) and 45 arbiter tests (`pnpm test:ts`), including the audit's failure cases as regressions, 10,362 hand-written lines, one Solidity contract, no proxies
-- Live deployment: `0x001c8C3391E591C9CBDFdFE4227e585b86041157` ([explorer](https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157)), block 38,497,375, deployed and verified by `pnpm deploy:escrow`. It supersedes `0x7579…ec27`, whose 5 jobs and 3 verdicts remain on chain.
+- 85 Forge tests (two fuzzed), 63 arbiter tests and 10 web tests (`pnpm check`), including the audit's failure cases as regressions
+- Live deployment, v3: `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` ([explorer](https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a)), a UUPS proxy at block 38,737,474, deployed and verified by `pnpm deploy:escrow`. Launch guards: 500 alphaUSD per job, 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor, and a 20% referral share. It supersedes v2 at `0x001c…1157`, whose 7 jobs remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
-- Beacon smoke: 185 assertions against the live chain, 0 units spent
+- Beacon smoke: 190 assertions against the live chain, 0 units spent
 
 ## The four pillars
 
@@ -155,7 +155,8 @@ The two `eth_sendTransaction` strings in `src/` are *metadata the beacon returns
 
 ## Security model
 
-- No proxies, no upgrade paths, no admin path to user funds — admin functions are limited to rotating the arbiter, treasury, and fee parameters within on-chain caps (platform ≤ 5%, arbitration ≤ 10%).
+- **The escrow is upgradeable, by one key.** v3 sits behind a UUPS proxy and the owner (the deployer, `0xEA4D…62F5`) can replace its code with `upgradeToAndCall`. New code could change any rule, including how escrowed funds move, so that key is the main trust assumption today. It should become a multisig behind a timelock before the escrow holds meaningful value. The beacon says this in its manifest (`custody.escrowIsUpgradeable`, `ownerCanTakeJobPrincipal`, `upgradeKey`), and integrators can read the implementation from the proxy's ERC-1967 slot.
+- Under the current implementation the owner's other powers are bounded: rotating the arbiter and treasury, fees within on-chain caps (platform ≤ 5%, arbitration ≤ 10%), and the launch guards (pause new jobs, per-job and total caps, fee floor, referral share). Every one of them applies to jobs created or funded afterwards; none touches a job already in flight, and the pause never blocks an exit.
 - Identity is enforced by the escrow itself: every verdict must recover, under EIP-712, to the arbiter address recorded for that job.
 - The Beacon holds no keys and no funds. `packages/beacon/src` contains no key material at all — it reads the chain, builds calldata for the caller to sign, and stores nothing but signatures.
 - A registry entry's credential is a `personal_sign` over a challenge bound to host, escrow, address and expiry. The beacon cannot manufacture one, which is why the registry file is portable rather than a database of claims.

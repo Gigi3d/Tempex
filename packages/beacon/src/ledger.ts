@@ -64,7 +64,12 @@ export type JobRecord = {
     platformFeeBps: number;
     arbitrationFeeBps: number;
     protocolCutBps: number;
+    /// v3: the minimum arbitration fee the job locked, in token units (0 if none)
+    arbitrationFeeFloor?: bigint;
   };
+  /// v3: who brought the job, the share of protocol fees it earns, and what it
+  /// has been paid so far.
+  referral?: Stamp & { referrer: Address; shareBps: number; paid: bigint };
   /// The arbiter never ruled in time; anyone settled it on the default split.
   lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
   /// Set when the job is one tranche of a milestone plan.
@@ -299,6 +304,28 @@ export class EscrowLedger {
             protocolCutBps: num(args['protocolCutBps']),
           };
         }
+        return;
+      }
+      case 'ArbitrationFeeFloorLocked': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.terms) job.terms.arbitrationFeeFloor = big(args['arbitrationFeeFloor']);
+        return;
+      }
+      case 'JobReferred': {
+        const job = this.mutate(big(args['jobId']));
+        if (job) {
+          job.referral = {
+            ...stamp,
+            referrer: String(args['referrer']) as Address,
+            shareBps: num(args['referralShareBps']),
+            paid: 0n,
+          };
+        }
+        return;
+      }
+      case 'ReferralPaid': {
+        const job = this.mutate(big(args['jobId']));
+        if (job?.referral) job.referral.paid += big(args['amount']);
         return;
       }
       case 'DisputeLapsed': {

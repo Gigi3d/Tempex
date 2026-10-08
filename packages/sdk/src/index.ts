@@ -63,6 +63,7 @@ export {
   awardBounds,
   disputeBond,
   disputeSettlement,
+  arbitrationFeeFor,
   JOB_STATES,
   SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
@@ -76,7 +77,9 @@ export {
 } from './client.js';
 export type {
   ArbiterListing,
+  EscrowGuards,
   FeePayment,
+  JobExtras,
   Job,
   JobState,
   MemoTransfer,

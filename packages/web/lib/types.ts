@@ -32,7 +32,11 @@ export type JobRecord = {
     platformFeeBps: number;
     arbitrationFeeBps: number;
     protocolCutBps: number;
+    /// v3 escrows: the minimum arbitration fee the job locked, in token units
+    arbitrationFeeFloor?: string;
   };
+  /// v3 escrows: who brought the job and what it has been paid
+  referral?: TxRef & { referrer: `0x${string}`; shareBps: number; paid: string };
   funded?: TxRef & { amount: string };
   delivered?: TxRef & {
     deliverableHash: `0x${string}`;

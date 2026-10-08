@@ -5,6 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ITIP20} from "../src/ITIP20.sol";
 import {TempexEscrow} from "../src/TempexEscrow.sol";
+import {TempexDeployment} from "../script/TempexDeployment.sol";
 
 /// @dev Mirrors the two TIP-20 behaviours the escrow depends on: the memo
 /// variants return nothing and revert (rather than returning false) on failure,
@@ -64,7 +65,7 @@ contract TempexEscrowTest is Test {
     function setUp() public {
         arbiter = vm.addr(ARBITER_PK);
         token = new MockStablecoin();
-        escrow = new TempexEscrow(
+        (escrow,) = TempexDeployment.deploy(
             token, owner, arbiter, treasury, PLATFORM_FEE_BPS, ARBITRATION_FEE_BPS
         );
         token.mint(buyer, 1_000_000e6);
@@ -392,7 +393,7 @@ contract TempexEscrowTest is Test {
         assertTrue(digestHere != digestOtherChain);
 
         // Same chain, different escrow => different digest
-        TempexEscrow other = new TempexEscrow(
+        (TempexEscrow other,) = TempexDeployment.deploy(
             token, owner, arbiter, treasury, PLATFORM_FEE_BPS, ARBITRATION_FEE_BPS
         );
         assertTrue(digestHere != other.verdictDigest(verdict));

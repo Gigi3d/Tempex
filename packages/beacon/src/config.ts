@@ -15,7 +15,7 @@ import {
 
 /// Block the escrow was deployed at. Nothing before it can mention Tempex, so the
 /// indexer treats it as the genesis of its own history and never scans further back.
-export const DEPLOYMENT_BLOCK = 38_497_375n;
+export const DEPLOYMENT_BLOCK = 38_737_474n;
 
 /// Default price of a paid discovery query, in alphaUSD.
 ///
@@ -95,7 +95,8 @@ export function beaconConfigFromEnv(repoRoot: string = process.cwd()): BeaconCon
 
     escrow: addresses.escrow,
     token: (process.env['TEMPEX_TOKEN'] as Address) ?? addresses.token ?? TOKENS.alphaUsd,
-    treasury: (process.env['BEACON_TREASURY'] ?? process.env['TEMPEX_TREASURY'] ?? '') as Address,
+    // `||`, not `??`: an empty BEACON_TREASURY= line in .env means unset.
+    treasury: (process.env['BEACON_TREASURY'] || process.env['TEMPEX_TREASURY'] || '') as Address,
     discoveryPrice: tokenAmount(process.env['BEACON_DISCOVERY_PRICE'] ?? DEFAULT_DISCOVERY_PRICE),
 
     scanChunkBlocks: scanChunkBlocks(process.env['BEACON_SCAN_CHUNK_BLOCKS']),

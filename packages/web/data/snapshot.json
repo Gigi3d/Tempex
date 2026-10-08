@@ -1,96 +1,80 @@
 {
-  "bakedAt": "2026-10-07T21:05:09.313Z",
-  "beaconAt": "2026-10-07T21:05:09.157Z",
+  "bakedAt": "2026-10-08T17:43:42.960Z",
+  "beaconAt": "2026-10-08T17:43:42.913Z",
   "beacon": {
     "url": "http://127.0.0.1:8787",
     "stats": {
-      "generatedAt": "2026-10-07T21:05:09.157Z",
+      "generatedAt": "2026-10-08T17:43:42.913Z",
       "chainId": 42431,
       "network": "tempo:moderato",
-      "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+      "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
       "token": {
         "address": "0x20c0000000000000000000000000000000000001",
         "symbol": "AlphaUSD",
         "decimals": 6
       },
       "blockRange": {
-        "from": "38497375",
-        "to": "38615358"
+        "from": "38737474",
+        "to": "38738306"
       },
-      "events": 50,
+      "events": 23,
       "jobs": {
-        "total": 4,
+        "total": 1,
         "created": 0,
-        "funded": 1,
+        "funded": 0,
         "delivered": 0,
         "accepted": 0,
-        "disputed": 3,
-        "resolved": 3,
+        "disputed": 1,
+        "resolved": 1,
         "refunded": 0,
         "cancelled": 0,
-        "settlementRate": 0.75,
-        "disputeRate": 0.75
+        "settlementRate": 1,
+        "disputeRate": 1
       },
       "money": {
         "escrowed": {
-          "units": "100000000",
-          "value": "100"
+          "units": "25000000",
+          "value": "25"
         },
         "paidToSellers": {
-          "units": "32327811",
-          "value": "32.327811"
+          "units": "12093437",
+          "value": "12.093437"
         },
         "refundedToBuyers": {
-          "units": "44922189",
-          "value": "44.922189"
+          "units": "13656563",
+          "value": "13.656563"
         },
         "arbitrationFees": {
-          "units": "1500000",
-          "value": "1.5"
+          "units": "500000",
+          "value": "0.5"
         },
         "platformFees": {
           "units": "0",
           "value": "0"
         },
         "withdrawn": {
-          "units": "78450000",
-          "value": "78.45"
+          "units": "26250000",
+          "value": "26.25"
         },
         "stillInEscrow": {
-          "units": "22750000",
-          "value": "22.75"
+          "units": "-750000",
+          "value": "-0.75"
         }
       },
       "arbitration": {
-        "verdicts": 3,
-        "avgSellerAwardBps": 4250,
-        "minSellerAwardBps": 3250,
+        "verdicts": 1,
+        "avgSellerAwardBps": 4750,
+        "minSellerAwardBps": 4750,
         "maxSellerAwardBps": 4750,
         "bounded": true,
         "timings": [
           {
             "jobId": "1",
-            "disputedAt": 1791336697,
-            "verdictAt": 1791336699,
-            "seconds": 2,
-            "blocks": 4,
-            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
-          },
-          {
-            "jobId": "3",
-            "disputedAt": 1791339114,
-            "verdictAt": 1791339124,
-            "seconds": 10,
-            "blocks": 17,
-            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7"
-          },
-          {
-            "jobId": "4",
-            "disputedAt": 1791339141,
-            "verdictAt": 1791339143,
-            "seconds": 2,
-            "blocks": 3,
-            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5"
+            "disputedAt": 1791481186,
+            "verdictAt": 1791481189,
+            "seconds": 3,
+            "blocks": 5,
+            "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449"
           }
         ]
       },
@@ -103,320 +87,100 @@
         {
           "jobId": "1",
           "stage": "created",
-          "block": 38497958,
-          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+          "block": 38737703,
+          "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
         },
         {
           "jobId": "1",
           "stage": "funded",
-          "block": 38497958,
-          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+          "block": 38737703,
+          "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
         },
         {
           "jobId": "1",
           "stage": "delivered",
-          "block": 38497960,
-          "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc"
+          "block": 38737924,
+          "tx": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201"
         },
         {
           "jobId": "1",
           "stage": "disputed",
-          "block": 38497962,
-          "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7"
+          "block": 38737926,
+          "tx": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82"
         },
         {
           "jobId": "1",
           "stage": "resolved",
-          "block": 38497966,
-          "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015"
-        },
-        {
-          "jobId": "2",
-          "stage": "created",
-          "block": 38497992,
-          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
-        },
-        {
-          "jobId": "2",
-          "stage": "funded",
-          "block": 38497992,
-          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
-        },
-        {
-          "jobId": "3",
-          "stage": "created",
-          "block": 38502004,
-          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
-        },
-        {
-          "jobId": "3",
-          "stage": "funded",
-          "block": 38502004,
-          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
-        },
-        {
-          "jobId": "3",
-          "stage": "delivered",
-          "block": 38502005,
-          "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335"
-        },
-        {
-          "jobId": "3",
-          "stage": "disputed",
-          "block": 38502007,
-          "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca"
-        },
-        {
-          "jobId": "3",
-          "stage": "resolved",
-          "block": 38502024,
-          "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7"
-        },
-        {
-          "jobId": "4",
-          "stage": "created",
-          "block": 38502049,
-          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
-        },
-        {
-          "jobId": "4",
-          "stage": "funded",
-          "block": 38502049,
-          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
-        },
-        {
-          "jobId": "4",
-          "stage": "delivered",
-          "block": 38502050,
-          "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971"
-        },
-        {
-          "jobId": "4",
-          "stage": "disputed",
-          "block": 38502052,
-          "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76"
-        },
-        {
-          "jobId": "4",
-          "stage": "resolved",
-          "block": 38502055,
-          "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5"
+          "block": 38737931,
+          "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449"
         }
       ]
     },
     "jobs": {
-      "count": 4,
-      "indexed": 4,
+      "count": 1,
+      "indexed": 1,
       "order": "newest first",
       "jobs": [
-        {
-          "jobId": "4",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-          "deliveryDeadline": 1791342739,
-          "reviewWindow": 3600,
-          "stage": "resolved",
-          "created": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
-          },
-          "terms": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
-          },
-          "funded": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "amount": "25000000"
-          },
-          "delivered": {
-            "block": 38502050,
-            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
-            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-            "deliveredAt": 1791339140,
-            "reviewDeadline": 1791342740,
-            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
-          },
-          "dispute": {
-            "block": 38502052,
-            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-            "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-            "disputedAt": 1791339141,
-            "buyerOfferBps": 2500,
-            "responseDeadline": 1791943941
-          },
-          "response": {
-            "block": 38502053,
-            "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
-            "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
-            "respondedAt": 1791339142,
-            "sellerAskBps": 5000
-          },
-          "verdict": {
-            "block": 38502055,
-            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
-            "sellerAwardBps": 4750,
-            "sellerAmount": "12093437",
-            "buyerAmount": "13656563",
-            "arbitrationFee": "500000",
-            "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-            "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-            "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
-          }
-        },
-        {
-          "jobId": "3",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-          "deliveryDeadline": 1791342712,
-          "reviewWindow": 3600,
-          "stage": "resolved",
-          "created": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
-          },
-          "terms": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
-          },
-          "funded": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "amount": "25000000"
-          },
-          "delivered": {
-            "block": 38502005,
-            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
-            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-            "deliveredAt": 1791339113,
-            "reviewDeadline": 1791342713,
-            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
-          },
-          "dispute": {
-            "block": 38502007,
-            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
-            "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-            "disputedAt": 1791339114,
-            "buyerOfferBps": 2500,
-            "responseDeadline": 1791943914
-          },
-          "response": {
-            "block": 38502008,
-            "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
-            "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
-            "respondedAt": 1791339115,
-            "sellerAskBps": 5000
-          },
-          "verdict": {
-            "block": 38502024,
-            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
-            "sellerAwardBps": 4750,
-            "sellerAmount": "12093437",
-            "buyerAmount": "13656563",
-            "arbitrationFee": "500000",
-            "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-            "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
-            "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
-          }
-        },
-        {
-          "jobId": "2",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0xabababababababababababababababababababababababababababababababab",
-          "deliveryDeadline": 1791941515,
-          "reviewWindow": 259200,
-          "stage": "funded",
-          "created": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
-          },
-          "terms": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 10000
-          },
-          "funded": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "amount": "25000000"
-          }
-        },
         {
           "jobId": "1",
           "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
           "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
           "amount": "25000000",
-          "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
-          "deliveryDeadline": 1791340293,
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791484649,
           "reviewWindow": 3600,
           "stage": "resolved",
           "created": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
           },
           "terms": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
             "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
             "platformFeeBps": 50,
             "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
+            "protocolCutBps": 10000,
+            "arbitrationFeeFloor": "500000"
           },
           "funded": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
             "amount": "25000000"
           },
           "delivered": {
-            "block": 38497960,
-            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
-            "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
-            "deliveredAt": 1791336695,
-            "reviewDeadline": 1791340295,
-            "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
+            "block": 38737924,
+            "tx": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791481185,
+            "reviewDeadline": 1791484785,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
           },
           "dispute": {
-            "block": 38497962,
-            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
-            "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-            "disputedAt": 1791336697,
+            "block": 38737926,
+            "tx": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+            "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+            "disputedAt": 1791481186,
             "buyerOfferBps": 2500,
-            "responseDeadline": 1791941497
+            "responseDeadline": 1792085986
           },
           "response": {
-            "block": 38497964,
-            "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
-            "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
-            "respondedAt": 1791336698,
+            "block": 38737928,
+            "tx": "0xb125b39d1ae937a5a2c89690424beb5ced9c9a945b7fb67d8db5458bb54c6995",
+            "responseHash": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f",
+            "respondedAt": 1791481187,
             "sellerAskBps": 5000
           },
           "verdict": {
-            "block": 38497966,
-            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
-            "sellerAwardBps": 3250,
-            "sellerAmount": "8140937",
-            "buyerAmount": "17609063",
+            "block": 38737931,
+            "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
             "arbitrationFee": "500000",
-            "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-            "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
-            "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+            "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+            "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+            "verdictDigest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40"
           }
         }
       ]
@@ -427,209 +191,61 @@
         "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
         "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
         "amount": "25000000",
-        "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
-        "deliveryDeadline": 1791340293,
-        "reviewWindow": 3600,
-        "stage": "resolved",
-        "created": {
-          "block": 38497958,
-          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
-        },
-        "terms": {
-          "block": 38497958,
-          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
-          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-          "platformFeeBps": 50,
-          "arbitrationFeeBps": 200,
-          "protocolCutBps": 2000
-        },
-        "funded": {
-          "block": 38497958,
-          "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
-          "amount": "25000000"
-        },
-        "delivered": {
-          "block": 38497960,
-          "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
-          "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
-          "deliveredAt": 1791336695,
-          "reviewDeadline": 1791340295,
-          "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
-        },
-        "dispute": {
-          "block": 38497962,
-          "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
-          "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-          "disputedAt": 1791336697,
-          "buyerOfferBps": 2500,
-          "responseDeadline": 1791941497
-        },
-        "response": {
-          "block": 38497964,
-          "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
-          "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
-          "respondedAt": 1791336698,
-          "sellerAskBps": 5000
-        },
-        "verdict": {
-          "block": 38497966,
-          "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
-          "sellerAwardBps": 3250,
-          "sellerAmount": "8140937",
-          "buyerAmount": "17609063",
-          "arbitrationFee": "500000",
-          "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-          "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
-          "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
-        }
-      },
-      "2": {
-        "jobId": "2",
-        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-        "amount": "25000000",
-        "termsHash": "0xabababababababababababababababababababababababababababababababab",
-        "deliveryDeadline": 1791941515,
-        "reviewWindow": 259200,
-        "stage": "funded",
-        "created": {
-          "block": 38497992,
-          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
-        },
-        "terms": {
-          "block": 38497992,
-          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-          "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-          "platformFeeBps": 50,
-          "arbitrationFeeBps": 200,
-          "protocolCutBps": 10000
-        },
-        "funded": {
-          "block": 38497992,
-          "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-          "amount": "25000000"
-        }
-      },
-      "3": {
-        "jobId": "3",
-        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-        "amount": "25000000",
         "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-        "deliveryDeadline": 1791342712,
+        "deliveryDeadline": 1791484649,
         "reviewWindow": 3600,
         "stage": "resolved",
         "created": {
-          "block": 38502004,
-          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
+          "block": 38737703,
+          "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
         },
         "terms": {
-          "block": 38502004,
-          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+          "block": 38737703,
+          "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
           "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
           "platformFeeBps": 50,
           "arbitrationFeeBps": 200,
-          "protocolCutBps": 2000
+          "protocolCutBps": 10000,
+          "arbitrationFeeFloor": "500000"
         },
         "funded": {
-          "block": 38502004,
-          "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
+          "block": 38737703,
+          "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
           "amount": "25000000"
         },
         "delivered": {
-          "block": 38502005,
-          "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
+          "block": 38737924,
+          "tx": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
           "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-          "deliveredAt": 1791339113,
-          "reviewDeadline": 1791342713,
+          "deliveredAt": 1791481185,
+          "reviewDeadline": 1791484785,
           "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
         },
         "dispute": {
-          "block": 38502007,
-          "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
-          "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-          "disputedAt": 1791339114,
+          "block": 38737926,
+          "tx": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+          "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+          "disputedAt": 1791481186,
           "buyerOfferBps": 2500,
-          "responseDeadline": 1791943914
+          "responseDeadline": 1792085986
         },
         "response": {
-          "block": 38502008,
-          "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
-          "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
-          "respondedAt": 1791339115,
+          "block": 38737928,
+          "tx": "0xb125b39d1ae937a5a2c89690424beb5ced9c9a945b7fb67d8db5458bb54c6995",
+          "responseHash": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f",
+          "respondedAt": 1791481187,
           "sellerAskBps": 5000
         },
         "verdict": {
-          "block": 38502024,
-          "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
+          "block": 38737931,
+          "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
           "sellerAwardBps": 4750,
           "sellerAmount": "12093437",
           "buyerAmount": "13656563",
           "arbitrationFee": "500000",
-          "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-          "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
-          "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
-        }
-      },
-      "4": {
-        "jobId": "4",
-        "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-        "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-        "amount": "25000000",
-        "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-        "deliveryDeadline": 1791342739,
-        "reviewWindow": 3600,
-        "stage": "resolved",
-        "created": {
-          "block": 38502049,
-          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
-        },
-        "terms": {
-          "block": 38502049,
-          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-          "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-          "platformFeeBps": 50,
-          "arbitrationFeeBps": 200,
-          "protocolCutBps": 2000
-        },
-        "funded": {
-          "block": 38502049,
-          "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-          "amount": "25000000"
-        },
-        "delivered": {
-          "block": 38502050,
-          "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
-          "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-          "deliveredAt": 1791339140,
-          "reviewDeadline": 1791342740,
-          "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
-        },
-        "dispute": {
-          "block": 38502052,
-          "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-          "disputedAt": 1791339141,
-          "buyerOfferBps": 2500,
-          "responseDeadline": 1791943941
-        },
-        "response": {
-          "block": 38502053,
-          "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
-          "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
-          "respondedAt": 1791339142,
-          "sellerAskBps": 5000
-        },
-        "verdict": {
-          "block": 38502055,
-          "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
-          "sellerAwardBps": 4750,
-          "sellerAmount": "12093437",
-          "buyerAmount": "13656563",
-          "arbitrationFee": "500000",
-          "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-          "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-          "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+          "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+          "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+          "verdictDigest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40"
         }
       }
     },
@@ -642,389 +258,121 @@
           "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
           "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
           "amount": "25000000",
-          "termsHash": "0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0",
-          "deliveryDeadline": 1791340293,
+          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
+          "deliveryDeadline": 1791484649,
           "reviewWindow": 3600,
           "stage": "resolved",
           "created": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3"
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
           },
           "terms": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
             "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
             "platformFeeBps": 50,
             "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
+            "protocolCutBps": 10000,
+            "arbitrationFeeFloor": "500000"
           },
           "funded": {
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
             "amount": "25000000"
           },
           "delivered": {
-            "block": 38497960,
-            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
-            "deliverableHash": "0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e",
-            "deliveredAt": 1791336695,
-            "reviewDeadline": 1791340295,
-            "uri": "data:text/plain;charset=utf-8;base64,SGFuZG9mZiBub3RlOiB0aGUgY2FydCwgY2hlY2tvdXQgYW5kIHBheW1lbnQgc2NyZWVucyB3ZXJlIHJld3JpdHRlbiBpbiBGcmVuY2gsIGFuZCB0aGUgb3JkZXIgY29uZmlybWF0aW9uIGVtYWlsIGlzIGxvY2FsaXplZC4KTm90IGRlbGl2ZXJlZDogcHJpY2VzIGFuZCBkYXRlcyBpbiBFdXJvcGVhbiBmb3JtYXRzOyB0aGUgc3VwcGxpZWQgZ2xvc3Nhcnku"
+            "block": 38737924,
+            "tx": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
+            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
+            "deliveredAt": 1791481185,
+            "reviewDeadline": 1791484785,
+            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
           },
           "dispute": {
-            "block": 38497962,
-            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
-            "disputeHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-            "disputedAt": 1791336697,
+            "block": 38737926,
+            "tx": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+            "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+            "disputedAt": 1791481186,
             "buyerOfferBps": 2500,
-            "responseDeadline": 1791941497
+            "responseDeadline": 1792085986
           },
           "response": {
-            "block": 38497964,
-            "tx": "0x89c14b6d9a7801196e67d7d7cd933f1353717c1de469b8866fd96e33aa9c280f",
-            "responseHash": "0xc03ba6506c8013585e3a83b2e0c46e3ef8a254186124c7e7fcd13cd49a15c081",
-            "respondedAt": 1791336698,
+            "block": 38737928,
+            "tx": "0xb125b39d1ae937a5a2c89690424beb5ced9c9a945b7fb67d8db5458bb54c6995",
+            "responseHash": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f",
+            "respondedAt": 1791481187,
             "sellerAskBps": 5000
           },
           "verdict": {
-            "block": 38497966,
-            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
-            "sellerAwardBps": 3250,
-            "sellerAmount": "8140937",
-            "buyerAmount": "17609063",
+            "block": 38737931,
+            "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
+            "sellerAwardBps": 4750,
+            "sellerAmount": "12093437",
+            "buyerAmount": "13656563",
             "arbitrationFee": "500000",
-            "evidenceHash": "0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1",
-            "rationaleHash": "0x99c4f1f3ae3909c877be7c64f6c75b1a67f283094e8385ae74d59fc683af8e9e",
-            "verdictDigest": "0x860ef74d022c4cd94b9691f20321371e897d6cadcc8059e9c8a120d74327ba72"
+            "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+            "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+            "verdictDigest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40"
           }
         },
         "timeline": [
           {
             "event": "JobCreated",
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
-            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0xdd01b050b4a1af7d95cdec4e24b52604b9ae7927f52e956279372391cab196d0"
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
+            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250"
           },
           {
             "event": "JobFunded",
-            "block": 38497958,
-            "tx": "0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xf2018253982d505597689550864efe8bee52f1778d381d40e9d75f09cff622a3",
+            "block": 38737703,
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
             "detail": "25000000 units moved into the escrow"
           },
           {
             "event": "JobDelivered",
-            "block": 38497960,
-            "tx": "0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xa9923ea0374e794a25f0284653a0a290d6d618210671b93f6e8f1f2aabff7cfc",
-            "detail": "deliverable 0x0a1fdaaef914a66daf563155f1256b1c0dff12365dfc5240e9208824ea964d3e, review until 1791340295"
+            "block": 38737924,
+            "tx": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
+            "detail": "deliverable 0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6, review until 1791484785"
           },
           {
             "event": "DisputeRaised",
-            "block": 38497962,
-            "tx": "0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xc4b16a9b1495d4f4d009b0031642c16deb33820c7270bc670c6cec100dec0fd7",
-            "detail": "dispute evidence 0x8eee7a4e50f3ab6707c804a0308b8b7b4ebaf8330ba3542ba52158a03f21b5b1"
+            "block": 38737926,
+            "tx": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+            "detail": "dispute evidence 0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589"
           },
           {
             "event": "VerdictResolved",
-            "block": 38497966,
-            "tx": "0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4c65e2511e83d95e78eac43682bb4f6720aad79aa8c9489587591fac755aa015",
-            "detail": "seller awarded 3250 bps (8140937), buyer 17609063, arbitration fee 500000"
+            "block": 38737931,
+            "tx": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
+            "explorer": "https://explore.testnet.tempo.xyz/tx/0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
+            "detail": "seller awarded 4750 bps (12093437), buyer 13656563, arbitration fee 500000"
           }
         ],
         "replay": [
           "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
-          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38497958 toBlock=38497966, and fold the events in block/logIndex order.",
-          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
+          "Or re-run the scan: eth_getLogs address=0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a fromBlock=38737703 toBlock=38737931, and fold the events in block/logIndex order.",
+          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a} and confirm ecrecover equals arbiter().",
           "For money movement, the funding transfer carries memo == 1, and a withdrawal carries the escrow's WITHDRAW_MEMO."
-        ]
-      },
-      "2": {
-        "jobId": "2",
-        "stage": "funded",
-        "job": {
-          "jobId": "2",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0xabababababababababababababababababababababababababababababababab",
-          "deliveryDeadline": 1791941515,
-          "reviewWindow": 259200,
-          "stage": "funded",
-          "created": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f"
-          },
-          "terms": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 10000
-          },
-          "funded": {
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "amount": "25000000"
-          }
-        },
-        "timeline": [
-          {
-            "event": "JobCreated",
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0xabababababababababababababababababababababababababababababababab"
-          },
-          {
-            "event": "JobFunded",
-            "block": 38497992,
-            "tx": "0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x4adcf5326799c4f870d3ea772aede29c229282f891978398fad7872322ca632f",
-            "detail": "25000000 units moved into the escrow"
-          }
-        ],
-        "replay": [
-          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
-          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38497992 toBlock=38497992, and fold the events in block/logIndex order.",
-          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
-          "For money movement, the funding transfer carries memo == 2, and a withdrawal carries the escrow's WITHDRAW_MEMO."
-        ]
-      },
-      "3": {
-        "jobId": "3",
-        "stage": "resolved",
-        "job": {
-          "jobId": "3",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-          "deliveryDeadline": 1791342712,
-          "reviewWindow": 3600,
-          "stage": "resolved",
-          "created": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83"
-          },
-          "terms": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
-          },
-          "funded": {
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "amount": "25000000"
-          },
-          "delivered": {
-            "block": 38502005,
-            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
-            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-            "deliveredAt": 1791339113,
-            "reviewDeadline": 1791342713,
-            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
-          },
-          "dispute": {
-            "block": 38502007,
-            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
-            "disputeHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-            "disputedAt": 1791339114,
-            "buyerOfferBps": 2500,
-            "responseDeadline": 1791943914
-          },
-          "response": {
-            "block": 38502008,
-            "tx": "0xb664499947f89f0168cdf8140ae78f6edbbb37ed02713ae30a1a153eb51083f7",
-            "responseHash": "0xce82caabd31d5c3a35cee80b7859b08022aabb43255be2a3e78964f66a6dc037",
-            "respondedAt": 1791339115,
-            "sellerAskBps": 5000
-          },
-          "verdict": {
-            "block": 38502024,
-            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
-            "sellerAwardBps": 4750,
-            "sellerAmount": "12093437",
-            "buyerAmount": "13656563",
-            "arbitrationFee": "500000",
-            "evidenceHash": "0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d",
-            "rationaleHash": "0x0a44c20ec9fd3a9cc9fd9cae188de715431e0bb1af313889ca67955e0040c675",
-            "verdictDigest": "0x26871420b5ca9ff6001a9a29ea82177a999a78271400fa0bfdff6cc743e450c0"
-          }
-        },
-        "timeline": [
-          {
-            "event": "JobCreated",
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250"
-          },
-          {
-            "event": "JobFunded",
-            "block": 38502004,
-            "tx": "0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x988dbeb9c45287c615a1ecba7ea22540c031d6eb770e5990a435caeb0537ab83",
-            "detail": "25000000 units moved into the escrow"
-          },
-          {
-            "event": "JobDelivered",
-            "block": 38502005,
-            "tx": "0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xee6731a7b98c437d4b5e0d57bd82a8de04ff7105feab16489efd196049652335",
-            "detail": "deliverable 0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6, review until 1791342713"
-          },
-          {
-            "event": "DisputeRaised",
-            "block": 38502007,
-            "tx": "0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x9552ac61bac2123d4dae66a94812f67f7e3bf8b10b83037cab0bb876766632ca",
-            "detail": "dispute evidence 0xd4fcfff16b0a65e9aa54f32e591642387de0f4bcf4157c17d98f0e76f05cf23d"
-          },
-          {
-            "event": "VerdictResolved",
-            "block": 38502024,
-            "tx": "0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xb5fca383be61139cbcb649157300f92c24e9932288f61ede9401b2dcd88030d7",
-            "detail": "seller awarded 4750 bps (12093437), buyer 13656563, arbitration fee 500000"
-          }
-        ],
-        "replay": [
-          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
-          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38502004 toBlock=38502024, and fold the events in block/logIndex order.",
-          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
-          "For money movement, the funding transfer carries memo == 3, and a withdrawal carries the escrow's WITHDRAW_MEMO."
-        ]
-      },
-      "4": {
-        "jobId": "4",
-        "stage": "resolved",
-        "job": {
-          "jobId": "4",
-          "buyer": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-          "seller": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-          "amount": "25000000",
-          "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-          "deliveryDeadline": 1791342739,
-          "reviewWindow": 3600,
-          "stage": "resolved",
-          "created": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
-          },
-          "terms": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-            "platformFeeBps": 50,
-            "arbitrationFeeBps": 200,
-            "protocolCutBps": 2000
-          },
-          "funded": {
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "amount": "25000000"
-          },
-          "delivered": {
-            "block": 38502050,
-            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
-            "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-            "deliveredAt": 1791339140,
-            "reviewDeadline": 1791342740,
-            "uri": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9"
-          },
-          "dispute": {
-            "block": 38502052,
-            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-            "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-            "disputedAt": 1791339141,
-            "buyerOfferBps": 2500,
-            "responseDeadline": 1791943941
-          },
-          "response": {
-            "block": 38502053,
-            "tx": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
-            "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
-            "respondedAt": 1791339142,
-            "sellerAskBps": 5000
-          },
-          "verdict": {
-            "block": 38502055,
-            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
-            "sellerAwardBps": 4750,
-            "sellerAmount": "12093437",
-            "buyerAmount": "13656563",
-            "arbitrationFee": "500000",
-            "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-            "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-            "verdictDigest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
-          }
-        },
-        "timeline": [
-          {
-            "event": "JobCreated",
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "detail": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4 hired 0x7798Af822DE1D5F0c0340895B07d804019E7ca64 for 25000000 units, terms 0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250"
-          },
-          {
-            "event": "JobFunded",
-            "block": 38502049,
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "detail": "25000000 units moved into the escrow"
-          },
-          {
-            "event": "JobDelivered",
-            "block": 38502050,
-            "tx": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
-            "detail": "deliverable 0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6, review until 1791342740"
-          },
-          {
-            "event": "DisputeRaised",
-            "block": 38502052,
-            "tx": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-            "detail": "dispute evidence 0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0"
-          },
-          {
-            "event": "VerdictResolved",
-            "block": 38502055,
-            "tx": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
-            "explorer": "https://explore.testnet.tempo.xyz/tx/0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
-            "detail": "seller awarded 4750 bps (12093437), buyer 13656563, arbitration fee 500000"
-          }
-        ],
-        "replay": [
-          "eth_getTransactionReceipt for each tx above; the escrow log in each one is the state change claimed.",
-          "Or re-run the scan: eth_getLogs address=0x001c8C3391E591C9CBDFdFE4227e585b86041157 fromBlock=38502049 toBlock=38502055, and fold the events in block/logIndex order.",
-          "For a resolved job, recompute verdictDigest(verdict) with the domain {name:\"Tempex\",version:\"1\",chainId:42431,verifyingContract:0x001c8C3391E591C9CBDFdFE4227e585b86041157} and confirm ecrecover equals arbiter().",
-          "For money movement, the funding transfer carries memo == 4, and a withdrawal carries the escrow's WITHDRAW_MEMO."
         ]
       }
     },
     "arbiters": {
       "house": {
-        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
         "active": true,
         "feeBps": 200,
         "metadataURI": null,
         "record": {
           "jobs": 1,
-          "disputes": 0,
-          "ruled": 0,
+          "disputes": 1,
+          "ruled": 1,
           "lapsed": 0,
           "openDisputes": 0,
-          "averageSellerAwardBps": null
+          "averageSellerAwardBps": 4750
         }
       },
       "listed": [
@@ -1034,12 +382,12 @@
           "feeBps": 200,
           "metadataURI": "tempex-demo: the rule engine in packages/arbiter",
           "record": {
-            "jobs": 3,
-            "disputes": 3,
-            "ruled": 3,
+            "jobs": 1,
+            "disputes": 1,
+            "ruled": 1,
             "lapsed": 0,
             "openDisputes": 0,
-            "averageSellerAwardBps": 4250
+            "averageSellerAwardBps": 4750
           }
         }
       ],
@@ -1048,13 +396,13 @@
     "reputation": {
       "0x8cab45977cf5576a7d19363225e4f98d7d884bc4": {
         "address": "0x8CAb45977CF5576A7d19363225E4F98D7D884bC4",
-        "generatedAt": "2026-10-07T21:05:09.298Z",
+        "generatedAt": "2026-10-08T17:43:42.931Z",
         "blockRange": {
-          "from": "38497375",
-          "to": "38615368"
+          "from": "38737474",
+          "to": "38738306"
         },
-        "score": 720,
-        "band": "trusted",
+        "score": 565,
+        "band": "settled",
         "factors": [
           {
             "label": "baseline",
@@ -1063,23 +411,23 @@
           },
           {
             "label": "settled-as-buyer",
-            "points": 120,
-            "detail": "3 job(s) closed as buyer, +40 each, capped at +160"
+            "points": 40,
+            "detail": "1 job(s) closed as buyer, +40 each, capped at +160"
           },
           {
             "label": "volume",
-            "points": 100,
+            "points": 25,
             "detail": "+1 per whole token settled through escrow, capped at +100"
           }
         ],
         "asBuyer": {
-          "jobs": 4,
+          "jobs": 1,
           "escrowed": {
-            "units": "100000000",
-            "value": "100"
+            "units": "25000000",
+            "value": "25"
           },
           "accepted": 0,
-          "disputed": 3,
+          "disputed": 1,
           "refunded": 0
         },
         "asSeller": {
@@ -1093,27 +441,24 @@
           "verdicts": 0,
           "avgAwardBps": null,
           "withdrawn": {
-            "units": "44922189",
-            "value": "44.922189"
+            "units": "13656563",
+            "value": "13.656563"
           }
         },
         "counters": {
-          "settled": 3,
-          "open": 1,
-          "disputesRaised": 3,
+          "settled": 1,
+          "open": 0,
+          "disputesRaised": 1,
           "disputesAgainst": 0,
-          "withdrawals": 3,
-          "firstBlock": 38497958,
-          "lastBlock": 38502049
+          "withdrawals": 1,
+          "firstBlock": 38737703,
+          "lastBlock": 38737703
         },
         "proofJobIds": [
-          "1",
-          "2",
-          "3",
-          "4"
+          "1"
         ],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "eth_getLogs on the escrow from block 38737474 to 38738306",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1121,12 +466,12 @@
       },
       "0x7798af822de1d5f0c0340895b07d804019e7ca64": {
         "address": "0x7798Af822DE1D5F0c0340895B07d804019E7ca64",
-        "generatedAt": "2026-10-07T21:05:09.300Z",
+        "generatedAt": "2026-10-08T17:43:42.933Z",
         "blockRange": {
-          "from": "38497375",
-          "to": "38615368"
+          "from": "38737474",
+          "to": "38738306"
         },
-        "score": 547,
+        "score": 517,
         "band": "settled",
         "factors": [
           {
@@ -1136,22 +481,22 @@
           },
           {
             "label": "settled-as-seller",
-            "points": 180,
-            "detail": "3 job(s) delivered and paid out, +60 each, capped at +240"
+            "points": 60,
+            "detail": "1 job(s) delivered and paid out, +60 each, capped at +240"
           },
           {
             "label": "verdict-favour",
-            "points": -15,
-            "detail": "arbiters awarded this seller 4250 bps on average; above 5000 earns, below costs"
+            "points": -5,
+            "detail": "arbiters awarded this seller 4750 bps on average; above 5000 earns, below costs"
           },
           {
             "label": "disputed-as-seller",
-            "points": -150,
-            "detail": "3 dispute(s) raised against this seller, -50 each"
+            "points": -50,
+            "detail": "1 dispute(s) raised against this seller, -50 each"
           },
           {
             "label": "volume",
-            "points": 32,
+            "points": 12,
             "detail": "+1 per whole token settled through escrow, capped at +100"
           }
         ],
@@ -1166,48 +511,45 @@
           "refunded": 0
         },
         "asSeller": {
-          "jobs": 4,
+          "jobs": 1,
           "earned": {
-            "units": "32327811",
-            "value": "32.327811"
+            "units": "12093437",
+            "value": "12.093437"
           },
           "accepted": 0,
-          "disputed": 3,
-          "verdicts": 3,
-          "avgAwardBps": 4250,
+          "disputed": 1,
+          "verdicts": 1,
+          "avgAwardBps": 4750,
           "withdrawn": {
-            "units": "32327811",
-            "value": "32.327811"
+            "units": "12093437",
+            "value": "12.093437"
           }
         },
         "counters": {
-          "settled": 3,
-          "open": 1,
+          "settled": 1,
+          "open": 0,
           "disputesRaised": 0,
-          "disputesAgainst": 3,
-          "withdrawals": 3,
-          "firstBlock": 38497958,
-          "lastBlock": 38502049
+          "disputesAgainst": 1,
+          "withdrawals": 1,
+          "firstBlock": 38737703,
+          "lastBlock": 38737703
         },
         "proofJobIds": [
-          "1",
-          "2",
-          "3",
-          "4"
+          "1"
         ],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "eth_getLogs on the escrow from block 38737474 to 38738306",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
         ]
       },
-      "0x92f3d653399fc151d58a927b9e1a33d50edcc4a8": {
-        "address": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-        "generatedAt": "2026-10-07T21:05:09.301Z",
+      "0x3425173fab110f780482af62bf603b9a7d023905": {
+        "address": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "generatedAt": "2026-10-08T17:43:42.937Z",
         "blockRange": {
-          "from": "38497375",
-          "to": "38615368"
+          "from": "38737474",
+          "to": "38738306"
         },
         "score": 500,
         "band": "unproven",
@@ -1254,65 +596,7 @@
         },
         "proofJobIds": [],
         "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38615368",
-          "keep JobCreated where buyer or seller is this address",
-          "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
-          "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
-        ]
-      },
-      "0x3425173fab110f780482af62bf603b9a7d023905": {
-        "address": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-        "generatedAt": "2026-10-07T21:05:09.302Z",
-        "blockRange": {
-          "from": "38497375",
-          "to": "38615368"
-        },
-        "score": 500,
-        "band": "unproven",
-        "factors": [
-          {
-            "label": "baseline",
-            "points": 500,
-            "detail": "every address starts neutral; escrow and arbitration stand in for history"
-          }
-        ],
-        "asBuyer": {
-          "jobs": 0,
-          "escrowed": {
-            "units": "0",
-            "value": "0"
-          },
-          "accepted": 0,
-          "disputed": 0,
-          "refunded": 0
-        },
-        "asSeller": {
-          "jobs": 0,
-          "earned": {
-            "units": "0",
-            "value": "0"
-          },
-          "accepted": 0,
-          "disputed": 0,
-          "verdicts": 0,
-          "avgAwardBps": null,
-          "withdrawn": {
-            "units": "1200000",
-            "value": "1.2"
-          }
-        },
-        "counters": {
-          "settled": 0,
-          "open": 0,
-          "disputesRaised": 0,
-          "disputesAgainst": 0,
-          "withdrawals": 3,
-          "firstBlock": null,
-          "lastBlock": null
-        },
-        "proofJobIds": [],
-        "recipe": [
-          "eth_getLogs on the escrow from block 38497375 to 38615368",
+          "eth_getLogs on the escrow from block 38737474 to 38738306",
           "keep JobCreated where buyer or seller is this address",
           "fold JobFunded, JobDelivered, JobAccepted, DisputeRaised, VerdictResolved, JobRefunded, Withdrawal",
           "apply the factor table in packages/beacon/src/reputation.ts (score is the clamped sum)"
@@ -1321,7 +605,7 @@
     },
     "quote": {
       "seller": {
-        "generatedAt": "2026-10-07T21:05:09.303Z",
+        "generatedAt": "2026-10-08T17:43:42.939Z",
         "role": "seller",
         "amount": {
           "units": "0",
@@ -1332,13 +616,13 @@
           "sponsored": true,
           "sponsorUrl": "https://sponsor.moderato.tempo.xyz",
           "measured": {
-            "units": "511",
-            "value": "0.000511"
+            "units": "1430",
+            "value": "0.00143"
           },
           "measuredOn": {
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "block": 38502049,
-            "jobId": "4"
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
+            "block": 38737703,
+            "jobId": "1"
           }
         },
         "total": {
@@ -1392,12 +676,20 @@
               "units": "0",
               "value": "0"
             },
-            "note": "deducted from the disputed amount at verdict, capped on-chain at 1000 bps"
+            "note": "deducted from the disputed amount at verdict: 200 bps of the job, at least 0.5 (the floor this job would lock), never more than the job amount; the rate is capped on-chain at 1000 bps"
+          },
+          {
+            "line": "launch limits",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "the escrow funds jobs up to 500 each"
           }
         ]
       },
       "buyer": {
-        "generatedAt": "2026-10-07T21:05:09.305Z",
+        "generatedAt": "2026-10-08T17:43:42.942Z",
         "role": "buyer",
         "amount": {
           "units": "0",
@@ -1408,13 +700,13 @@
           "sponsored": true,
           "sponsorUrl": "https://sponsor.moderato.tempo.xyz",
           "measured": {
-            "units": "511",
-            "value": "0.000511"
+            "units": "1430",
+            "value": "0.00143"
           },
           "measuredOn": {
-            "tx": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-            "block": 38502049,
-            "jobId": "4"
+            "tx": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182",
+            "block": 38737703,
+            "jobId": "1"
           }
         },
         "total": {
@@ -1468,7 +760,15 @@
               "units": "0",
               "value": "0"
             },
-            "note": "deducted from the disputed amount at verdict, capped on-chain at 1000 bps"
+            "note": "deducted from the disputed amount at verdict: 200 bps of the job, at least 0.5 (the floor this job would lock), never more than the job amount; the rate is capped on-chain at 1000 bps"
+          },
+          {
+            "line": "launch limits",
+            "cost": {
+              "units": "0",
+              "value": "0"
+            },
+            "note": "the escrow funds jobs up to 500 each"
           }
         ]
       }
@@ -1476,7 +776,7 @@
     "onboard": {
       "seller": {
         "role": "seller",
-        "generatedAt": "2026-10-07T21:05:09.306Z",
+        "generatedAt": "2026-10-08T17:43:42.943Z",
         "claim": "A seller can be hired, deliver, and collect payment holding nothing but a private key.",
         "whyItWorks": [
           "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
@@ -1560,8 +860,8 @@
             "value": "0"
           },
           "unsponsoredFee": {
-            "units": "511",
-            "value": "0.000511"
+            "units": "1430",
+            "value": "0.00143"
           },
           "principal": "none — the buyer escrows the payment",
           "totalToStart": {
@@ -1612,7 +912,7 @@
       },
       "buyer": {
         "role": "buyer",
-        "generatedAt": "2026-10-07T21:05:09.307Z",
+        "generatedAt": "2026-10-08T17:43:42.944Z",
         "claim": "A buyer needs the payment itself and nothing else: no gas token, no separate fee balance.",
         "whyItWorks": [
           "Tempo has no gas token. Fees are paid in a TIP-20 stablecoin, and a hosted fee payer can sign the fee leg instead of the caller.",
@@ -1696,8 +996,8 @@
             "value": "0"
           },
           "unsponsoredFee": {
-            "units": "511",
-            "value": "0.000511"
+            "units": "1430",
+            "value": "0.00143"
           },
           "principal": "the job amount itself (0)",
           "totalToStart": {
@@ -1848,7 +1148,7 @@
     },
     "manifest": {
       "schema": "tempex/1",
-      "generatedAt": "2026-10-07T21:05:09.310Z",
+      "generatedAt": "2026-10-08T17:43:42.947Z",
       "identity": {
         "name": "Tempex Beacon",
         "version": "0.1.0",
@@ -1864,10 +1164,10 @@
         "repository": "https://github.com/Gigi3d/Tempex"
       },
       "protocol": {
-        "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
-        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
-        "treasury": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
-        "owner": "0x592C94228BDEfc1B34EB6559934544437a19C37b",
+        "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+        "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+        "treasury": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
+        "owner": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
         "paymentToken": {
           "address": "0x20c0000000000000000000000000000000000001",
           "symbol": "AlphaUSD",
@@ -1884,29 +1184,47 @@
           "note": "The owner can move fees within the caps and no further: setFees reverts above 500 bps platform or 1000 bps arbitration. Both caps are public constants, readable at the selectors below."
         },
         "counters": {
-          "jobCount": "4",
-          "nextJobId": "5"
+          "jobCount": "1",
+          "nextJobId": "2"
         },
         "custody": {
           "beaconHoldsKeys": false,
-          "escrowIsUpgradeable": false,
-          "ownerCanTakeJobPrincipal": false,
+          "escrowIsUpgradeable": true,
+          "ownerCanTakeJobPrincipal": true,
+          "upgradeKey": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
+          "implementation": "0x7817e82dde33ddc0069b58c5f4a17f1376850db9",
+          "version": "3.0.0",
           "ownerPowers": [
+            "upgradeToAndCall(address,bytes) — replace the escrow's code. This is unrestricted: new code could change any rule, including how escrowed funds move. It is one key today (see upgradeKey), to become a multisig behind a timelock before the escrow holds meaningful value",
+            "setNewJobsPaused(bool) — stop new jobs from being created or funded; jobs already in flight keep every exit",
+            "setLimits(uint256,uint256) — cap the size of one job and the value held by all open jobs, for jobs funded afterwards",
+            "setArbitrationFeeFloor(uint256) — minimum arbitration fee, locked by jobs created afterwards",
+            "setReferralShare(uint16) — referrers' share of protocol fees, up to 5000 bps, locked by jobs created afterwards",
+            "setProtocolCut(uint16) — the treasury's share of listed arbiters' fees, for jobs created afterwards",
             "setArbiter(address) — choose the default referee for jobs created afterwards; every existing job keeps the arbiter it locked at creation",
             "setTreasury(address) — redirect future platform fees",
             "setFees(uint16,uint16) — within the on-chain caps, for jobs created afterwards only",
             "transferOwnership(address) + acceptOwnership() (two-step) / renounceOwnership()"
           ],
           "withdrawalMemo": "0x74656d7065782e77697468647261770000000000000000000000000000000000"
+        },
+        "guards": {
+          "newJobsPaused": false,
+          "maxJobAmount": "500000000",
+          "maxOpenValue": "25000000000",
+          "openValue": "0",
+          "arbitrationFeeFloor": "500000",
+          "referralShareBps": 2000,
+          "note": "Token base units (6 decimals). A cap of 2^256-1 means no cap. A job above maxJobAmount, or one that would take openValue past maxOpenValue, cannot be funded; while newJobsPaused, no job can be created or funded. None of this touches a job already funded. The arbitration fee is the larger of the locked rate and the locked floor, never more than the job amount; createJobWithReferrer pays the named referrer referralShareBps of the protocol's fees on that job."
         }
       },
       "index": {
-        "fromBlock": "38497375",
-        "toBlock": "38615368",
-        "head": "38615368",
+        "fromBlock": "38737474",
+        "toBlock": "38738306",
+        "head": "38738306",
         "lagBlocks": "0",
-        "events": 50,
-        "jobs": 4,
+        "events": 23,
+        "jobs": 1,
         "storage": "memory, rebuilt from eth_getLogs on every start",
         "note": "There is no database. Every number this beacon serves is a fold over events it re-read from the chain, so it cannot drift, and anyone can reproduce it with the same scan."
       },
@@ -1925,10 +1243,10 @@
             "value": "0"
           },
           "unsponsored": {
-            "units": "511",
-            "value": "0.000511"
+            "units": "1430",
+            "value": "0.00143"
           },
-          "measuredOn": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438"
+          "measuredOn": "0x418cefbc3d6e9f75b4601f299468556bf402a45aad7c87ec51a6410dc838a182"
         },
         "platformFee": "50 bps of the escrowed amount, deducted at payout, capped at 500 bps",
         "arbitrationFee": "200 bps, charged only when a dispute is resolved, capped at 1000 bps",
@@ -1946,7 +1264,7 @@
       "claims": [
         {
           "claim": "Onboarding costs nothing. An address with a zero balance can earn and withdraw.",
-          "check": "GET /onboard?role=seller, then confirm the escrow's credits are pull-based: eth_call 0x001c8C3391E591C9CBDFdFE4227e585b86041157 0xfe5ff468 with your address, and read withdraw() in the source."
+          "check": "GET /onboard?role=seller, then confirm the escrow's credits are pull-based: eth_call 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a 0xfe5ff468 with your address, and read withdraw() in the source."
         },
         {
           "claim": "The referee cannot be forged, and cannot rule outside 0-10000 bps.",
@@ -1962,7 +1280,7 @@
         },
         {
           "claim": "Reputation is derived, not assigned, and any third party can recompute it.",
-          "check": "GET /reputation/:address returns the itemised factors and a recipe; re-run the same scan from block 38497375 and you get the same score."
+          "check": "GET /reputation/:address returns the itemised factors and a recipe; re-run the same scan from block 38737474 and you get the same score."
         },
         {
           "claim": "Discovery ranking cannot be bought.",
@@ -1976,10 +1294,10 @@
       "verification": {
         "recipe": [
           "1. Point an RPC client at https://rpc.moderato.tempo.xyz (chainId 42431).",
-          "2. Read the escrow's governance: eth_call to 0x001c8C3391E591C9CBDFdFE4227e585b86041157 for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
-          "3. Rebuild the index: eth_getLogs from block 38497375 to head, address 0x001c8C3391E591C9CBDFdFE4227e585b86041157, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
+          "2. Read the escrow's governance: eth_call to 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
+          "3. Rebuild the index: eth_getLogs from block 38737474 to head, address 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
           "4. Compare your fold against GET /stats and GET /jobs. Any difference is a bug in one of us, and the chain settles which.",
-          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0x001c8C3391E591C9CBDFdFE4227e585b86041157; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
+          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
           "6. Check the money: for any job, the TIP-20 TransferWithMemo into the escrow carries memo == jobId, and payouts credit sellers via credits() with memo 0x74656d7065782e77697468647261770000000000000000000000000000000000 on withdrawal.",
           "7. Check the fee: pull any transaction receipt and find the Transfer to Tempo's fee manager. That is the whole fee mechanism — there is no gas token.",
           "8. Check this beacon holds nothing: it has no signing key, no custody, and no write path to the escrow. Every endpoint is a read or a calldata build."
@@ -2483,8 +1801,8 @@
         "feePayer": "https://sponsor.moderato.tempo.xyz"
       },
       "contracts": {
-        "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
-        "arbiter": "0x92F3D653399fC151d58A927B9e1A33D50EdCC4A8",
+        "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+        "arbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
         "paymentToken": "0x20c0000000000000000000000000000000000001"
       },
       "skills": [
@@ -2588,10 +1906,10 @@
         "repository": "https://github.com/Gigi3d/Tempex",
         "verification": [
           "1. Point an RPC client at https://rpc.moderato.tempo.xyz (chainId 42431).",
-          "2. Read the escrow's governance: eth_call to 0x001c8C3391E591C9CBDFdFE4227e585b86041157 for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
-          "3. Rebuild the index: eth_getLogs from block 38497375 to head, address 0x001c8C3391E591C9CBDFdFE4227e585b86041157, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
+          "2. Read the escrow's governance: eth_call to 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a for arbiter(), owner(), treasury(), paymentToken(), platformFeeBps(), arbitrationFeeBps(), MAX_PLATFORM_FEE_BPS(), MAX_ARBITRATION_FEE_BPS(). They must equal the values in \"protocol\" above.",
+          "3. Rebuild the index: eth_getLogs from block 38737474 to head, address 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a, all topics. Fold JobCreated/JobFunded/JobDelivered/JobAccepted/DisputeRaised/VerdictResolved/JobRefunded/Withdrawal into job records.",
           "4. Compare your fold against GET /stats and GET /jobs. Any difference is a bug in one of us, and the chain settles which.",
-          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0x001c8C3391E591C9CBDFdFE4227e585b86041157; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
+          "5. Check the referee: read eip712Domain() and confirm verifyingContract is 0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a; for any resolved job, recompute verdictDigest(verdict) and confirm ECDSA.recover(digest, signature) equals arbiter().",
           "6. Check the money: for any job, the TIP-20 TransferWithMemo into the escrow carries memo == jobId, and payouts credit sellers via credits() with memo 0x74656d7065782e77697468647261770000000000000000000000000000000000 on withdrawal.",
           "7. Check the fee: pull any transaction receipt and find the Transfer to Tempo's fee manager. That is the whole fee mechanism — there is no gas token.",
           "8. Check this beacon holds nothing: it has no signing key, no custody, and no write path to the escrow. Every endpoint is a read or a calldata build."
@@ -2604,14 +1922,14 @@
       "version": "0.1.0",
       "network": "tempo:moderato",
       "chainId": 42431,
-      "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
+      "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
       "index": {
-        "fromBlock": "38497375",
-        "caughtUpTo": "38615368",
-        "head": "38615368",
+        "fromBlock": "38737474",
+        "caughtUpTo": "38738306",
+        "head": "38738306",
         "lagBlocks": "0",
-        "events": 50,
-        "jobs": 4
+        "events": 23,
+        "jobs": 1
       },
       "registry": {
         "listings": 0
@@ -2629,52 +1947,35 @@
         "canSign": false,
         "canMoveFunds": false
       },
-      "time": "2026-10-07T21:05:09.313Z"
+      "time": "2026-10-08T17:43:42.959Z"
     }
   },
   "receipt": {
-    "file": "runs/demo-underdelivered-2026-10-07T02-12-27-827Z.json",
+    "file": "runs/demo-underdelivered-2026-10-08T17-39-54-692Z.json",
     "tempex": "demo-receipt/1",
     "scenario": "underdelivered",
     "title": "Localization sprint, partly delivered",
     "premise": "A buyer paid 25 alphaUSD for a French checkout locale. Most strings arrived in French, but prices and dates are in US formats and the glossary was ignored.",
-    "at": "2026-10-07T02:12:27.827Z",
+    "at": "2026-10-08T17:39:54.692Z",
     "chainId": 42431,
-    "escrow": "0x001c8C3391E591C9CBDFdFE4227e585b86041157",
-    "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157",
-    "sponsored": false,
+    "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+    "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+    "sponsored": true,
     "ran": [
-      "case",
-      "approve",
-      "open",
       "deliver",
       "dispute",
       "rule",
       "relay",
       "settle"
     ],
-    "skipped": [],
+    "skipped": [
+      "case",
+      "approve",
+      "open"
+    ],
     "ok": true,
     "failures": [],
     "expectations": [
-      {
-        "check": "job amount",
-        "expected": "25000000",
-        "actual": "25000000",
-        "passed": true
-      },
-      {
-        "check": "job termsHash",
-        "expected": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-        "actual": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
-        "passed": true
-      },
-      {
-        "check": "job arbiter",
-        "expected": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-        "actual": "0x3425173FAB110f780482af62Bf603b9A7D023905",
-        "passed": true
-      },
       {
         "check": "deliverable URI",
         "expected": "data:text/plain;charset=utf-8;base64,ewogICJsb2NhbGUiOiAiZnItRlIiLAogICJzdHJpbmdzIjogewogICAgImNhcnQudGl0bGUiOiAiVm90cmUgcGFuaWVyIiwKICAgICJjaGVja291dC50aXRsZSI6ICJQYWllbWVudCIsCiAgICAiY2hlY2tvdXQuc3VibWl0IjogIlBheWVyIG1haW50ZW5hbnQiLAogICAgImNoZWNrb3V0LnNoaXBwaW5nIjogIkFkcmVzc2UgZGUgbGl2cmFpc29uIiwKICAgICJlbWFpbC5zdWJqZWN0IjogIkNvbmZpcm1hdGlvbiBkZSB2b3RyZSBjb21tYW5kZSIsCiAgICAiZW1haWwuYm9keSI6ICJNZXJjaSBwb3VyIHZvdHJlIGNvbW1hbmRlLiBFbGxlIHNlcmEgZXhww6lkacOpZSBzb3VzIGRldXggam91cnMgb3V2csOpcy4iCiAgfSwKICAicHJpY2VzIjogewogICAgImNoZWNrb3V0LnRvdGFsIjogIiQxMi41MCIsCiAgICAiY2hlY2tvdXQuc2hpcHBpbmdfZmVlIjogIiQ0LjAwIgogIH0sCiAgImRhdGVzIjogewogICAgIm9yZGVyLnBsYWNlZCI6ICJPY3RvYmVyIDcsIDIwMjYiCiAgfQp9",
@@ -2689,20 +1990,20 @@
       },
       {
         "check": "job disputeHash",
-        "expected": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-        "actual": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "expected": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+        "actual": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
         "passed": true
       },
       {
         "check": "disputeHash from disk",
-        "expected": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-        "actual": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+        "expected": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+        "actual": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
         "passed": true
       },
       {
         "check": "job responseHash",
-        "expected": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
-        "actual": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6",
+        "expected": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f",
+        "actual": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f",
         "passed": true
       },
       {
@@ -2773,8 +2074,8 @@
       },
       {
         "check": "escrow digest",
-        "expected": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
-        "actual": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "expected": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
+        "actual": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
         "passed": true
       },
       {
@@ -2803,8 +2104,8 @@
       },
       {
         "check": "job verdictHash",
-        "expected": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
-        "actual": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+        "expected": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
+        "actual": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
         "passed": true
       },
       {
@@ -2815,8 +2116,8 @@
       },
       {
         "check": "seller wallet delta",
-        "expected": "12093408",
-        "actual": "12093408",
+        "expected": "12093437",
+        "actual": "12093437",
         "passed": true
       },
       {
@@ -2827,20 +2128,20 @@
       },
       {
         "check": "buyer wallet delta",
-        "expected": "13656534",
-        "actual": "13656534",
+        "expected": "13656563",
+        "actual": "13656563",
         "passed": true
       },
       {
-        "check": "arbiter payout",
-        "expected": "400000",
-        "actual": "400000",
+        "check": "treasury payout",
+        "expected": "500000",
+        "actual": "500000",
         "passed": true
       },
       {
-        "check": "arbiter wallet delta",
-        "expected": "399971",
-        "actual": "399971",
+        "check": "treasury wallet delta",
+        "expected": "500000",
+        "actual": "500000",
         "passed": true
       }
     ],
@@ -2853,62 +2154,62 @@
       "scenario": "underdelivered",
       "title": "Localization sprint, partly delivered",
       "session": "underdelivered",
-      "startedAt": "2026-10-07T02:12:18.507Z",
-      "updatedAt": "2026-10-07T02:12:27.826Z",
-      "submittedAt": "2026-10-07T02:12:18.507Z",
-      "predictedJobId": "4",
-      "jobId": "4",
+      "startedAt": "2026-10-08T17:37:26.765Z",
+      "updatedAt": "2026-10-08T17:39:54.691Z",
+      "submittedAt": "2026-10-08T17:37:26.765Z",
+      "predictedJobId": "1",
+      "jobId": "1",
       "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
       "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-      "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+      "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
       "amount": "25000000",
       "stages": {
         "case": {
-          "predictedJobId": "4",
+          "predictedJobId": "1",
           "jobId": "",
-          "submittedAt": "2026-10-07T02:12:18.507Z",
+          "submittedAt": "2026-10-08T17:37:26.765Z",
           "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
           "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+          "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
           "amount": "25000000",
-          "termsPath": "/home/user/tempex/evidence/job-4.terms.json",
-          "bundlePath": "/home/user/tempex/evidence/job-4.evidence.json"
+          "termsPath": "/home/user/tempex/evidence/job-1.terms.json",
+          "bundlePath": "/home/user/tempex/evidence/job-1.evidence.json"
         },
         "approve": {
-          "hash": "0xcf3e8cb885f9f9d0cc1200b7b01bbcd1dcf1e223aed090cfcb6a367bf430027a",
+          "hash": "0xdc0046c45e82c0fa9a1d38711c0e8f2eddac157b7494a73174f51b5894cf3608",
           "amount": "25000000"
         },
         "open": {
-          "hash": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-          "jobId": "4",
-          "deliveryDeadline": "1791342739",
-          "reviewWindow": "3600"
+          "hash": "0xdc0046c45e82c0fa9a1d38711c0e8f2eddac157b7494a73174f51b5894cf3608",
+          "jobId": "1",
+          "deliveryDeadline": "0",
+          "reviewWindow": "0"
         },
         "deliver": {
-          "hash": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+          "hash": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
           "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
         },
         "dispute": {
-          "hash": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-          "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-          "rederived": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-          "response": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
-          "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6"
+          "hash": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+          "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+          "rederived": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+          "response": "0xb125b39d1ae937a5a2c89690424beb5ced9c9a945b7fb67d8db5458bb54c6995",
+          "responseHash": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f"
         },
         "rule": {
-          "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
-          "signature": "0x2f9235fda4e8dd73558eb8ae1014dac1d8c1f1dcc72abe233463f2fddd3c818f518dda0d157a7450fac619bc933a5de2ca8d22178c7fa9fc7497addea7448a201b",
+          "digest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
+          "signature": "0xbdf1c95577aa5a6e5570b70210f389ebbf90ad9d18c95cae6feaabfaf5f2bfb721fdf3ee9b3ae779a911d35b1b3575b3f4838628662020871aefc4d708e26d111c",
           "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
           "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
           "certified": "true",
           "engine": "rules",
           "model": "tempex-rules/1",
           "sellerAwardBps": "4750",
-          "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-          "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-          "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 4).",
-          "issuedAt": "1791339142",
-          "validUntil": "1791425543",
+          "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+          "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+          "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 1).",
+          "issuedAt": "1791481187",
+          "validUntil": "1791567589",
           "amount": "25000000",
           "bond": "1250000",
           "bondToSeller": "480937",
@@ -2919,16 +2220,16 @@
           "band": "4250-5250"
         },
         "relay": {
-          "hash": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+          "hash": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
           "relayer": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
-          "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+          "digest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
           "sellerAmount": "12093437",
           "buyerAmount": "13656563",
           "arbitrationFee": "500000",
-          "verdictHash": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+          "verdictHash": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40"
         },
         "settle": {
-          "at": "2026-10-07T02:12:27.826Z"
+          "at": "2026-10-08T17:39:54.691Z"
         }
       }
     },
@@ -2949,31 +2250,31 @@
       ]
     },
     "adjudication": {
-      "jobId": 4,
+      "jobId": 1,
       "engine": "rules",
       "model": "tempex-rules/1",
       "amount": "25000000",
-      "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+      "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
       "ruling": {
-        "jobId": 4,
+        "jobId": 1,
         "sellerAwardBps": 4750,
-        "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-        "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-        "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 4).",
-        "issuedAt": 1791339142,
-        "validUntil": 1791425543,
+        "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+        "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+        "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 1).",
+        "issuedAt": 1791481187,
+        "validUntil": 1791567589,
         "model": "tempex-rules/1"
       },
       "verdict": {
-        "jobId": "4",
+        "jobId": "1",
         "sellerAwardBps": 4750,
-        "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-        "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-        "issuedAt": "1791339142",
-        "validUntil": "1791425543"
+        "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+        "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+        "issuedAt": "1791481187",
+        "validUntil": "1791567589"
       },
-      "signature": "0x2f9235fda4e8dd73558eb8ae1014dac1d8c1f1dcc72abe233463f2fddd3c818f518dda0d157a7450fac619bc933a5de2ca8d22178c7fa9fc7497addea7448a201b",
-      "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+      "signature": "0xbdf1c95577aa5a6e5570b70210f389ebbf90ad9d18c95cae6feaabfaf5f2bfb721fdf3ee9b3ae779a911d35b1b3575b3f4838628662020871aefc4d708e26d111c",
+      "digest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
       "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
       "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
       "certified": true,
@@ -3175,8 +2476,8 @@
           "contentHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
         },
         "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-        "jobId": 4,
-        "submittedAt": "2026-10-07T02:12:18.507Z",
+        "jobId": 1,
+        "submittedAt": "2026-10-08T17:37:26.765Z",
         "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
         "version": 1
       },
@@ -3186,10 +2487,10 @@
           "content": "{\n  \"locale\": \"fr-FR\",\n  \"strings\": {\n    \"cart.title\": \"Votre panier\",\n    \"checkout.title\": \"Paiement\",\n    \"checkout.submit\": \"Payer maintenant\",\n    \"checkout.shipping\": \"Adresse de livraison\",\n    \"email.subject\": \"Confirmation de votre commande\",\n    \"email.body\": \"Merci pour votre commande. Elle sera expédiée sous deux jours ouvrés.\"\n  },\n  \"prices\": {\n    \"checkout.total\": \"$12.50\",\n    \"checkout.shipping_fee\": \"$4.00\"\n  },\n  \"dates\": {\n    \"order.placed\": \"October 7, 2026\"\n  }\n}",
           "contentHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
         },
-        "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-        "jobId": 4,
+        "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+        "jobId": 1,
         "statement": "The delivered locale is attached. The core checkout and email strings are translated; formats were left for a follow-up.",
-        "submittedAt": "2026-10-07T02:12:18.507Z",
+        "submittedAt": "2026-10-08T17:37:26.765Z",
         "version": 1
       }
     }

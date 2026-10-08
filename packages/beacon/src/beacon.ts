@@ -541,6 +541,8 @@ export class Beacon {
       amount: value,
       decimals: this.decimals,
       measured: this.fee.measured,
+      guards: this.escrowState.guards,
+      arbitrationFeeBps: this.escrowState.arbitrationFeeBps,
       measuredOn:
         this.fee.tx === null || this.fee.block === null || this.fee.jobId === null
           ? null

@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { analyze, clampToBand, withinOffers } from '@tempex/arbiter/guardrail';
-import { caseIntegrity, disputeHashOf, disputeSettlement, hashCanonical, hashText, responseHashOf, type Job } from '@tempex/sdk/browser';
+import { arbitrationFeeFor, caseIntegrity, disputeHashOf, disputeSettlement, hashCanonical, hashText, responseHashOf, type Job } from '@tempex/sdk/browser';
 
 import snapshotJson from '../data/snapshot.json' with { type: 'json' };
 import { bundleFor, responseFor, termsFor } from '../lib/play.js';
@@ -70,4 +70,24 @@ describe('evidence built by /play', () => {
       assert.deepEqual([analysis.band.lowBps, analysis.band.highBps], scenario.prediction.band);
     });
   }
+});
+
+describe('the v3 fee floor, as the SDK mirrors it', () => {
+  it('raises a small job to the floor, as the escrow did for job 2 on v3', () => {
+    // 12.5 αUSD at 200 bps is 0.25; the job locked a 0.5 floor and paid 0.5.
+    assert.equal(arbitrationFeeFor({ amount: 12_500_000n, arbitrationFeeBps: 200, arbitrationFeeFloor: 500_000n }), 500_000n);
+  });
+  it('leaves larger jobs at their rate', () => {
+    assert.equal(arbitrationFeeFor({ amount: 25_000_000n, arbitrationFeeBps: 300, arbitrationFeeFloor: 500_000n }), 750_000n);
+  });
+  it('never charges more than the job, and keeps a free arbiter free', () => {
+    assert.equal(arbitrationFeeFor({ amount: 100_000n, arbitrationFeeBps: 200, arbitrationFeeFloor: 500_000n }), 100_000n);
+    assert.equal(arbitrationFeeFor({ amount: 12_500_000n, arbitrationFeeBps: 0, arbitrationFeeFloor: 500_000n }), 0n);
+  });
+  it('pays out exactly the escrow plus the bond at any award', () => {
+    for (const award of [0, 500, 4_750, 10_000]) {
+      const money = disputeSettlement({ amount: 12_500_000n, arbitrationFeeBps: 200, sellerAwardBps: award, arbitrationFeeFloor: 500_000n });
+      assert.equal(money.sellerAmount + money.buyerAmount + money.arbitrationFee, 12_500_000n + money.bond);
+    }
+  });
 });
