@@ -150,7 +150,12 @@ export class AgentDesk {
     stored.expiresAt = Date.now() + KEEP_AFTER_APPROVAL_MS;
     this.profiles[stored.request.keyId.toLowerCase()] = {
       name: stored.request.name,
-      role: stored.request.role,
+      // Also a label (the scopes the owner signed are what bind), and only ever a
+      // narrowing of what was asked: an agent that asked for both may be granted one.
+      role:
+        body['role'] === stored.request.role || (stored.request.role === 'both' && (body['role'] === 'buyer' || body['role'] === 'seller'))
+          ? (body['role'] as AgentRole)
+          : stored.request.role,
       owner,
       pairedAt: new Date().toISOString(),
       pairing: display(stored.code),

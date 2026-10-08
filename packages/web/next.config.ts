@@ -41,6 +41,12 @@ const config: NextConfig = {
           },
         ],
       },
+      {
+        // A delivered piece of work served as text: whatever is in it must never
+        // run on this origin. Listed last so its policy replaces the one above.
+        source: '/api/docs/:hash/raw',
+        headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'; sandbox; frame-ancestors 'none'" }],
+      },
     ];
   },
 };

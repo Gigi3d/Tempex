@@ -91,6 +91,18 @@ describe('agent desk', () => {
     assert.equal(statSync(good.file).mode & 0o777, 0o600);
   });
 
+  it('labels the role the owner granted, never a wider one', async () => {
+    const both = signed({ role: 'both' });
+    const narrowed = desk(proof(both.request.keyId, both.request.witness));
+    await narrowed.desk.confirm(narrowed.desk.request(both, '2.2.2.2').code, { tx: TX, role: 'buyer' });
+    assert.equal(JSON.parse(readFileSync(narrowed.file, 'utf8'))[both.request.keyId.toLowerCase()].role, 'buyer');
+
+    const buyerOnly = signed({ role: 'buyer' });
+    const widened = desk(proof(buyerOnly.request.keyId, buyerOnly.request.witness));
+    await widened.desk.confirm(widened.desk.request(buyerOnly, '3.3.3.3').code, { tx: TX, role: 'both' });
+    assert.equal(JSON.parse(readFileSync(widened.file, 'utf8'))[buyerOnly.request.keyId.toLowerCase()].role, 'buyer', 'a claimed role wider than the request is ignored');
+  });
+
   it('refuses a malformed transaction hash and an unknown code', async () => {
     const { desk: d } = desk();
     const t = d.request(signed(), '1.1.1.1');

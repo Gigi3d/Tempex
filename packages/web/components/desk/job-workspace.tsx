@@ -30,7 +30,42 @@ type Papers = {
 /// One job, worked from either side. The left column is the record (the terms
 /// and work behind its hashes, and every step with the key that signed it); the
 /// right column is the move the escrow accepts from you right now.
-export function JobWorkspace({ jobId, protocol, initial }: { jobId: string; protocol: Protocol; initial: JobRecord }) {
+export function JobWorkspace({ jobId, protocol, initial }: { jobId: string; protocol: Protocol; initial: JobRecord | null }) {
+  // A link shared the moment a job opens can arrive before the beacon's index
+  // has seen it; keep looking for a while instead of answering "no such job".
+  const [found, setFound] = useState<JobRecord | null>(initial);
+  const [tries, setTries] = useState(0);
+  useEffect(() => {
+    if (found) return;
+    const timer = setTimeout(async () => {
+      const response = await fetch(`/api/jobs/${jobId}`, { cache: 'no-store' }).catch(() => null);
+      if (response?.ok) setFound(((await response.json()) as { data: JobRecord }).data);
+      else setTries((n) => n + 1);
+    }, 3_000);
+    return () => clearTimeout(timer);
+  }, [found, jobId, tries]);
+  if (found) return <Workspace jobId={jobId} protocol={protocol} initial={found} />;
+  return (
+    <div className="panel flex min-h-[320px] flex-col items-center justify-center gap-4 p-8 text-center">
+      {tries < 20 ? (
+        <>
+          <p className="label anim-pulse text-ref">Looking for job #{jobId}…</p>
+          <p className="max-w-[48ch] text-[14px] text-fg-3">A job that just opened takes a few seconds to reach the index. This page opens it as soon as it does.</p>
+        </>
+      ) : (
+        <>
+          <p className="label text-fail">No job #{jobId}</p>
+          <p className="max-w-[48ch] text-[14px] text-fg-3">The escrow&rsquo;s index has no job with this number. Check the link with whoever sent it.</p>
+          <Link className="btn" href="/dashboard">
+            Dashboard
+          </Link>
+        </>
+      )}
+    </div>
+  );
+}
+
+function Workspace({ jobId, protocol, initial }: { jobId: string; protocol: Protocol; initial: JobRecord }) {
   const o = useOwner(protocol);
   const d = useDesk(o.session);
   const now = useNow(1_000);
@@ -255,16 +290,16 @@ function DisputeCard({ job, evidence, response, ruling }: { job: JobRecord; evid
     <section className="panel flex flex-col gap-5 p-6" aria-labelledby="dispute-title">
       <p id="dispute-title" className="label text-pip">Dispute</p>
       <div className="grid gap-px border hairline bg-line md:grid-cols-2">
-        <div className="flex flex-col gap-3 bg-ink-2 p-4">
-          <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-3 bg-ink-2 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="label text-pip">buyer · offers {pct(dispute.buyerOfferBps)}</span>
             {evidence !== undefined ? <Verified ok={!!evidence} what="disputeHash" /> : null}
           </div>
           <p className="whitespace-pre-wrap text-[14px] text-fg-2">{evidence?.doc.claim ?? (evidence === null ? 'The buyer’s evidence is not on file here.' : '…')}</p>
           {evidence ? <JsonView value={evidence.doc} label="evidence bundle" depth={1} maxHeight={260} /> : null}
         </div>
-        <div className="flex flex-col gap-3 bg-ink-2 p-4">
-          <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-col gap-3 bg-ink-2 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="label text-bolt">seller{job.response ? ` · asks ${pct(job.response.sellerAskBps)}` : ''}</span>
             {job.response && response !== undefined ? <Verified ok={!!response} what="responseHash" /> : null}
           </div>

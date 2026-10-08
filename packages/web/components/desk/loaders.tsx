@@ -23,7 +23,7 @@ export function DashboardLoader(props: { protocol: Protocol }) {
   return <DashboardView {...props} />;
 }
 
-export function WorkspaceLoader(props: { jobId: string; protocol: Protocol; initial: JobRecord }) {
+export function WorkspaceLoader(props: { jobId: string; protocol: Protocol; initial: JobRecord | null }) {
   return <WorkspaceView {...props} />;
 }
 

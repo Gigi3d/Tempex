@@ -42,7 +42,7 @@ export function JsonView({
           <span className="text-ref">{'{ }'}</span> {label}
           {caption ? <span className="normal-case tracking-normal text-fg-3">· {caption}</span> : null}
         </span>
-        <span className="flex items-center gap-1">
+        <span className="flex flex-wrap items-center gap-1">
           <button type="button" className="tab" aria-pressed={mode === 'tree'} aria-selected={mode === 'tree'} onClick={() => setMode('tree')}>
             tree
           </button>

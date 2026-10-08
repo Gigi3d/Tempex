@@ -14,12 +14,13 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 export default async function JobWorkspacePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   if (!/^\d{1,12}$/.test(id)) notFound();
-  let job;
+  // Not in the index yet is not the same as not existing: a job opened seconds
+  // ago may not have been scanned. The client keeps looking, then says so.
+  let job = null;
   try {
     job = (await getJob(id)).data;
   } catch (error) {
-    if (error instanceof NotFound) notFound();
-    throw error;
+    if (!(error instanceof NotFound)) throw error;
   }
   const table = await tableConfig();
   return (

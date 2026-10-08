@@ -180,7 +180,7 @@ export function PairApproval({ code, protocol, chainId }: { code: string; protoc
                   const response = await fetch(`/api/agents/pair/${encodeURIComponent(code)}`, {
                     method: 'POST',
                     headers: { 'content-type': 'application/json' },
-                    body: JSON.stringify({ tx, limit: grantUnits.toString() }),
+                    body: JSON.stringify({ tx, limit: grantUnits.toString(), role }),
                   });
                   if (!response.ok) throw new Error(((await response.json()) as { message?: string }).message ?? 'the beacon refused the confirmation');
                 });
