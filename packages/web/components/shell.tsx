@@ -5,9 +5,11 @@ import { CHAIN_ID, EXPLORER_URL } from '@tempex/sdk/browser';
 import { beaconUrl } from '@/lib/beacon';
 import { snapshot } from '@/lib/snapshot';
 
+import { InboxBadge } from './desk/inbox-badge';
 import { Hash, Wordmark } from './ui';
 
 const NAV = [
+  { href: '/dashboard', label: 'Dashboard' },
   { href: '/demo', label: 'Demo' },
   { href: '/play', label: 'Play' },
   { href: '/agents', label: 'Agents' },
@@ -26,8 +28,9 @@ export function Header() {
         </Link>
         <nav aria-label="Main" className="ml-auto flex min-w-0 items-center gap-0 overflow-x-auto text-[14px] text-fg-2 [mask-image:linear-gradient(to_right,black_80%,transparent)] md:gap-1 md:[mask-image:none]">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="shrink-0 px-2 py-2 transition-colors hover:text-fg md:px-3">
+            <Link key={item.href} href={item.href} className="inline-flex shrink-0 items-center px-2 py-2 transition-colors hover:text-fg md:px-3">
               {item.label}
+              {item.href === '/dashboard' ? <InboxBadge /> : null}
             </Link>
           ))}
         </nav>

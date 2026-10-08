@@ -11,7 +11,9 @@ export type OwnerState = {
   error: string | null;
   canPasskey: boolean;
   remembered: boolean;
-  signIn: (kind: 'passkey' | 'device') => Promise<void>;
+  signIn: (kind: 'passkey' | 'existing' | 'device') => Promise<void>;
+  /// Set once the page has checked for a remembered passkey.
+  ready: boolean;
   signOut: () => void;
   refreshBalance: () => Promise<void>;
   fund: () => Promise<void>;
@@ -27,10 +29,16 @@ export function useOwner(protocol: owner.Protocol): OwnerState {
   const [error, setError] = useState<string | null>(null);
   const [canPasskey, setCanPasskey] = useState(false);
   const [remembered, setRemembered] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     setCanPasskey(owner.passkeysAvailable());
     setRemembered(owner.rememberedPasskey() !== null);
+    // A passkey this device already knows signs back in without a prompt.
+    const restored = owner.restoreSession(protocol);
+    if (restored) setSession(restored);
+    setReady(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const run = useCallback(async <T,>(label: string, action: () => Promise<T>): Promise<T | undefined> => {
@@ -55,9 +63,13 @@ export function useOwner(protocol: owner.Protocol): OwnerState {
   }, [refreshBalance]);
 
   const signIn = useCallback(
-    async (kind: 'passkey' | 'device') => {
-      const next = await run(kind === 'passkey' ? 'Waiting for your passkey' : 'Creating a device key', () =>
-        kind === 'passkey' ? owner.signInWithPasskey(protocol) : owner.signInWithDeviceKey(protocol),
+    async (kind: 'passkey' | 'existing' | 'device') => {
+      const next = await run(kind === 'device' ? 'Creating a device key' : kind === 'existing' ? 'Choose your passkey' : 'Waiting for your passkey', () =>
+        kind === 'passkey'
+          ? owner.signInWithPasskey(protocol)
+          : kind === 'existing'
+            ? owner.signInWithExistingPasskey(protocol, (address) => owner.hasFootprint(address, protocol))
+            : owner.signInWithDeviceKey(protocol),
       );
       if (next) {
         setSession(next);
@@ -90,7 +102,9 @@ export function useOwner(protocol: owner.Protocol): OwnerState {
     canPasskey,
     remembered,
     signIn,
+    ready,
     signOut: () => {
+      if (session?.kind === 'passkey') owner.markSignedOut(true);
       setSession(null);
       setBalance(null);
     },

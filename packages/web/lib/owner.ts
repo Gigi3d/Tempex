@@ -1,9 +1,9 @@
-import { P256, PublicKey } from 'ox';
+import { Base64, Bytes, Hash, Hex as OxHex, P256, PublicKey, WebAuthnP256 as OxWebAuthn } from 'ox';
 import { getAddress, type Address, type Hex } from 'viem';
 import { Account, Actions, WebAuthnP256, WebCryptoP256, createClient, http, withFeePayer } from 'viem/tempo';
 import { tempoTestnet } from 'viem/tempo/chains';
 
-import { AGENT_PERIODS, RPC_URL, SPONSOR_URL, agentScopes, keyIdOf, type AgentPeriod, type AgentRole } from '@tempex/sdk/browser';
+import { AGENT_PERIODS, RPC_URL, SPONSOR_URL, agentScopes, keyIdOf, tip20Abi, type AgentPeriod, type AgentRole } from '@tempex/sdk/browser';
 import { TempexClient } from '@tempex/sdk/client';
 
 /// The owner's side of agent wallets. The owner signs in with a passkey: the
@@ -23,6 +23,8 @@ export type OwnerSession = {
 };
 
 const PASSKEY_STORE = 'tempex.owner.passkey';
+/// Set for this tab when the owner signs out, so a reload does not sign them back in.
+const SIGNED_OUT = 'tempex.owner.signedOut';
 
 export function passkeysAvailable(): boolean {
   return typeof window !== 'undefined' && typeof window.PublicKeyCredential !== 'undefined' && window.isSecureContext;
@@ -63,7 +65,104 @@ export async function signInWithPasskey(protocol: Protocol): Promise<OwnerSessio
       // a private window: the passkey still works for this visit
     }
   }
+  markSignedOut(false);
   return sessionFor(Account.fromWebAuthnP256(stored), 'passkey', protocol);
+}
+
+/// Signing back in needs no prompt: the passkey's public key is all an account
+/// needs to be addressed, and every signature still asks the authenticator.
+export function restoreSession(protocol: Protocol): OwnerSession | null {
+  const stored = rememberedPasskey();
+  if (!stored) return null;
+  try {
+    if (sessionStorage.getItem(SIGNED_OUT) === '1') return null;
+  } catch {
+    // no session storage: restore anyway
+  }
+  return sessionFor(Account.fromWebAuthnP256(stored), 'passkey', protocol);
+}
+
+export function markSignedOut(signedOut: boolean): void {
+  try {
+    if (signedOut) sessionStorage.setItem(SIGNED_OUT, '1');
+    else sessionStorage.removeItem(SIGNED_OUT);
+  } catch {
+    // nothing to remember
+  }
+}
+
+/// The address a passkey's public key controls on Tempo.
+export function addressOfPasskey(publicKey: Hex): Address {
+  return keyIdOf(publicKey);
+}
+
+/// A passkey made on another device (synced by iCloud Keychain, Google Password
+/// Manager, a security key) signs in here without any server remembering it.
+///
+/// A WebAuthn assertion does not carry its public key, but an ECDSA signature
+/// pins it to one of two candidates. If only one candidate account has ever been
+/// used, that is the owner. Otherwise a second assertion narrows the two to one.
+/// Nothing is trusted that this browser did not recover itself.
+export async function signInWithExistingPasskey(protocol: Protocol, footprint: (address: Address) => Promise<boolean>): Promise<OwnerSession> {
+  const first = await candidates();
+  let publicKey: Hex | null = null;
+  if (first.keys.length === 1) publicKey = first.keys[0]!;
+  else {
+    const used = await Promise.all(first.keys.map((key) => footprint(addressOfPasskey(key)).catch(() => false)));
+    if (used.filter(Boolean).length === 1) publicKey = first.keys[used.indexOf(true)]!;
+  }
+  if (!publicKey) {
+    const second = await candidates(first.id);
+    publicKey = first.keys.find((key) => second.keys.includes(key)) ?? null;
+  }
+  if (!publicKey) throw new Error('This passkey could not be matched to one account. Try again, or create a new passkey.');
+  const stored = { id: first.id, publicKey };
+  try {
+    localStorage.setItem(PASSKEY_STORE, JSON.stringify(stored));
+  } catch {
+    // a private window: the passkey still works for this visit
+  }
+  markSignedOut(false);
+  return sessionFor(Account.fromWebAuthnP256(stored), 'passkey', protocol);
+}
+
+/// One assertion over a random challenge, and the two public keys it could have come from.
+async function candidates(credentialId?: string): Promise<{ id: string; keys: Hex[] }> {
+  const challenge = OxHex.fromBytes(crypto.getRandomValues(new Uint8Array(32)));
+  const { id, metadata, signature } = await OxWebAuthn.sign({ challenge, ...(credentialId ? { credentialId } : {}) });
+  const clientData = JSON.parse(metadata.clientDataJSON) as { type?: string; challenge?: string };
+  if (clientData.type !== 'webauthn.get' || OxHex.fromBytes(Base64.toBytes(clientData.challenge ?? '')) !== challenge) {
+    throw new Error('The authenticator answered a different challenge.');
+  }
+  const digest = Hash.sha256(Bytes.concat(Bytes.fromHex(metadata.authenticatorData), Hash.sha256(Bytes.fromString(metadata.clientDataJSON), { as: 'Bytes' })));
+  const keys: Hex[] = [];
+  for (const yParity of [0, 1]) {
+    try {
+      // The same encoding passkey creation stores: x‖y, no 0x04 prefix.
+      const key = PublicKey.toHex(P256.recoverPublicKey({ payload: digest, signature: { r: signature.r, s: signature.s, yParity } }), { includePrefix: false });
+      // Recovery can only produce a key that verifies; check anyway.
+      if (P256.verify({ payload: digest, publicKey: PublicKey.fromHex(key), signature: { r: signature.r, s: signature.s } }) && !keys.includes(key)) keys.push(key);
+    } catch {
+      // this parity has no valid point
+    }
+  }
+  if (keys.length === 0) throw new Error('No public key could be recovered from the passkey\u2019s signature.');
+  return { id, keys };
+}
+
+/// Whether an account has ever been used: a balance, or any Tempex job.
+export async function hasFootprint(address: Address, protocol: Protocol): Promise<boolean> {
+  const reader = createClient({ chain: tempoTestnet, transport: http(RPC_URL) });
+  const balance = (await (reader as unknown as { readContract: (p: unknown) => Promise<bigint> }).readContract({
+    address: protocol.token,
+    abi: tip20Abi,
+    functionName: 'balanceOf',
+    args: [address],
+  })) as bigint;
+  if (balance > 0n) return true;
+  const response = await fetch(`/api/jobs?address=${address}`, { cache: 'no-store' });
+  if (!response.ok) return false;
+  return ((await response.json()) as { count?: number }).count! > 0;
 }
 
 /// Where passkeys are unavailable (an insecure origin, an old browser): a key

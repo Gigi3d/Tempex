@@ -41,7 +41,7 @@ const write = { sponsored: true } as const;
 /// The sponsor fills each transaction against its own node, which can trail the
 /// block the last write landed in by a moment. A revert at fill time means
 /// nothing was sent, so it is safe to wait and try again.
-async function settled<T>(action: () => Promise<T>, attempts = 5): Promise<T> {
+export async function settled<T>(action: () => Promise<T>, attempts = 5): Promise<T> {
   for (let attempt = 1; ; attempt += 1) {
     try {
       return await action();

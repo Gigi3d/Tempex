@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { AuthorizedLink, BudgetMeter, KeyGlyph, ROLE_TONE, StatusChip, expiryText } from '@/components/agents/kit';
+import { PublicActivity } from '@/components/desk/public-activity';
 import { beaconUrl, getJobsFor } from '@/lib/beacon';
 import { addressUrl, amount, shortHash } from '@/lib/format';
-import type { AgentKey } from '@/lib/types';
+import type { Activity, AgentKey } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,12 +26,23 @@ async function agentsOf(owner: string): Promise<AgentKey[] | null> {
   }
 }
 
+async function activityOf(owner: string): Promise<Activity | null> {
+  const base = beaconUrl();
+  if (!base) return null;
+  try {
+    const response = await fetch(`${base}/activity/${owner}`, { cache: 'no-store', signal: AbortSignal.timeout(15_000) });
+    return response.ok ? ((await response.json()) as Activity) : null;
+  } catch {
+    return null;
+  }
+}
+
 /// Anyone can see which agents an account runs, what they may spend and what they
 /// have spent: all of it is public keychain state. Names come from pairings.
 export default async function OwnerProfile({ params }: { params: Promise<{ owner: string }> }) {
   const { owner } = await params;
   if (!/^0x[0-9a-fA-F]{40}$/.test(owner)) notFound();
-  const [agents, jobs] = await Promise.all([agentsOf(owner), getJobsFor(owner).catch(() => null)]);
+  const [agents, jobs, activity] = await Promise.all([agentsOf(owner), getJobsFor(owner).catch(() => null), activityOf(owner)]);
   const list = jobs?.data.jobs ?? [];
   return (
     <div className="wrap flex flex-col gap-10 pt-10 pb-24">
@@ -69,6 +81,14 @@ export default async function OwnerProfile({ params }: { params: Promise<{ owner
             ))}
           </div>
         )}
+      </section>
+
+      <section className="flex flex-col gap-4">
+        <div>
+          <p className="label">Activity</p>
+          <p className="mt-1 text-[13px] text-fg-3">Each step with the key that signed it, read from the transaction itself. Steps an agent signed open with the exact calls it made.</p>
+        </div>
+        {activity ? <PublicActivity entries={activity.entries} owner={owner} agents={agents ?? []} /> : <p className="text-[14px] text-fg-3">The beacon is unreachable, so activity could not be read just now.</p>}
       </section>
 
       <section className="flex flex-col gap-4">

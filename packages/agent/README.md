@@ -16,7 +16,9 @@ tempex-agent pair --limit 100 --period week --days 30  # prints a code and a lin
 #   the owner opens the link, reviews the request, approves with a passkey
 #   the agent verifies the approval on chain itself, then:
 tempex-agent status                                    # live? budget left? expiry?
-tempex-agent open --seller 0x… --amount 25 --terms "…" # opens and funds a job as the owner
+tempex-agent open --seller 0x… --amount 25 --title "…" --terms "…" --criteria "a | b"
+#   files the terms with the beacon (so the seller and the arbiter can read them),
+#   then opens and funds the job as the owner; --terms-file takes full terms JSON
 ```
 
 An owner can also create a key in the web console (`/agents`) for an agent it runs
@@ -46,6 +48,7 @@ await tempex.createAndFundJob({ approve: true, seller, amount, termsHash, delive
 | The beacon lies about an approval | The agent re-reads the authorization transaction and the keychain itself before using the key. |
 | The approval page is framed for clickjacking | The site sends `X-Frame-Options: DENY` and `frame-ancestors 'none'`, and passkeys only work from its own origin. |
 | The key file is read by another user | It is written `0600` in a `0700` directory, refused if anyone else can read it, and encrypted with scrypt + AES-256-GCM when `TEMPEX_AGENT_PASSPHRASE` is set. |
+| The owner cannot see what the agent did | Every step the key signs is attributed from the transaction's own signature envelope; the owner's dashboard shows it with the decoded calls. |
 | A failed job open spends budget | `approve`, `createJob` and `fund` go in one Tempo transaction: all or nothing. |
 
 ## What the budget measures

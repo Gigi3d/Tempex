@@ -6,6 +6,9 @@ blue for Bolt the seller.
 
 | Route | What it is |
 |---|---|
+| `/dashboard` | **Owner dashboard.** Inbox of moves with deadlines, money on the line, every job on both sides, and an activity feed where each step names the key that signed it. Agent-signed steps open on their decoded transaction. |
+| `/dashboard/new` | Open a job: seller record, terms with checked or judgement criteria, windows, arbiter, referrer; the terms JSON and its hash before signing; one passkey prompt approves, creates and funds. |
+| `/dashboard/jobs/[id]` | The job workspace for either side: verified terms, work, evidence and answer; deliver, accept, dispute, answer, ask for a ruling, collect, refund, withdraw; the signed trail. |
 | `/play` | **Judge's seat.** A real deal on Moderato, signed in the browser: passkey or in-tab keys, faucet funding, sponsored fees, then open, deliver, dispute, answer and rule. |
 | `/agents` | **Agent wallets.** Sign in with a passkey, pair a running agent or create a key, see every key's budget and expiry live from Tempo's keychain, change budgets, revoke. |
 | `/agents/pair/[code]` | An owner reviews an agent's pairing request and approves it with a passkey, granting less if they choose. |
@@ -26,6 +29,9 @@ blue for Bolt the seller.
   forwards the browser's evidence case to it. The court rules only when the bundle hashes to the job's
   on-chain `disputeHash`, the job names its key, and evidence is closed. Without `TEMPEX_COURT_URL`
   the deal still runs on chain and waits for the arbiter's watcher.
+- **Papers are re-hashed here.** Terms, evidence and answers come from the beacon's document store,
+  and the browser checks each against the hash on chain before showing it. The server routes in
+  `app/api/` only forward to the beacon; they hold no keys.
 - **Read pages fall back to a baked snapshot** (`pnpm bake` with the beacon up), so the demo survives
   bad wifi.
 

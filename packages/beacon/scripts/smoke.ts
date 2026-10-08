@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 import { keccak256, pad, toBytes, toFunctionSelector, toHex } from 'viem';
 import type { Address, Hex } from 'viem';
 
-import { accountFor, addressFor, privateKeyFor, tip20Abi } from '@tempex/sdk';
+import { accountFor, addressFor, hashCanonical, privateKeyFor, tip20Abi } from '@tempex/sdk';
 
 import {
   Beacon,
@@ -378,9 +378,27 @@ async function main(): Promise<void> {
   };
   // A pairing exists only while an agent is waiting for its owner, so its route
   // is checked for a clean 404 below rather than walked with a made-up code.
+  // The document store files under the hash it computes; the routes below then
+  // read that document back and decode the job's opening transaction.
+  const smokeTerms = { title: 'smoke', deliverableSpec: 'smoke check of the document store', acceptanceCriteria: ['exists'], amount: '1', buyer: seller, seller };
+  const filed = await post(`${server.url}/docs`, { kind: 'terms', doc: smokeTerms });
+  assert(filed.status === 201 || filed.status === 200, `POST /docs answered 201, got ${filed.status}: ${reason(filed)}`);
+  const docHash = at<string>(filed.body, 'hash');
+  assert(docHash === hashCanonical(smokeTerms), 'the store files a document under its own canonical hash, not one the caller names');
+  pass(`POST /docs -> ${filed.status}: filed under ${docHash.slice(0, 18)}…, the hash it computed itself`);
+  const forged = await post(`${server.url}/docs`, { kind: 'terms', doc: { ...smokeTerms, buyer: 'nobody' } });
+  assert(forged.status === 400, 'a malformed document is refused');
+  const opened = await call(`${server.url}/jobs/${jobId}`);
+  const openTx = at<string>(opened.body, 'created.tx');
+
   const freeGets = ROUTES.filter((route) => route.method === 'GET' && !route.paid && route.path !== '/agents/pair/:code');
   for (const route of freeGets) {
-    const path = route.path.replace(/:jobId/g, jobId).replace(/:address/g, seller).replace(/:owner/g, seller);
+    const path = route.path
+      .replace(/:jobId/g, jobId)
+      .replace(/:address/g, seller)
+      .replace(/:owner/g, seller)
+      .replace(/^\/docs\/:hash$/, `/docs/${docHash}`)
+      .replace(/^\/tx\/:hash$/, `/tx/${openTx}`);
     const reply = await call(`${server.url}${path}${query[path] ?? ''}`);
     assert(reply.status === 200, `${route.method} ${path} answered 200, got ${reply.status}: ${reason(reply)}`);
     assert(
@@ -395,6 +413,15 @@ async function main(): Promise<void> {
     console.log(`    \x1b[32m200\x1b[0m   GET ${path}${query[path] ?? ''}`);
   }
   pass(`${freeGets.length} free GET routes answer from the same route table the manifest publishes`);
+
+  const inspected = await call(`${server.url}/tx/${openTx}`);
+  const signerKind = at<string>(inspected.body, 'signer.kind');
+  assert(signerKind === 'root' || signerKind === 'access-key', 'GET /tx/:hash names the kind of key that signed');
+  assert((at<unknown[]>(inspected.body, 'calls') ?? []).length > 0, 'GET /tx/:hash decodes the calls');
+  pass(`GET /tx/:hash -> job ${jobId} was opened by ${signerKind === 'access-key' ? 'an agent' : 'the account'}'s own key, its calls decoded`);
+  const activity = await call(`${server.url}/activity/${seller}`);
+  assert(Array.isArray(at<unknown[]>(activity.body, 'entries')), 'GET /activity/:address lists steps');
+  pass(`GET /activity/:address -> ${at<number>(activity.body, 'count')} step(s) for ${seller}, each with its signer`);
 
   const noPairing = await call(`${server.url}/agents/pair/ZZZZ-ZZZZ`);
   assert(noPairing.status === 404, `GET /agents/pair/<unknown> answered 404, got ${noPairing.status}`);

@@ -23,6 +23,11 @@ export function OwnerBar({ owner, faucet = true }: { owner: OwnerState; faucet?:
               {owner.remembered ? 'Sign in with passkey' : 'Create owner passkey'}
             </button>
           ) : null}
+          {owner.canPasskey ? (
+            <button type="button" className="btn" disabled={!!owner.busy} onClick={() => void owner.signIn('existing')} title="A passkey synced from another device, or a security key">
+              {owner.remembered ? 'Use another passkey' : 'I have a passkey'}
+            </button>
+          ) : null}
           <button type="button" className="btn" disabled={!!owner.busy} onClick={() => void owner.signIn('device')}>
             {owner.canPasskey ? 'Use a device key (testing)' : 'Use a device key'}
           </button>

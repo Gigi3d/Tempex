@@ -44,12 +44,12 @@ export type JobRecord = {
     reviewDeadline: number;
     uri?: string;
   };
-  accepted?: TxRef;
+  accepted?: TxRef & { sellerAmount?: string; platformFee?: string };
   dispute?: TxRef & {
     disputeHash: `0x${string}`;
     disputedAt: number;
     buyerOfferBps: number;
-    responseDeadline: number;
+    responseDeadline?: number;
   };
   response?: TxRef & { responseHash: `0x${string}`; respondedAt: number; sellerAskBps: number };
   verdict?: TxRef & {
@@ -61,9 +61,13 @@ export type JobRecord = {
     rationaleHash: `0x${string}`;
     verdictDigest: `0x${string}`;
   };
+  /// The beacon's name for the refund of a job that was never delivered.
+  refund?: TxRef & { amount?: string };
+  /// Older snapshots used this name.
   refunded?: TxRef;
   cancelled?: TxRef;
-  lapsed?: TxRef;
+  lapsed?: TxRef & { sellerAmount?: string; buyerAmount?: string };
+  milestone?: { planHash: `0x${string}`; index: number; count: number };
 };
 
 export type JobsList = { count: number; indexed: number; order: string; jobs: JobRecord[] };
@@ -238,3 +242,57 @@ export type AgentPairing = {
   };
   approval?: { owner: `0x${string}`; tx: `0x${string}`; at: number };
 };
+
+/// Who signed a transaction, read from its Tempo signature envelope by the beacon.
+export type Signer = {
+  account: `0x${string}`;
+  kind: 'access-key' | 'root';
+  keyId: `0x${string}` | null;
+  signatureType: string;
+};
+
+/// One Tempo transaction, decoded by the beacon's /tx route.
+export type InspectedTx = {
+  hash: `0x${string}`;
+  status: 'success' | 'reverted';
+  block: number;
+  timestamp: number;
+  signer: Signer;
+  feePayer: `0x${string}` | null;
+  sponsored: boolean;
+  feeToken: `0x${string}` | null;
+  gasUsed: string;
+  nonceKey: string | null;
+  validBefore: number | null;
+  calls: { to: `0x${string}`; contract: string; function: string | null; args: Record<string, unknown> | null; selector: string }[];
+  events: { address: `0x${string}`; contract: string; event: string | null; args: Record<string, unknown> | null; logIndex: number }[];
+};
+
+export type ActivityStep =
+  | 'created'
+  | 'funded'
+  | 'delivered'
+  | 'accepted'
+  | 'disputed'
+  | 'responded'
+  | 'ruled'
+  | 'refunded'
+  | 'cancelled'
+  | 'settled-lapsed'
+  | 'withdrew';
+
+export type ActivityEntry = {
+  jobId: string | null;
+  step: ActivityStep;
+  tx: `0x${string}`;
+  block: number;
+  timestamp: number | null;
+  side: 'buyer' | 'seller' | null;
+  signer: Signer | null;
+  self: boolean;
+};
+
+export type Activity = { address: `0x${string}`; count: number; entries: ActivityEntry[]; byKey: Record<string, number> };
+
+export type DocKind = 'terms' | 'evidence' | 'response' | 'deliverable';
+export type StoredDoc<T = unknown> = { kind: DocKind; hash: `0x${string}`; doc: T; storedAt: string; bytes: number };

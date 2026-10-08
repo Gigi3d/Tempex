@@ -1,8 +1,8 @@
-import { type Address } from 'viem';
+import { type Address, type Hex } from 'viem';
 import { Account, Actions, createClient, http } from 'viem/tempo';
 import { tempoTestnet } from 'viem/tempo/chains';
 
-import { RPC_URL, SPONSOR_URL, TempexClient, type TempexAddresses } from '@tempex/sdk';
+import { RPC_URL, SPONSOR_URL, TempexClient, hashCanonical, type JobTerms, type TempexAddresses } from '@tempex/sdk';
 
 import type { Agent } from './keystore.js';
 
@@ -45,4 +45,20 @@ export async function agentStanding(agent: Agent, token: Address) {
     remaining: limit?.remaining ?? null,
     periodEnd: limit?.periodEnd ? Number(limit.periodEnd) : null,
   };
+}
+
+/// Files a job's terms with the beacon's document store, so the seller and the
+/// arbiter can read what the agent committed to. The store computes the hash
+/// itself; it must equal the hash the agent is about to put on chain.
+export async function fileTerms(beacon: string, terms: JobTerms): Promise<Hex> {
+  const expected = hashCanonical(terms);
+  const response = await fetch(`${beacon}/docs`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ kind: 'terms', doc: terms }),
+  });
+  const body = (await response.json()) as { hash?: Hex; message?: string };
+  if (!response.ok) throw new Error(`the beacon refused the terms: ${body.message ?? response.status}`);
+  if (body.hash?.toLowerCase() !== expected.toLowerCase()) throw new Error('the beacon filed the terms under a different hash; refusing to open the job');
+  return expected;
 }

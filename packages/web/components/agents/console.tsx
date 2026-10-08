@@ -8,9 +8,11 @@ import { AGENT_PERIODS, tokenAmount, type AgentPeriod, type AgentRole } from '@t
 
 import { amount, shortHash, txUrl } from '@/lib/format';
 import * as owner from '@/lib/owner';
-import type { AgentKey } from '@/lib/types';
+import type { Activity, AgentKey } from '@/lib/types';
 
 import { CopyButton } from '../copy';
+import { ActivityFeed } from '../desk/activity';
+import { JsonDisclosure } from '../json-view';
 import { AuthorizedLink, BudgetMeter, CAN, CANNOT, KeyGlyph, ROLE_TONE, StatusChip, expiryText } from './kit';
 import { OwnerBar } from './owner-bar';
 import { useOwner } from './use-owner';
@@ -42,6 +44,7 @@ export function AgentConsole({ protocol }: { protocol: owner.Protocol }) {
   const [panel, setPanel] = useState<'none' | 'create' | 'pair'>('none');
   const [code, setCode] = useState('');
   const [reveal, setReveal] = useState<{ env: string; name: string } | null>(null);
+  const [activity, setActivity] = useState<Activity | null>(null);
 
   const load = useCallback(async () => {
     if (!o.session) return;
@@ -49,6 +52,9 @@ export function AgentConsole({ protocol }: { protocol: owner.Protocol }) {
     const body = (await response.json()) as { agents?: AgentKey[]; message?: string };
     if (!response.ok) throw new Error(body.message ?? `the beacon answered ${response.status}`);
     const labels = readLabels();
+    void fetch(`/api/activity/${o.session.address}`, { cache: 'no-store' })
+      .then(async (r) => (r.ok ? ((await r.json()) as Activity) : null))
+      .then((value) => value && setActivity(value), () => undefined);
     setAgents(
       (body.agents ?? []).map((agent) => {
         const label = labels[agent.keyId.toLowerCase()];
@@ -75,6 +81,7 @@ export function AgentConsole({ protocol }: { protocol: owner.Protocol }) {
   }, [load, o.session]);
 
   const live = agents?.filter((agent) => !agent.revoked && !agent.expired).length ?? 0;
+  const agentMap = useMemo(() => new Map((agents ?? []).map((agent) => [agent.keyId.toLowerCase(), agent])), [agents]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -107,6 +114,9 @@ export function AgentConsole({ protocol }: { protocol: owner.Protocol }) {
               <button type="button" className={`btn ${panel === 'create' ? 'btn-primary' : 'btn-ref'}`} onClick={() => setPanel(panel === 'create' ? 'none' : 'create')}>
                 Create an agent key
               </button>
+              <Link className="btn" href="/dashboard">
+                Dashboard
+              </Link>
               <Link className="btn" href={`/agents/${o.session.address}`}>
                 Public profile ↗
               </Link>
@@ -175,6 +185,9 @@ export function AgentConsole({ protocol }: { protocol: owner.Protocol }) {
                 <AgentCard
                   key={agent.keyId}
                   agent={agent}
+                  owner={o.session!.address}
+                  agents={agentMap}
+                  activity={activity}
                   busy={!!o.busy}
                   onRevoke={async () => {
                     if (!window.confirm(`Revoke ${agent.name ?? shortHash(agent.keyId)}? It stops working at once and cannot be restored.`)) return;
@@ -311,8 +324,27 @@ function RevealKey({ reveal, onDone }: { reveal: { env: string; name: string }; 
   );
 }
 
-function AgentCard({ agent, busy, onRevoke, onBudget }: { agent: AgentKey; busy: boolean; onRevoke: () => Promise<void>; onBudget: (limit: bigint) => Promise<void> }) {
+function AgentCard({
+  agent,
+  owner: ownerAddress,
+  agents,
+  activity,
+  busy,
+  onRevoke,
+  onBudget,
+}: {
+  agent: AgentKey;
+  owner: string;
+  agents: Map<string, AgentKey>;
+  activity: Activity | null;
+  busy: boolean;
+  onRevoke: () => Promise<void>;
+  onBudget: (limit: bigint) => Promise<void>;
+}) {
   const [editing, setEditing] = useState(false);
+  const [showActivity, setShowActivity] = useState(false);
+  const mine = (activity?.entries ?? []).filter((entry) => entry.self && entry.signer?.keyId?.toLowerCase() === agent.keyId.toLowerCase());
+  const steps = activity ? (activity.byKey[agent.keyId] ?? Object.entries(activity.byKey).find(([key]) => key.toLowerCase() === agent.keyId.toLowerCase())?.[1] ?? 0) : null;
   const [value, setValue] = useState('');
   const dead = agent.revoked || agent.expired;
   return (
@@ -341,6 +373,20 @@ function AgentCard({ agent, busy, onRevoke, onBudget }: { agent: AgentKey; busy:
           <dd className="mt-1 text-fg-2" title="Allowance raised to the escrow, as the keychain meters it">{amount(agent.spent)} αUSD</dd>
         </div>
       </dl>
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          aria-expanded={showActivity}
+          onClick={() => setShowActivity(!showActivity)}
+          className={`chip cursor-pointer transition-colors hover:border-ref-dim hover:text-ref ${showActivity ? 'chip-ref' : ''}`}
+        >
+          {showActivity ? '−' : '+'} activity {steps === null ? '…' : `· ${steps} step${steps === 1 ? '' : 's'}`}
+        </button>
+        <JsonDisclosure value={agent} label="keychain record" summaryText="keychain record" />
+      </div>
+      {showActivity ? (
+        <ActivityFeed entries={mine} me={ownerAddress} agents={agents} limit={5} compact emptyText="This key has not signed anything on Tempex yet." />
+      ) : null}
       <footer className="flex flex-wrap items-center justify-between gap-3 border-t hairline pt-4">
         {agent.revokedAt ? (
           <a className="link font-mono text-[11px] text-fail" href={txUrl(agent.revokedAt.tx)} target="_blank" rel="noreferrer">

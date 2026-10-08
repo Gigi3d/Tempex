@@ -62,10 +62,10 @@ buyer                TempexEscrow                seller                arbiter
 | L1 | `contracts/` | 385 | `TempexEscrow.sol` — one escrow, job ledger, pull payments, ECDSA-gated settlement |
 | L2 | `packages/sdk` | 861 | Tempo client, canonical evidence hashing, EIP-712 verdict types, TIP-20 |
 | L3 | `packages/arbiter` | 2,075 | rules → band → prompt → LLM → clamp → certify → sign |
-| L4 | `packages/beacon` | 4,933 | 18-route front door: manifest, evidence, reputation, zero-balance onboarding, 402 gate |
+| L4 | `packages/beacon` | 4,933 | 27-route front door: manifest, evidence, reputation, agent desk, document store, signer attribution, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
 | L7 | `packages/agent` | — | Agent wallets: a scoped, budgeted, revocable Tempo access key under the owner's account, with pairing, a CLI and an encrypted key store |
-| L6 | `packages/web` | — | The human frontend: Judge's seat (live deals from the browser), Demo Theater, explorer, receipts, cases, console |
+| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Judge's seat, Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
 
@@ -83,9 +83,10 @@ pnpm demo drill             # offline: push scripted judge proposals through the
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
-pnpm smoke                  # live: SDK chain client + 185 beacon assertions, spends nothing
+pnpm smoke                  # live: SDK chain client + 214 beacon assertions, spends nothing
 pnpm court --sponsored      # arbiter over HTTP: POST /rule/:jobId with the evidence pinned on chain
 pnpm agent init && pnpm agent pair   # give an agent a wallet: its owner approves at /agents with a passkey
+pnpm agent open --seller 0x… --amount 5 --title "…" --terms "…" --criteria "a | b"   # files the terms, then opens as the owner
 pnpm --filter @tempex/web dev   # the website; set TEMPEX_COURT_URL to let /play call the referee
 ```
 
@@ -100,6 +101,17 @@ An agent never holds its owner's money. It holds a Tempo **access key** under th
 - **Pairing:** the agent makes its own P-256 key and sends the beacon a request signed by it, with a random witness. The owner opens the link, reviews it at `/agents/pair/<code>`, may grant less (never more), and approves with a passkey. That authorization binds the witness on chain, so it answers this request only. The beacon and the agent each verify it from the chain.
 - **Console:** `/agents` lists every key an owner authorized, read from the keychain's own events and state (budget left, expiry, total metered), with one-tap revoke and budget changes. `/agents/<owner>` is the public view.
 - **Measured on Moderato:** a scoped key opens and funds a job as its owner in one atomic transaction; over budget is refused (`SpendingLimitExceeded`) with nothing spent; any call outside the scope is refused (`CallNotAllowed`); a revoked key is refused. See `packages/agent/README.md` for the security model and how the budget is metered.
+
+## Dashboard
+
+`/dashboard` is where an owner works their deals, as buyer and as seller, from one passkey account.
+
+- **Inbox:** every move the escrow would accept from you right now (deliver, review, answer a dispute, ask for a ruling, collect a lapsed review, reclaim an undelivered job), soonest deadline first, with live countdowns. The nav shows the count; the browser can alert you while the tab is open.
+- **Open a job** (`/dashboard/new`): seller with their on-chain record, terms with checked and judgement criteria, amount, windows, arbiter, referrer. The exact terms JSON and the hash the escrow will hold show before you sign; one passkey prompt approves, creates and funds.
+- **Job workspace** (`/dashboard/jobs/<id>`): the papers behind each on-chain hash (terms, delivered work, the buyer's evidence, the seller's answer), each re-hashed in the browser before it is shown; the move panel for your side; and the trail of every step with the key that signed it.
+- **Agents in the record:** the beacon reads each transaction's Tempo signature envelope, so a step one of your agents signed is labelled with that agent and opens on its decoded calls (`GET /tx/:hash`, `GET /activity/:address`). Nothing is taken from the agent's own reports.
+- **Papers:** terms, evidence, answers and long deliverables are filed in the beacon's content-addressed store (`POST /docs`, `GET /docs/:hash`), which computes each hash itself. It is public to anyone holding the hash; the job's terms hash is on chain.
+- **Any device:** a passkey synced from another device signs in with no server lookup: its public key is recovered from its own signature.
 
 ## The guardrail, in one paragraph
 

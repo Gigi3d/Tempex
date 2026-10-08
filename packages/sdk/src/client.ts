@@ -334,6 +334,25 @@ export class TempexClient {
     return this.send([this.call('fund', [jobId])], options);
   }
 
+  /// Funds a job that was created earlier and left unfunded, with the allowance
+  /// for it in the same transaction: both land or neither does.
+  async approveAndFund(jobId: bigint, amount: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send(
+      [
+        {
+          to: this.addresses.token,
+          data: encodeFunctionData({ abi: tip20Abi, functionName: 'approve', args: [this.addresses.escrow, amount] }),
+        },
+        this.call('fund', [jobId]),
+      ],
+      options,
+    );
+  }
+
+  async cancel(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('cancel', [jobId])], options);
+  }
+
   /// Commits to the delivered work by hash and, when `uri` is given, records
   /// where it can be fetched so the arbiter can read the real work itself.
   async deliver(

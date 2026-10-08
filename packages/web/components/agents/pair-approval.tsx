@@ -9,6 +9,7 @@ import { amount, shortHash, txUrl } from '@/lib/format';
 import * as owner from '@/lib/owner';
 import type { AgentPairing } from '@/lib/types';
 
+import { JsonDisclosure } from '../json-view';
 import { CAN, CANNOT, KeyGlyph, ROLE_TONE } from './kit';
 import { OwnerBar } from './owner-bar';
 import { useOwner } from './use-owner';
@@ -127,6 +128,7 @@ export function PairApproval({ code, protocol, chainId }: { code: string; protoc
               This request is for a different network or escrow than this site serves. Do not approve it here.
             </p>
           ) : null}
+          <JsonDisclosure value={r} label="signed pairing request" summaryText="signed request" depth={1} />
           <p className="border border-pip-dim px-4 py-3 text-[13px] leading-relaxed text-pip">
             Only approve if you started this agent yourself. The request is signed by the agent&rsquo;s own key, whose private half never leaves the agent; approving lets that key act for your account within the limits below until it expires or you revoke it.
           </p>

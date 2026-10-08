@@ -18,5 +18,9 @@ export async function beaconAgents(path: string, init?: RequestInit): Promise<Re
   }
 }
 
+/// The same passthrough, for the dashboard's routes.
+export const beaconPass = beaconAgents;
+
 export const PAIR_CODE = /^[0-9A-Za-z]{4}-?[0-9A-Za-z]{4}$/;
 export const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+export const HASH = /^0x[0-9a-fA-F]{64}$/;

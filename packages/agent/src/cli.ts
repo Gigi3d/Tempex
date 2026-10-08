@@ -1,9 +1,11 @@
 #!/usr/bin/env tsx
 import { getAddress, type Address } from 'viem';
 
-import { AGENT_PERIODS, AGENT_ROLES, EXPLORER_URL, formatToken, hashText, tokenAmount, type AgentPeriod, type AgentRole } from '@tempex/sdk';
+import { readFileSync } from 'node:fs';
 
-import { agentStanding, agentTempex } from './client.js';
+import { AGENT_PERIODS, AGENT_ROLES, EXPLORER_URL, formatToken, tokenAmount, type AgentPeriod, type AgentRole, type JobTerms } from '@tempex/sdk';
+
+import { agentStanding, agentTempex, fileTerms } from './client.js';
 import { createAgent, defaultAgentFile, loadAgent, saveOwner } from './keystore.js';
 import { requestPairing, verifyApproval, waitForApproval } from './pairing.js';
 
@@ -124,10 +126,30 @@ async function main(argv: string[]): Promise<number> {
       // key's budget; the keychain refuses it otherwise.
       const agent = loadAgent();
       const seller = typeof f['seller'] === 'string' ? getAddress(f['seller']) : null;
-      const terms = typeof f['terms'] === 'string' ? f['terms'] : null;
-      if (!seller || !terms) throw new Error('open needs --seller <address> --amount <αUSD> --terms <text>');
-      const { escrow, token } = await protocol(beaconUrl(f));
-      const amount = tokenAmount(String(f['amount'] ?? '1'));
+      const spec = typeof f['terms'] === 'string' ? f['terms'] : null;
+      const file = typeof f['terms-file'] === 'string' ? f['terms-file'] : null;
+      if (!seller || (!spec && !file)) throw new Error('open needs --seller <address> --amount <αUSD> and --terms <text> or --terms-file <terms.json>');
+      if (!agent.owner) throw new Error('this agent has no owner yet: run `tempex-agent pair` first');
+      const beacon = beaconUrl(f);
+      const { escrow, token } = await protocol(beacon);
+      const price = String(f['amount'] ?? '1');
+      const amount = tokenAmount(price);
+      // The terms are a document both sides (and the arbiter) can read, filed by
+      // hash before the job commits to that hash. A file carries full terms; a
+      // line of text becomes the spec, with --title and --criteria "a | b".
+      const base = file ? (JSON.parse(readFileSync(file, 'utf8')) as Partial<JobTerms>) : {};
+      const terms: JobTerms = {
+        title: String(f['title'] ?? base.title ?? spec!.slice(0, 80)),
+        deliverableSpec: base.deliverableSpec ?? spec!,
+        acceptanceCriteria:
+          typeof f['criteria'] === 'string'
+            ? f['criteria'].split('|').map((part) => part.trim()).filter(Boolean)
+            : (base.acceptanceCriteria ?? ['Delivers what the spec describes']),
+        amount: price,
+        currency: 'αUSD',
+        buyer: getAddress(agent.owner),
+        seller,
+      };
       // Check standing first: a revoked or expired key fails on chain with an
       // unhelpful error, and the operator deserves the real reason.
       const standing = await agentStanding(agent, token);
@@ -139,7 +161,7 @@ async function main(argv: string[]): Promise<number> {
           approve: true,
           seller,
           amount,
-          termsHash: hashText(terms),
+          termsHash: await fileTerms(beacon, terms),
           deliveryDeadline: Math.floor(Date.now() / 1000) + Number(f['hours'] ?? 24) * 3600,
           reviewWindow: 3600,
         },
@@ -147,6 +169,7 @@ async function main(argv: string[]): Promise<number> {
       );
       const job = await tempex.job(opened.jobId);
       out(`Opened job ${opened.jobId}: ${formatToken(job.amount)} αUSD escrowed, buyer ${job.buyer} (the owner).`);
+      row('terms', `${terms.title} · filed under ${job.termsHash}`);
       row('tx', `${EXPLORER_URL}/tx/${opened.hash}`);
       return 0;
     }
@@ -158,7 +181,8 @@ async function main(argv: string[]): Promise<number> {
       out('  pair  [--limit <αUSD>] [--period none|day|week|month] [--days <n>] [--beacon <url>]   ask the owner to authorize it');
       out('  status                                                  key, owner, expiry and budget left, read from chain');
       out('  whoami                                                  key id and owner');
-  out('  open  --seller <address> --amount <αUSD> --terms <text> [--hours <n>]   open and fund a job as the owner, within budget');
+  out('  open  --seller <address> --amount <αUSD> --terms <text> [--title <t>] [--criteria "a | b"] [--terms-file <json>] [--hours <n>]');
+      out('                                                          file the terms, then open and fund a job as the owner, within budget');
       out();
       out(`Key file: ${defaultAgentFile()} · beacon: TEMPEX_BEACON_URL or --beacon`);
       return command === 'help' ? 0 : 1;

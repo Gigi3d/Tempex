@@ -72,6 +72,8 @@ export type JobRecord = {
   referral?: Stamp & { referrer: Address; shareBps: number; paid: bigint };
   /// The arbiter never ruled in time; anyone settled it on the default split.
   lapsed?: Stamp & { sellerAmount: bigint; buyerAmount: bigint };
+  /// The buyer called the job off before funding it.
+  cancelled?: Stamp;
   /// Set when the job is one tranche of a milestone plan.
   milestone?: { planHash: Hex; index: number; count: number };
 };
@@ -350,7 +352,10 @@ export class EscrowLedger {
       }
       case 'JobCancelled': {
         const job = this.mutate(big(args['jobId']));
-        if (job) job.stage = 'cancelled';
+        if (job) {
+          job.stage = 'cancelled';
+          job.cancelled = { ...stamp };
+        }
         return;
       }
       case 'Withdrawal': {
