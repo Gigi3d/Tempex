@@ -109,6 +109,10 @@ export class TempexClient {
   readonly addresses: TempexAddresses;
   readonly feeToken: Address;
   private readonly client: TempoClient;
+  /// Reads go through a client with no account. A view call made "as" an access
+  /// key is checked against that key's call scopes by Tempo's keychain, so an
+  /// agent scoped to the escrow's write functions could not even read a job.
+  private readonly reader: Client<Transport, typeof tempoTestnet>;
 
   constructor(params: TempexClientParams) {
     this.account = params.account;
@@ -123,6 +127,7 @@ export class TempexClient {
       feeToken: this.feeToken,
       transport,
     });
+    this.reader = createClient({ chain: tempoTestnet, transport: http(params.rpcUrl ?? RPC_URL) }) as never;
   }
 
   get address(): Address {
@@ -177,7 +182,7 @@ export class TempexClient {
   }
 
   private async read<T>(functionName: string, args: readonly unknown[] = []): Promise<T> {
-    return this.client.readContract({
+    return (this.reader as unknown as TempoClient).readContract({
       address: this.addresses.escrow,
       abi: tempexEscrowAbi,
       functionName: functionName as never,
@@ -188,7 +193,7 @@ export class TempexClient {
   // ----------------------------------------------------------------- token
 
   async tokenBalance(account: Address = this.address): Promise<bigint> {
-    return this.client.readContract({
+    return (this.reader as unknown as TempoClient).readContract({
       address: this.addresses.token,
       abi: tip20Abi,
       functionName: 'balanceOf',
@@ -238,10 +243,22 @@ export class TempexClient {
       /// Who brought the job (a marketplace, an agent framework). Paid the
       /// escrow's referral share of the protocol's fees on it. v3 escrows only.
       referrer?: Address;
+      /// Put the token approval in the same transaction, so approve, create and
+      /// fund land together or not at all. For an agent key this also means a
+      /// failed open never spends any of its budget.
+      approve?: boolean;
     },
     options: WriteOptions = {},
   ): Promise<{ jobId: bigint; hash: Hex }> {
     const predicted = await this.nextJobId();
+    const approval = params.approve
+      ? [
+          {
+            to: this.addresses.token,
+            data: encodeFunctionData({ abi: tip20Abi, functionName: 'approve', args: [this.addresses.escrow, params.amount] }),
+          },
+        ]
+      : [];
     const common = [
       params.seller,
       params.amount,
@@ -251,6 +268,7 @@ export class TempexClient {
     ] as const;
     const receipt = await this.send(
       [
+        ...approval,
         params.referrer !== undefined
           ? this.call('createJobWithReferrer', [...common, params.arbiter ?? ZERO_ADDRESS, params.referrer])
           : params.arbiter === undefined

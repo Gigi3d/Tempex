@@ -16,10 +16,12 @@
     "stats": "tsx src/cli.ts stats",
     "reputation": "tsx src/cli.ts reputation",
     "onboard": "tsx src/cli.ts onboard",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx scripts/smoke.ts",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "@tempex/sdk": "workspace:*",
+    "ox": "^0.14.45",
     "viem": "^2.38.5"
   },
   "devDependencies": {

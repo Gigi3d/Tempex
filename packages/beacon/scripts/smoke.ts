@@ -376,9 +376,11 @@ async function main(): Promise<void> {
     '/ready': `?role=seller&address=${seller}`,
     '/quote': '?role=buyer&amount=25',
   };
-  const freeGets = ROUTES.filter((route) => route.method === 'GET' && !route.paid);
+  // A pairing exists only while an agent is waiting for its owner, so its route
+  // is checked for a clean 404 below rather than walked with a made-up code.
+  const freeGets = ROUTES.filter((route) => route.method === 'GET' && !route.paid && route.path !== '/agents/pair/:code');
   for (const route of freeGets) {
-    const path = route.path.replace(/:jobId/g, jobId).replace(/:address/g, seller);
+    const path = route.path.replace(/:jobId/g, jobId).replace(/:address/g, seller).replace(/:owner/g, seller);
     const reply = await call(`${server.url}${path}${query[path] ?? ''}`);
     assert(reply.status === 200, `${route.method} ${path} answered 200, got ${reply.status}: ${reason(reply)}`);
     assert(
@@ -393,6 +395,14 @@ async function main(): Promise<void> {
     console.log(`    \x1b[32m200\x1b[0m   GET ${path}${query[path] ?? ''}`);
   }
   pass(`${freeGets.length} free GET routes answer from the same route table the manifest publishes`);
+
+  const noPairing = await call(`${server.url}/agents/pair/ZZZZ-ZZZZ`);
+  assert(noPairing.status === 404, `GET /agents/pair/<unknown> answered 404, got ${noPairing.status}`);
+  pass('GET /agents/pair/<unknown> -> 404: a pairing exists only while an agent waits for its owner');
+  const agentsOfSeller = await call(`${server.url}/agents/${seller}`);
+  const agentsBody = agentsOfSeller.body as { owner?: string; agents?: unknown[] };
+  assert(Array.isArray(agentsBody.agents) && agentsBody.owner?.toLowerCase() === seller.toLowerCase(), 'GET /agents/:owner lists the keys an owner authorized, read from the keychain');
+  pass(`GET /agents/:owner -> ${agentsBody.agents?.length ?? 0} key(s) for ${seller}`);
 
   const withdraw = await post(`${server.url}/blueprint/withdraw`, {});
   assert(withdraw.status === 200, `POST /blueprint/withdraw answered 200, got ${withdraw.status}: ${reason(withdraw)}`);

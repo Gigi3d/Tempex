@@ -196,3 +196,45 @@ export type RouteInfo = { path: string; method: 'GET' | 'POST'; summary: string;
 
 /// Where a value came from: the live beacon, or the baked snapshot.
 export type Sourced<T> = { data: T; source: 'live' | 'snapshot'; asOf: string };
+
+/// An access key an owner authorized, as the beacon's agent desk reads it from
+/// Tempo's keychain.
+export type AgentKey = {
+  keyId: `0x${string}`;
+  name: string | null;
+  role: 'buyer' | 'seller' | 'both' | null;
+  limit: string | null;
+  period: number | null;
+  keyType: string;
+  expiry: number;
+  revoked: boolean;
+  expired: boolean;
+  spendPolicy: string;
+  remaining: string | null;
+  periodEnd: number | null;
+  spent: string;
+  authorized: { block: number; tx: `0x${string}` };
+  revokedAt?: { block: number; tx: `0x${string}` };
+};
+
+export type AgentPairing = {
+  code: string;
+  status: 'pending' | 'approved' | 'expired';
+  createdAt: number;
+  expiresAt: number;
+  request: {
+    version: 1;
+    chainId: number;
+    escrow: `0x${string}`;
+    keyId: `0x${string}`;
+    publicKey: `0x${string}`;
+    name: string;
+    role: 'buyer' | 'seller' | 'both';
+    limit: string;
+    period: number;
+    days: number;
+    witness: `0x${string}`;
+    issuedAt: number;
+  };
+  approval?: { owner: `0x${string}`; tx: `0x${string}`; at: number };
+};

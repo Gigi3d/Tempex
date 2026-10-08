@@ -8,6 +8,9 @@ import {
   type BlueprintAction,
   type RefreshResult,
 } from './beacon.js';
+import { resolve as resolvePath } from 'node:path';
+
+import { AgentDesk } from './agents.js';
 import { endpoint } from './config.js';
 import type { JobStage } from './ledger.js';
 import { ROUTES } from './manifest.js';
@@ -39,7 +42,9 @@ const ERROR_NAMES: Record<number, string> = {
   404: 'not_found',
   405: 'method_not_allowed',
   409: 'conflict',
+  410: 'gone',
   413: 'payload_too_large',
+  429: 'too_many_requests',
   500: 'internal_error',
 };
 
@@ -51,6 +56,8 @@ type Ctx = {
   /// Present only on a paid route that was paid for: the receipt of the transfer that
   /// unlocked this response, which is the payer's proof it was charged once.
   settled: Settlement | null;
+  desk: AgentDesk;
+  ip: string;
 };
 
 type Handler = (ctx: Ctx) => Promise<unknown> | unknown;
@@ -71,6 +78,11 @@ const HANDLERS: Record<string, Handler> = {
     paid: ROUTES.filter((route) => route.paid).map((route) => `${route.method} ${route.path}`),
     note: 'Everything an agent needs in order to decide whether to use this protocol is free. Only discovery queries are priced, and that price is a spam cost, not a subscription.',
   }),
+
+  'POST /agents/pair': ({ desk, body, ip }) => desk.request(body, ip),
+  'GET /agents/pair/:code': ({ desk, params }) => desk.get(params['code'] ?? ''),
+  'POST /agents/pair/:code/confirm': ({ desk, params, body }) => desk.confirm(params['code'] ?? '', body),
+  'GET /agents/:owner': ({ desk, params }) => desk.agentsOf(params['owner'] ?? ''),
 
   'GET /.well-known/tempex.json': ({ beacon }) => beacon.manifest(),
   'GET /.well-known/agent.json': ({ beacon }) => beacon.card(),
@@ -268,6 +280,17 @@ export async function startBeaconServer(beacon: Beacon, options: ServerOptions =
 
   head = (await sync()).head;
 
+  const desk = new AgentDesk({
+    reader: beacon.reader,
+    chainId: beacon.config.chainId,
+    escrow: beacon.config.escrow,
+    token: beacon.config.token,
+    fromBlock: beacon.config.indexFromBlock,
+    chunkBlocks: beacon.config.scanChunkBlocks,
+    approveUrl: beacon.config.pairUrl,
+    profilesFile: resolvePath(beacon.config.agentProfilesFile),
+  });
+
   const timer = setInterval(() => {
     void sync().catch(() => undefined);
   }, options.syncIntervalMs ?? SYNC_INTERVAL_MS);
@@ -356,8 +379,10 @@ export async function startBeaconServer(beacon: Beacon, options: ServerOptions =
       if (LIVE.has(route.key) && (inFlight || Date.now() - syncedAt > SYNC_STALE_MS)) await sync();
 
       const body = await readBody(req);
-      const payload = await HANDLERS[route.key]!({ beacon, url, params: route.params, body, settled });
-      send(res, route.key === 'POST /registry' ? 201 : 200, payload, {
+      const forwarded = beacon.config.trustProxy ? String(req.headers['x-forwarded-for'] ?? '').split(',')[0]?.trim() : '';
+      const ip = forwarded || req.socket.remoteAddress || 'unknown';
+      const payload = await HANDLERS[route.key]!({ beacon, url, params: route.params, body, settled, desk, ip });
+      send(res, route.key === 'POST /registry' || route.key === 'POST /agents/pair' ? 201 : 200, payload, {
         'x-tempex-index-head': head.toString(),
         ...(settled?.tx ? { 'x-tempex-settled': settled.tx } : {}),
       });

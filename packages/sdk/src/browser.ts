@@ -16,3 +16,4 @@ export {
 export type { VerdictStruct } from './verdict.js';
 export { tempexEscrowAbi } from './abi/TempexEscrow.js';
 export { tip20Abi } from './abi/TIP20.js';
+export * from './agents.js';

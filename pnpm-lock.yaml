@@ -18,6 +18,22 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/agent:
+    dependencies:
+      '@tempex/sdk':
+        specifier: workspace:*
+        version: link:../sdk
+      ox:
+        specifier: ^0.14.45
+        version: 0.14.45(typescript@5.9.3)(zod@4.6.5)
+      viem:
+        specifier: ^2.38.5
+        version: 2.56.9(typescript@5.9.3)(zod@4.6.5)
+    devDependencies:
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.15
+
   packages/arbiter:
     dependencies:
       '@tempex/sdk':
@@ -42,6 +58,9 @@ importers:
       '@tempex/sdk':
         specifier: workspace:*
         version: link:../sdk
+      ox:
+        specifier: ^0.14.45
+        version: 0.14.45(typescript@5.9.3)(zod@4.6.5)
       viem:
         specifier: ^2.38.5
         version: 2.56.9(typescript@5.9.3)(zod@4.6.5)
@@ -68,6 +87,9 @@ importers:
 
   packages/sdk:
     dependencies:
+      ox:
+        specifier: ^0.14.45
+        version: 0.14.45(typescript@5.9.3)(zod@4.6.5)
       viem:
         specifier: ^2.38.5
         version: 2.56.9(typescript@5.9.3)(zod@4.6.5)
@@ -90,6 +112,9 @@ importers:
       next:
         specifier: 15.5.27
         version: 15.5.27(@types/node@22.20.4)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      ox:
+        specifier: ^0.14.45
+        version: 0.14.45(typescript@5.9.3)(zod@4.6.5)
       qrcode:
         specifier: 1.5.4
         version: 1.5.4

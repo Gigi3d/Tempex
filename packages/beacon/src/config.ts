@@ -67,6 +67,11 @@ export type BeaconConfig = {
   /// anchor, so the file can be copied between beacon instances without loss.
   dataDir: string;
   registryFile: string;
+  /// Where an owner approves an agent's pairing: the web app's /agents/pair page.
+  pairUrl: string;
+  agentProfilesFile: string;
+  /// Behind a reverse proxy, rate limits key on the first X-Forwarded-For hop.
+  trustProxy: boolean;
 
   /// How long a registration challenge stays valid. Short enough that a captured
   /// challenge cannot be replayed after the agent notices.
@@ -104,6 +109,9 @@ export function beaconConfigFromEnv(repoRoot: string = process.cwd()): BeaconCon
 
     dataDir,
     registryFile: resolve(dataDir, process.env['BEACON_REGISTRY_FILE'] ?? 'registry.json'),
+    pairUrl: stripTrailingSlash(process.env['BEACON_PAIR_URL'] || 'http://localhost:3000/agents/pair'),
+    agentProfilesFile: resolve(dataDir, 'agents.json'),
+    trustProxy: process.env['BEACON_TRUST_PROXY'] === '1',
     challengeTtlSeconds: Number(process.env['BEACON_CHALLENGE_TTL'] ?? 300),
   };
 }

@@ -10,6 +10,7 @@ import { Hash, Wordmark } from './ui';
 const NAV = [
   { href: '/demo', label: 'Demo' },
   { href: '/play', label: 'Play' },
+  { href: '/agents', label: 'Agents' },
   { href: '/cases', label: 'Cases' },
   { href: '/explorer', label: 'Explorer' },
   { href: '/arbiters', label: 'Arbiters' },

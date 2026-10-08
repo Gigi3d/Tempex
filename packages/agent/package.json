@@ -1,0 +1,30 @@
+{
+  "name": "@tempex/agent",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "description": "Agent wallets for Tempex: a scoped, limited, revocable Tempo access key under its owner's account, plus pairing and signing",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "tempex-agent": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "start": "tsx src/cli.ts",
+    "spike": "tsx scripts/spike.ts",
+    "test": "tsx --test test/*.test.ts"
+  },
+  "dependencies": {
+    "@tempex/sdk": "workspace:*",
+    "ox": "^0.14.45",
+    "viem": "^2.38.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2"
+  }
+}

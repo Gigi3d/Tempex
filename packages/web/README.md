@@ -7,6 +7,9 @@ blue for Bolt the seller.
 | Route | What it is |
 |---|---|
 | `/play` | **Judge's seat.** A real deal on Moderato, signed in the browser: passkey or in-tab keys, faucet funding, sponsored fees, then open, deliver, dispute, answer and rule. |
+| `/agents` | **Agent wallets.** Sign in with a passkey, pair a running agent or create a key, see every key's budget and expiry live from Tempo's keychain, change budgets, revoke. |
+| `/agents/pair/[code]` | An owner reviews an agent's pairing request and approves it with a passkey, granting less if they choose. |
+| `/agents/[owner]` | Public view of an account's agents and jobs. |
 | `/demo` | Demo Theater: job 4 replayed from its receipt in five acts. Works offline. |
 | `/cases`, `/cases/[id]` | The four-scenario corpus, with the clamp playground running the real guardrail. |
 | `/explorer`, `/explorer/[id]`, `/proof/[id]` | Every job from the beacon, and a shareable receipt with an OG image. |

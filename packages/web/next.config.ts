@@ -20,6 +20,29 @@ const config: NextConfig = {
   outputFileTracingRoot: fileURLToPath(new URL('../..', import.meta.url)),
   outputFileTracingIncludes: { '/proof/[id]/opengraph-image': ['./app/fonts/*.ttf'] },
   poweredByHeader: false,
+  // Security headers on every page. The agent console and the pairing approval
+  // are where an owner signs with a passkey, so no other site may frame them
+  // (clickjacking an approval is the attack to rule out), and passkeys are only
+  // usable from this origin.
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=(), payment=(), publickey-credentials-create=(self), publickey-credentials-get=(self)',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default config;

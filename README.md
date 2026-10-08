@@ -64,6 +64,7 @@ buyer                TempexEscrow                seller                arbiter
 | L3 | `packages/arbiter` | 2,075 | rules → band → prompt → LLM → clamp → certify → sign |
 | L4 | `packages/beacon` | 4,933 | 18-route front door: manifest, evidence, reputation, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
+| L7 | `packages/agent` | — | Agent wallets: a scoped, budgeted, revocable Tempo access key under the owner's account, with pairing, a CLI and an encrypted key store |
 | L6 | `packages/web` | — | The human frontend: Judge's seat (live deals from the browser), Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
@@ -84,12 +85,21 @@ pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign 
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
 pnpm smoke                  # live: SDK chain client + 185 beacon assertions, spends nothing
 pnpm court --sponsored      # arbiter over HTTP: POST /rule/:jobId with the evidence pinned on chain
+pnpm agent init && pnpm agent pair   # give an agent a wallet: its owner approves at /agents with a passkey
 pnpm --filter @tempex/web dev   # the website; set TEMPEX_COURT_URL to let /play call the referee
 ```
 
 `.env.example` already points at the public Moderato deployment, so the beacon's
 read-only surface — manifest, stats, jobs, proofs, reputation, onboarding — works
 before you generate a single key. Keys are only ever needed to *act*.
+
+## Agent wallets
+
+An agent never holds its owner's money. It holds a Tempo **access key** under the owner's account, which Tempo's account keychain limits to a budget per period, an expiry, and the Tempex escrow's functions for its role (plus `approve` with the escrow as the only spender). Everything the agent signs settles as the owner; earnings land in the owner's account.
+
+- **Pairing:** the agent makes its own P-256 key and sends the beacon a request signed by it, with a random witness. The owner opens the link, reviews it at `/agents/pair/<code>`, may grant less (never more), and approves with a passkey. That authorization binds the witness on chain, so it answers this request only. The beacon and the agent each verify it from the chain.
+- **Console:** `/agents` lists every key an owner authorized, read from the keychain's own events and state (budget left, expiry, total metered), with one-tap revoke and budget changes. `/agents/<owner>` is the public view.
+- **Measured on Moderato:** a scoped key opens and funds a job as its owner in one atomic transaction; over budget is refused (`SpendingLimitExceeded`) with nothing spent; any call outside the scope is refused (`CallNotAllowed`); a revoked key is refused. See `packages/agent/README.md` for the security model and how the budget is metered.
 
 ## The guardrail, in one paragraph
 
