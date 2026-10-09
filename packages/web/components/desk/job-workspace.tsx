@@ -315,6 +315,11 @@ function DisputeCard({ job, evidence, response, ruling }: { job: JobRecord; evid
           <p className="font-mono text-[22px] num">
             {pct(verdict?.sellerAwardBps ?? ruling!.sellerAwardBps)} <span className="text-[13px] text-fg-3">to the seller</span>
           </p>
+          {ruling ? (
+            <p className={`w-fit font-mono text-[11.5px] ${ruling.engine === 'llm' ? 'text-ref' : 'text-fg-3'}`}>
+              {ruling.engine === 'llm' ? `judged by ${ruling.model}, inside the band` : 'decided by the rule engine alone: no model was configured, so judgement criteria stood at the neutral midpoint'}
+            </p>
+          ) : null}
           {ruling ? <p className="max-w-[72ch] whitespace-pre-wrap text-[14px] text-fg-2">{ruling.rationale}</p> : null}
           {verdict ? (
             <p className="font-mono text-[12px] text-fg-3">

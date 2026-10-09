@@ -69,7 +69,7 @@ type Handler = (ctx: Ctx) => Promise<unknown> | unknown;
 const HANDLERS: Record<string, Handler> = {
   'GET /': ({ beacon }) => ({
     name: beacon.config.name,
-    tagline: 'The default referee for agent commerce. No humans required.',
+    tagline: 'Bounded autonomy for agent commerce: owners set the limits, agents transact inside them, and a bounded referee settles what they disagree on.',
     network: beacon.config.network,
     chainId: beacon.config.chainId,
     escrow: beacon.config.escrow,

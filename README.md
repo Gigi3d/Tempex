@@ -1,21 +1,33 @@
 # Tempex
 
-**The default referee for every MPP and x402 business. No humans required.**
+**Bounded autonomy for agent commerce: your agents spend, inside limits you set.**
 
-Agents can pay each other. They cannot disagree — a payment is boolean, but the work behind it is judged qualitatively, and no primitive settles "was this good enough?" Tempex is the missing referee: an escrow that holds the money, an arbiter that judges the delivery, and an on-chain guardrail that cages the judge inside the band the evidence justifies.
+Agents can now pay each other. The hard part is letting them do it without handing them your wallet, and settling the deal when the work comes back wrong. Tempex is three things that fit together on Tempo:
+
+1. **You set the limits.** Each agent gets its own Tempo access key with a budget per period, an expiry, and calls that only reach the Tempex escrow. You approve it with a passkey and revoke it in one tap. The chain enforces it; the agent cannot spend past it.
+2. **Agents do the deals.** An agent hires another agent, or gets hired through a link. The money waits in escrow until the work is delivered, and every step is signed by the key that took it, so you can see which agent did what.
+3. **A bounded referee settles disagreements.** Code decides every acceptance criterion it can check. A model judges the rest when one is configured. Neither can rule outside the range the evidence and both parties' offers allow, and the contract rejects any verdict that tries.
+
+**The wedge:** agent-to-agent subcontracting, tasks worth $5 to $500 with a deliverable that can be checked. Small enough that no one hires a lawyer, large enough that "pay and hope" is not acceptable.
+
+**Where it stands, plainly:**
+
+- Every job on chain so far was opened by us, testing. The next milestone is the first job from someone else: [hire links](#dashboard) exist to make that one link and one passkey prompt.
+- Every live ruling so far was decided by the rule engine alone (`tempex-rules/1`): no model was configured, so judgement criteria stood at the neutral midpoint. `pnpm demo judge` runs the real judge panel over the dispute corpus once `OPENAI_API_KEY` is set, and shows where it moved the award.
+- One disclosed key can upgrade the escrow today. It becomes a timelocked multisig, after an external audit, before mainnet.
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 85 Forge tests (two fuzzed), 63 arbiter tests and 10 web tests (`pnpm check`), including the audit's failure cases as regressions
+- 85 Forge tests (two fuzzed), plus 63 arbiter, 16 beacon, 15 agent, 24 web and 2 demo tests (`pnpm check`), including the audit's failure cases as regressions
 - Live deployment, v3: `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` ([explorer](https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a)), a UUPS proxy at block 38,737,474, deployed and verified by `pnpm deploy:escrow`. Launch guards: 500 alphaUSD per job, 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor, and a 20% referral share. It supersedes v2 at `0x001c…1157`, whose 7 jobs remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
-- Beacon smoke: 190 assertions against the live chain, 0 units spent
+- Beacon smoke: 214 assertions against the live chain, 0 units spent
 
 ## The four pillars
 
 | Pillar | What it means |
 |---|---|
-| **Custody** | Funds are provably locked in one escrow contract — never held by a trusted party. |
+| **Custody** | Funds are locked in one escrow contract, never held by us. One disclosed upgrade key can change the contract today; it becomes a timelocked multisig before mainnet. |
 | **Judgement** | Qualitative delivery is scored ("4 of 8 criteria met"), not reduced to yes/no. |
 | **Boundedness** | The judge has no unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the arbiter clamps the model's proposal into a rule-derived band inside that range, and the receipt lets anyone re-derive the band. |
 | **Verifiability** | A stranger can reconstruct exactly why the money moved: evidence hash, verdict digest, EIP-712 signature, JSON receipt per run. |
@@ -80,6 +92,7 @@ pnpm test:ts                # arbiter: checks, band properties, judge panel, aud
 pnpm check                  # all of the above, plus demo predict and drill
 
 pnpm demo drill             # offline: push scripted judge proposals through the band guardrail
+pnpm demo judge             # the real judge panel over the corpus, beside the rule engine (needs OPENAI_API_KEY)
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
@@ -106,6 +119,7 @@ An agent never holds its owner's money. It holds a Tempo **access key** under th
 
 `/dashboard` is where an owner works their deals, as buyer and as seller, from one passkey account.
 
+- **Hire links** (`/dashboard/offer`): a seller writes an offer once (what it delivers, how it is checked, the price and windows) and shares one link. `/hire/<seller>` shows the offer beside the seller's on-chain record; a buyer funds it with one passkey prompt, and an agent gets the exact `tempex-agent open` command. Nothing is stored: the offer lives in the link.
 - **Inbox:** every move the escrow would accept from you right now (deliver, review, answer a dispute, ask for a ruling, collect a lapsed review, reclaim an undelivered job), soonest deadline first, with live countdowns. The nav shows the count; the browser can alert you while the tab is open.
 - **Open a job** (`/dashboard/new`): seller with their on-chain record, terms with checked and judgement criteria, amount, windows, arbiter, referrer. The exact terms JSON and the hash the escrow will hold show before you sign; one passkey prompt approves, creates and funds.
 - **Job workspace** (`/dashboard/jobs/<id>`): the papers behind each on-chain hash (terms, delivered work, the buyer's evidence, the seller's answer), each re-hashed in the browser before it is shown; the move panel for your side; and the trail of every step with the key that signed it.

@@ -383,9 +383,9 @@ export function buildManifest(params: ManifestParams): Manifest {
     identity: {
       name: config.name,
       version: config.version,
-      tagline: 'The default referee for agent commerce. No humans required.',
+      tagline: 'Bounded autonomy for agent commerce: owners set the limits, agents transact inside them, and a bounded referee settles what they disagree on.',
       description:
-        'Tempex settles deals between agents that have never met and cannot sue each other. Money goes into an escrow on Tempo, delivery is hashed onto the chain, and a dispute is decided by a referee whose verdict the contract itself validates by signature. This beacon is the read-only front door: it indexes the escrow, derives reputation from it, prices discovery, and hands back calldata an agent signs with its own key.',
+        'Tempex lets agents transact inside limits their owners set: each agent signs with a Tempo access key scoped to a budget, an expiry and this escrow. It settles deals between agents that have never met and cannot sue each other. Money goes into an escrow on Tempo, delivery is hashed onto the chain, and a dispute is decided by a referee whose verdict the contract itself validates by signature. This beacon is the read-only front door: it indexes the escrow, derives reputation from it, prices discovery, and hands back calldata an agent signs with its own key.',
       host: config.host,
       network: config.network,
       chainId: config.chainId,

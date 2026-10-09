@@ -1,7 +1,11 @@
 import { formatBps } from '@tempex/arbiter';
 import { CHAIN_ID } from '@tempex/sdk';
 
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { drill, renderDrill } from './drill.js';
+import { judgeCorpus, renderComparisons } from './judge.js';
 import { caseHashes, predictAll, renderPredictions, ARBITRATION_FEE_BPS } from './predict.js';
 import { runDemo, type DemoResult } from './runner.js';
 import { DEFAULT_SCENARIO, SCENARIOS, scenarioById, type ScenarioId } from './scenarios.js';
@@ -94,6 +98,7 @@ function help(): void {
   out('  run       drive a dispute end to end against the live chain');
   out('  predict   run the rule engine over the corpus offline; no keys, no network');
   out('  drill     push scripted judge proposals through the band guardrail');
+  out('  judge     the real judge panel over the corpus, beside the rule engine (needs OPENAI_API_KEY)');
   out('  stages    the demo spine, in order, and what each stage proves');
   out('  scenarios the dispute corpus: what each case delivers and what it should rule');
   out('');
@@ -228,6 +233,20 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command === 'predict') return predict(flags);
   if (command === 'drill') return drillGuardrail();
+  if (command === 'judge') {
+    const { model, comparisons } = await judgeCorpus();
+    out('');
+    out(`judge panel (${model}) beside the rule engine, on the dispute corpus`);
+    out('');
+    process.stdout.write(renderComparisons(comparisons));
+    const dir = resolve(process.cwd(), '../../runs');
+    mkdirSync(dir, { recursive: true });
+    const file = resolve(dir, `judge-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
+    writeFileSync(file, `${JSON.stringify({ tempex: 'judge-comparison/1', model, at: new Date().toISOString(), comparisons }, null, 2)}\n`);
+    out('');
+    out(`written ${file}`);
+    return 0;
+  }
 
   if (command === 'run') {
     const asJson = boolFlag(flags, 'json');

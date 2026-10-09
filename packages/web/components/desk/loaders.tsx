@@ -27,6 +27,6 @@ export function WorkspaceLoader(props: { jobId: string; protocol: Protocol; init
   return <WorkspaceView {...props} />;
 }
 
-export function NewJobLoader(props: { context: NewJobContext }) {
+export function NewJobLoader(props: { context: NewJobContext; mode?: 'job' | 'offer' }) {
   return <NewJobView {...props} />;
 }

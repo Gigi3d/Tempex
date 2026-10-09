@@ -9,7 +9,9 @@ import { hashCanonical, tokenAmount, type Criterion, type CriterionCheck } from 
 import * as desk from '@/lib/desk';
 import { amount, pct, shortHash, txUrl } from '@/lib/format';
 import type { Protocol } from '@/lib/owner';
+import { decodeOffer, encodeOffer, type Offer } from '@/lib/offer';
 import type { Reputation } from '@/lib/types';
+import { CopyButton } from '../copy';
 
 import { OwnerBar } from '../agents/owner-bar';
 import { useOwner } from '../agents/use-owner';
@@ -64,8 +66,11 @@ function toCriterion(draft: DraftCriterion): Criterion | null {
 /// Writing a job: who does the work, what counts as done, what it pays and how
 /// long each side has. The terms are shown as the exact JSON that will be filed
 /// and hashed, with the hash the escrow will hold, before anything is signed.
-export function NewJob({ context }: { context: NewJobContext }) {
+export function NewJob({ context, mode = 'job' }: { context: NewJobContext; mode?: 'job' | 'offer' }) {
   const o = useOwner(context.protocol);
+  const offering = mode === 'offer';
+  const [offerLink, setOfferLink] = useState<string | null>(null);
+  const [fromOffer, setFromOffer] = useState<Offer | null>(null);
   const [seller, setSeller] = useState('');
   const [title, setTitle] = useState('');
   const [spec, setSpec] = useState('');
@@ -85,7 +90,25 @@ export function NewJob({ context }: { context: NewJobContext }) {
     if (ref && /^0x[0-9a-fA-F]{40}$/.test(ref)) setReferrer(ref);
     const to = new URLSearchParams(window.location.search).get('seller');
     if (to && /^0x[0-9a-fA-F]{40}$/.test(to)) setSeller(to);
-  }, []);
+    // A seller's hire link: the form opens with its offer, still editable, and the
+    // buyer's terms are what get filed and hashed.
+    const offer = decodeOffer(new URLSearchParams(window.location.search).get('o'));
+    if (offer && !offering) {
+      setFromOffer(offer);
+      setSeller(offer.seller);
+      setTitle(offer.title);
+      setSpec(offer.spec);
+      setCriteria(offer.criteria);
+      setPrice(offer.amount);
+      setDelivery(offer.deliverySeconds);
+      setReview(offer.reviewSeconds);
+    }
+  }, [offering]);
+
+  // Offering: the seller is whoever is signed in.
+  useEffect(() => {
+    if (offering && o.session) setSeller(o.session.address);
+  }, [offering, o.session]);
 
   useEffect(() => {
     setReputation(null);
@@ -124,18 +147,50 @@ export function NewJob({ context }: { context: NewJobContext }) {
   const termsHash = useMemo(() => (terms ? hashCanonical(terms) : null), [terms]);
 
   const problems: string[] = [];
-  if (!sellerAddress) problems.push('a seller address');
-  else if (me && sellerAddress.toLowerCase() === me.toLowerCase()) problems.push('a seller other than yourself');
+  if (offering && !me) problems.push('you to sign in, so buyers know whom they hire');
+  else if (!sellerAddress) problems.push('a seller address');
+  else if (!offering && me && sellerAddress.toLowerCase() === me.toLowerCase()) problems.push('a seller other than yourself');
   if (!title.trim()) problems.push('a title');
   if (!spec.trim()) problems.push('what to deliver');
   if (built.length === 0) problems.push('at least one acceptance criterion');
   if (!units || units === 0n) problems.push('an amount');
   else if (cap !== null && units > cap) problems.push(`an amount within the ${amount(cap)} αUSD launch cap`);
   if (referrer && !referrerAddress) problems.push('a valid referrer address (or none)');
-  if (o.balance !== null && units && units > o.balance) problems.push(`more αUSD in your wallet (you have ${amount(o.balance)})`);
+  if (!offering && o.balance !== null && units && units > o.balance) problems.push(`more αUSD in your wallet (you have ${amount(o.balance)})`);
 
   const arbiterFee = arbiter === 'house' ? context.house.feeBps : (context.listed.find((entry) => entry.arbiter === arbiter)?.feeBps ?? context.house.feeBps);
   const platformFee = units ? (units * BigInt(context.platformFeeBps)) / 10_000n : 0n;
+
+  if (offerLink) {
+    return (
+      <div className="flex flex-col gap-6">
+        <section className="panel flex flex-col gap-5 border-ref-dim p-8" aria-live="polite">
+          <p className="label text-ref">Your hire link</p>
+          <h2 className="h2">Send this to whoever should hire you.</h2>
+          <p className="max-w-[66ch] text-[15px] text-fg-2">
+            It opens your offer with your record beside it. A buyer reviews it and funds the job with one passkey prompt; an agent gets the exact command to open it. Nothing is stored: the offer lives in the link.
+          </p>
+          <div className="panel-sunk flex items-center gap-4 px-4 py-3 font-mono text-[12.5px]">
+            <span className="min-w-0 flex-1 truncate">{offerLink}</span>
+            <CopyButton value={offerLink} label="Copy the hire link">
+              <span className="btn px-3 py-1.5 text-[12px]">Copy</span>
+            </CopyButton>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <a className="btn btn-ref" href={offerLink} target="_blank" rel="noreferrer">
+              Preview as a buyer ↗
+            </a>
+            <button type="button" className="btn" onClick={() => setOfferLink(null)}>
+              Edit the offer
+            </button>
+            <Link className="btn" href="/dashboard">
+              Dashboard
+            </Link>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (opened) {
     const link = `${typeof window === 'undefined' ? '' : window.location.origin}/dashboard/jobs/${opened.jobId}`;
@@ -177,6 +232,11 @@ export function NewJob({ context }: { context: NewJobContext }) {
         onSubmit={async (event) => {
           event.preventDefault();
           if (!draft || problems.length > 0 || !o.session) return;
+          if (offering) {
+            const offer: Offer = { v: 1, seller: o.session.address, title: title.trim(), spec: spec.trim(), criteria: criteria.filter((c) => c.text.trim()), amount: price, deliverySeconds: delivery, reviewSeconds: review };
+            setOfferLink(`${window.location.origin}/hire/${o.session.address}?o=${encodeOffer(offer)}`);
+            return;
+          }
           const result = await o.run('Filing the terms, then approving, creating and funding with your passkey', () => desk.openJob(o.session!, draft));
           if (result) {
             setOpened({ jobId: result.jobId, hash: result.hash, termsHash: result.termsHash });
@@ -185,7 +245,17 @@ export function NewJob({ context }: { context: NewJobContext }) {
         }}
       >
         <div className="flex min-w-0 flex-col gap-px border hairline bg-line">
+          {offering ? (
+            <Step n="01" title="You are the seller">
+              <p className="text-[14px] text-fg-2">
+                Buyers hire <span className="font-mono text-[13px] text-fg">{me ? shortHash(me, 10, 8) : 'your account, once you sign in'}</span>. They see your on-chain record beside the offer, and payment lands in your escrow credit when the work is accepted.
+              </p>
+            </Step>
+          ) : (
           <Step n="01" title="Who does the work">
+            {fromOffer ? (
+              <p className="border border-ref-dim px-4 py-3 text-[13px] text-ref">From the seller&rsquo;s hire link. Everything below is theirs to start from and yours to change before you sign.</p>
+            ) : null}
             <Field label="Seller address">
               <input value={seller} onChange={(event) => setSeller(event.target.value)} placeholder="0x…" spellCheck={false} className="panel-sunk px-4 py-3 font-mono text-[14px]" />
             </Field>
@@ -211,6 +281,7 @@ export function NewJob({ context }: { context: NewJobContext }) {
               </div>
             ) : null}
           </Step>
+          )}
 
           <Step n="02" title="What counts as done">
             <Field label="Title">
@@ -301,6 +372,7 @@ export function NewJob({ context }: { context: NewJobContext }) {
             {cap !== null ? <p className="font-mono text-[11.5px] text-fg-3">launch cap: {amount(cap)} αUSD per job</p> : null}
           </Step>
 
+          {offering ? null : (
           <Step n="04" title="Who rules if you disagree">
             <div className="flex flex-col gap-2" role="radiogroup" aria-label="Arbiter">
               <ArbiterOption checked={arbiter === 'house'} onSelect={() => setArbiter('house')} title="House arbiter" detail={`${pct(context.house.feeBps)} fee, charged only on a ruling`} address={context.house.arbiter} />
@@ -315,13 +387,14 @@ export function NewJob({ context }: { context: NewJobContext }) {
             </Field>
             {referrerAddress ? <p className="font-mono text-[11.5px] text-fg-3">earns {pct(context.referralShareBps)} of the protocol&rsquo;s fees on this job; costs you nothing extra</p> : null}
           </Step>
+          )}
         </div>
 
         <aside className="flex flex-col gap-4 lg:sticky lg:top-20">
           <section className="panel flex flex-col gap-4 p-5">
-            <p className="label text-ref">Summary</p>
+            <p className="label text-ref">{offering ? 'Your offer' : 'Summary'}</p>
             <dl className="grid grid-cols-[1fr_auto] gap-y-2 text-[14px]">
-              <dt className="text-fg-2">Escrowed now</dt>
+              <dt className="text-fg-2">{offering ? 'Your price' : 'Escrowed now'}</dt>
               <dd className="font-mono num">{units ? amount(units) : '—'}</dd>
               <dt className="text-fg-2">Platform fee, on accept</dt>
               <dd className="font-mono num text-fg-3">{pct(context.platformFeeBps)} · {amount(platformFee)}</dd>
@@ -334,17 +407,19 @@ export function NewJob({ context }: { context: NewJobContext }) {
               <dd className="font-mono text-ref">sponsored</dd>
             </dl>
             <p className="border-t hairline pt-3 text-[12.5px] leading-relaxed text-fg-3">
-              One passkey prompt approves {units ? amount(units) : 'the amount'} αUSD to the escrow, creates the job and funds it, in a single Tempo transaction. All three land or none do.
+              {offering
+                ? 'Nothing is signed or stored. The link carries the offer; the buyer files the terms and funds the job when they hire you.'
+                : `One passkey prompt approves ${units ? amount(units) : 'the amount'} αUSD to the escrow, creates the job and funds it, in a single Tempo transaction. All three land or none do.`}
             </p>
             {problems.length > 0 ? (
               <p className="text-[12.5px] text-pip">Still needs {problems.join(', ')}.</p>
             ) : null}
             <button type="submit" className="btn btn-ref justify-center" disabled={!o.session || problems.length > 0 || !!o.busy}>
-              {o.session ? 'Open and fund with passkey' : 'Sign in to open a job'}
+              {offering ? 'Create hire link' : o.session ? 'Open and fund with passkey' : 'Sign in to open a job'}
             </button>
           </section>
           {terms ? (
-            <JsonView value={terms} label="terms to be filed" depth={2} caption={termsHash ? `hash ${shortHash(termsHash, 8, 6)}` : undefined} />
+            <JsonView value={terms} label={offering ? 'terms a buyer will file' : 'terms to be filed'} depth={2} caption={termsHash ? `hash ${shortHash(termsHash, 8, 6)}` : undefined} />
           ) : (
             <div className="panel-sunk p-5 text-[13px] text-fg-3">The exact terms JSON, and the hash the escrow will hold, appear here as you fill the form.</div>
           )}

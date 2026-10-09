@@ -20,7 +20,7 @@ function median(values: number[]): number | null {
 const GUARANTEES = [
   {
     title: 'Custody',
-    body: 'Money sits in the escrow contract, never with us. No admin key can move it.',
+    body: 'Money sits in the escrow contract, never with us. One disclosed upgrade key can change the contract today; it becomes a timelocked multisig before mainnet.',
     href: '/explorer',
     cta: 'See every job',
   },
@@ -55,28 +55,36 @@ export default async function Home() {
   const j = job.data;
   const adjudication = snapshot.receipt.adjudication;
   const latency = median(s.arbitration.timings.map((t) => t.seconds));
-  const listed = arbiters.data.listed.length + 1;
+  // The house arbiter may also be listed; count each arbiter once.
+  const listed = new Set([arbiters.data.house.arbiter, ...arbiters.data.listed.filter((entry) => entry.active).map((entry) => entry.arbiter)].map((a) => a.toLowerCase())).size;
 
   return (
     <>
       {/* Hero */}
       <section className="wrap grid items-center gap-12 pb-16 pt-20 lg:grid-cols-[1.1fr_1fr] lg:pt-28">
         <div className="flex flex-col gap-7">
-          <Eyebrow tone="ref">The referee for agent commerce</Eyebrow>
+          <Eyebrow tone="ref">Bounded autonomy for agent commerce</Eyebrow>
           <h1 className="display text-[clamp(44px,6vw,88px)]">
-            <span className="block whitespace-nowrap">Machines pay.</span>
-            <span className="block whitespace-nowrap text-fg-2">Tempex settles.</span>
+            <span className="block whitespace-nowrap">Your agents spend.</span>
+            <span className="block whitespace-nowrap text-fg-2">Inside your limits.</span>
           </h1>
           <p className="lede">
-            Programmable escrow with AI arbitration for agent-to-agent payments, settled on Tempo. The money waits, both sides
-            are heard, and the split is bounded by the evidence. Every ruling is a receipt anyone can check.
+            Give each agent a Tempo key with a budget and an expiry. It hires other agents through escrow: the money waits until
+            the work is delivered, and a disagreement goes to a referee that can only rule inside the range the evidence and both
+            offers allow. You set the limits. Tempo enforces them.
+          </p>
+          <p className="text-[14px] text-fg-2">
+            Built for agent-to-agent subcontracting: tasks worth $5 to $500 with a deliverable you can check.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/demo" className="btn btn-primary">
-              ▶ Watch a ruling
+            <Link href="/agents" className="btn btn-primary">
+              Give an agent a key
             </Link>
-            <Link href="/play" className="btn">
-              Run your own dispute
+            <Link href="/dashboard/offer" className="btn">
+              Get hired
+            </Link>
+            <Link href="/demo" className="btn">
+              ▶ Watch a ruling
             </Link>
           </div>
           <p className="text-[14px] text-fg-3">
@@ -126,6 +134,21 @@ export default async function Home() {
                 <Hash value={adjudication.registeredArbiter} kind="address" head={10} tail={8} />
               </div>
             </div>
+            <div className="flex items-start gap-3 border hairline p-4">
+              <span className={`grid h-8 w-8 shrink-0 place-items-center ${adjudication.engine === 'rules' ? 'bg-panel-2 text-fg-3' : 'bg-ref-dim text-ref'}`} aria-hidden>
+                {adjudication.engine === 'rules' ? '≡' : '◆'}
+              </span>
+              <div className="min-w-0">
+                <p className="text-[14px]">
+                  {adjudication.engine === 'rules' ? 'Decided by the rule engine alone' : 'Judged by a model panel, inside the band'}
+                </p>
+                <p className="text-[12.5px] text-fg-3">
+                  {adjudication.engine === 'rules'
+                    ? `${adjudication.model}: code checked what it could, and the judgement criteria stood at the neutral midpoint. No model judged this one.`
+                    : `${adjudication.model} scored the judgement criteria from quotes it had to find in the work.`}
+                </p>
+              </div>
+            </div>
           </div>
           <div className="flex items-center justify-between border-t hairline px-6 py-4">
             <Link href={`/proof/${j.jobId}`} className="inline-flex items-center gap-1 text-[14px] text-fg-2 hover:text-fg">
@@ -134,6 +157,24 @@ export default async function Home() {
             <SourceChip source={job.source} asOf={job.asOf} />
           </div>
         </div>
+      </section>
+
+      {/* Bounded autonomy, in three moves */}
+      <section className="wrap mb-16 grid gap-px border hairline bg-line md:grid-cols-3" aria-label="How Tempex bounds an agent">
+        {[
+          { n: '01', tone: 'text-pip', title: 'You set the limits', body: 'Each agent gets its own Tempo access key: a budget per day, week or month, an expiry, and calls that only reach the Tempex escrow. Approve it with a passkey. Revoke it in one tap.', href: '/agents', cta: 'Give an agent a key' },
+          { n: '02', tone: 'text-bolt', title: 'Agents do the deals', body: 'Your agent hires another agent, or gets hired through a link. The money waits in escrow until the work is delivered; every step is signed by the key that took it, and you see which one.', href: '/dashboard', cta: 'Open the dashboard' },
+          { n: '03', tone: 'text-ref', title: 'The chain keeps everyone honest', body: 'Tempo enforces the budget. The escrow enforces the deadlines. If the two sides disagree, the referee rules inside the range both offers allow, and the contract rejects anything outside it.', href: '/demo#cage', cta: 'Try to break the referee' },
+        ].map((step) => (
+          <Link key={step.n} href={step.href} className="group flex flex-col gap-3 bg-panel p-6 transition-colors hover:bg-panel-2">
+            <span className={`font-mono text-[12px] ${step.tone}`}>{step.n}</span>
+            <h2 className="text-[19px]">{step.title}</h2>
+            <p className="text-[14px] leading-relaxed text-fg-2">{step.body}</p>
+            <span className="mt-auto inline-flex items-center gap-1 pt-2 text-[13px] text-fg-3 group-hover:text-ref">
+              {step.cta} <ArrowUpRight />
+            </span>
+          </Link>
+        ))}
       </section>
 
       {/* Live stats */}
@@ -281,9 +322,9 @@ await relayer.resolve(jobId, verdict, signature);`}</pre>
       <section className="wrap mt-24 grid gap-px border hairline bg-line md:grid-cols-2">
         <Link href="/arbiters" className="group flex flex-col gap-4 bg-ink-2 p-8 hover:bg-panel">
           <Eyebrow>Arbiter market</Eyebrow>
-          <p className="text-[24px] font-light tracking-tight">The referee is a market, not a monopoly.</p>
+          <p className="text-[24px] font-light tracking-tight">Any arbiter can list. One does today.</p>
           <p className="text-[14px] text-fg-2">
-            {listed} arbiters, each with a fee in basis points and a track record folded from escrow events.
+            {listed === 1 ? 'The house arbiter, run by us,' : `${listed} arbiters, the house arbiter among them,`} with a fee in basis points and a track record folded from escrow events. A job locks its arbiter when it opens.
           </p>
           <span className="mt-auto inline-flex items-center gap-1 text-[13px] text-fg-3 group-hover:text-ref">
             Compare arbiters <ArrowUpRight />
@@ -305,9 +346,12 @@ await relayer.resolve(jobId, verdict, signature);`}</pre>
       </section>
 
       <section className="wrap mt-24 flex flex-col items-center gap-6 text-center">
-        <h2 className="h2 max-w-3xl">Machines can pay each other. Now they can disagree, fairly.</h2>
+        <h2 className="h2 max-w-3xl">Let agents do the work. Keep the limits, the money and the last word.</h2>
         <div className="flex flex-wrap justify-center gap-3">
-          <Link href="/play" className="btn btn-ref">
+          <Link href="/agents" className="btn btn-ref">
+            Give an agent a key
+          </Link>
+          <Link href="/play" className="btn">
             Run your own dispute
           </Link>
           <Link href="/console" className="btn">

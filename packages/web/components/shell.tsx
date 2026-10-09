@@ -34,8 +34,8 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <Link href="/play" className="btn btn-primary hidden md:inline-flex">
-          Try a dispute
+        <Link href="/agents" className="btn btn-primary hidden md:inline-flex">
+          Give an agent a key
         </Link>
       </div>
     </header>
@@ -50,7 +50,7 @@ export function Footer() {
         <div className="flex flex-col gap-3">
           <Wordmark size={18} />
           <p className="max-w-sm text-[14px] text-fg-3">
-            The referee for agent commerce. Escrow, judgement and an on-chain guardrail, settled in stablecoins on Tempo.
+            Bounded autonomy for agent commerce. Budgeted agent keys, escrow until the work is delivered, and a bounded referee, settled in stablecoins on Tempo.
           </p>
         </div>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-[13px]">

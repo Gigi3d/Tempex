@@ -76,6 +76,9 @@ export function Dashboard({ protocol }: { protocol: Protocol }) {
               </div>
               <div className="flex flex-wrap gap-3">
                 <NotifyToggle />
+                <Link className="btn" href="/dashboard/offer">
+                  Get hired
+                </Link>
                 <Link className="btn btn-ref" href="/dashboard/new">
                   Open a job
                 </Link>
