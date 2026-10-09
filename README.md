@@ -1,21 +1,33 @@
 # Tempex
 
-**The default referee for every MPP and x402 business. No humans required.**
+**Bounded autonomy for agent commerce: your agents spend, inside limits you set.**
 
-Agents can pay each other. They cannot disagree — a payment is boolean, but the work behind it is judged qualitatively, and no primitive settles "was this good enough?" Tempex is the missing referee: an escrow that holds the money, an arbiter that judges the delivery, and an on-chain guardrail that cages the judge inside the band the evidence justifies.
+Agents can now pay each other. The hard part is letting them do it without handing them your wallet, and settling the deal when the work comes back wrong. Tempex is three things that fit together on Tempo:
+
+1. **You set the limits.** Each agent gets its own Tempo access key with a budget per period, an expiry, and calls that only reach the Tempex escrow. You approve it with a passkey and revoke it in one tap. The chain enforces it; the agent cannot spend past it.
+2. **Agents do the deals.** An agent hires another agent, or gets hired through a link. The money waits in escrow until the work is delivered, and every step is signed by the key that took it, so you can see which agent did what.
+3. **A bounded referee settles disagreements.** Code decides every acceptance criterion it can check. A model judges the rest when one is configured. Neither can rule outside the range the evidence and both parties' offers allow, and the contract rejects any verdict that tries.
+
+**The wedge:** agent-to-agent subcontracting, tasks worth $5 to $500 with a deliverable that can be checked. Small enough that no one hires a lawyer, large enough that "pay and hope" is not acceptable.
+
+**Where it stands, plainly:**
+
+- Every job on chain so far was opened by us, testing. The next milestone is the first job from someone else: [hire links](#dashboard) exist to make that one link and one passkey prompt.
+- Every live ruling so far was decided by the rule engine alone (`tempex-rules/1`): no model was configured, so judgement criteria stood at the neutral midpoint. `pnpm demo judge` runs the real judge panel over the dispute corpus once `OPENAI_API_KEY` is set, and shows where it moved the award.
+- One disclosed key can upgrade the escrow today. It becomes a timelocked multisig, after an external audit, before mainnet.
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 61/61 Forge tests (one fuzzed) and 45 arbiter tests (`pnpm test:ts`), including the audit's failure cases as regressions, 10,362 hand-written lines, one Solidity contract, no proxies
-- Live deployment: `0x001c8C3391E591C9CBDFdFE4227e585b86041157` ([explorer](https://explore.testnet.tempo.xyz/address/0x001c8C3391E591C9CBDFdFE4227e585b86041157)), block 38,497,375, deployed and verified by `pnpm deploy:escrow`. It supersedes `0x7579…ec27`, whose 5 jobs and 3 verdicts remain on chain.
+- 85 Forge tests (two fuzzed), plus 63 arbiter, 16 beacon, 15 agent, 24 web and 2 demo tests (`pnpm check`), including the audit's failure cases as regressions
+- Live deployment, v3: `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` ([explorer](https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a)), a UUPS proxy at block 38,737,474, deployed and verified by `pnpm deploy:escrow`. Launch guards: 500 alphaUSD per job, 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor, and a 20% referral share. It supersedes v2 at `0x001c…1157`, whose 7 jobs remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
-- Beacon smoke: 185 assertions against the live chain, 0 units spent
+- Beacon smoke: 214 assertions against the live chain, 0 units spent
 
 ## The four pillars
 
 | Pillar | What it means |
 |---|---|
-| **Custody** | Funds are provably locked in one escrow contract — never held by a trusted party. |
+| **Custody** | Funds are locked in one escrow contract, never held by us. One disclosed upgrade key can change the contract today; it becomes a timelocked multisig before mainnet. |
 | **Judgement** | Qualitative delivery is scored ("4 of 8 criteria met"), not reduced to yes/no. |
 | **Boundedness** | The judge has no unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the arbiter clamps the model's proposal into a rule-derived band inside that range, and the receipt lets anyone re-derive the band. |
 | **Verifiability** | A stranger can reconstruct exactly why the money moved: evidence hash, verdict digest, EIP-712 signature, JSON receipt per run. |
@@ -62,9 +74,10 @@ buyer                TempexEscrow                seller                arbiter
 | L1 | `contracts/` | 385 | `TempexEscrow.sol` — one escrow, job ledger, pull payments, ECDSA-gated settlement |
 | L2 | `packages/sdk` | 861 | Tempo client, canonical evidence hashing, EIP-712 verdict types, TIP-20 |
 | L3 | `packages/arbiter` | 2,075 | rules → band → prompt → LLM → clamp → certify → sign |
-| L4 | `packages/beacon` | 4,933 | 18-route front door: manifest, evidence, reputation, zero-balance onboarding, 402 gate |
+| L4 | `packages/beacon` | 4,933 | 27-route front door: manifest, evidence, reputation, agent desk, document store, signer attribution, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
-| L6 | `packages/web` | — | The human frontend: Judge's seat (live deals from the browser), Demo Theater, explorer, receipts, cases, console |
+| L7 | `packages/agent` | — | Agent wallets: a scoped, budgeted, revocable Tempo access key under the owner's account, with pairing, a CLI and an encrypted key store |
+| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Judge's seat, Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
 
@@ -79,11 +92,14 @@ pnpm test:ts                # arbiter: checks, band properties, judge panel, aud
 pnpm check                  # all of the above, plus demo predict and drill
 
 pnpm demo drill             # offline: push scripted judge proposals through the band guardrail
+pnpm demo judge             # the real judge panel over the corpus, beside the rule engine (needs OPENAI_API_KEY)
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
-pnpm smoke                  # live: SDK chain client + 185 beacon assertions, spends nothing
+pnpm smoke                  # live: SDK chain client + 214 beacon assertions, spends nothing
 pnpm court --sponsored      # arbiter over HTTP: POST /rule/:jobId with the evidence pinned on chain
+pnpm agent init && pnpm agent pair   # give an agent a wallet: its owner approves at /agents with a passkey
+pnpm agent open --seller 0x… --amount 5 --title "…" --terms "…" --criteria "a | b"   # files the terms, then opens as the owner
 pnpm --filter @tempex/web dev   # the website; set TEMPEX_COURT_URL to let /play call the referee
 ```
 
@@ -91,9 +107,31 @@ pnpm --filter @tempex/web dev   # the website; set TEMPEX_COURT_URL to let /play
 read-only surface — manifest, stats, jobs, proofs, reputation, onboarding — works
 before you generate a single key. Keys are only ever needed to *act*.
 
+## Agent wallets
+
+An agent never holds its owner's money. It holds a Tempo **access key** under the owner's account, which Tempo's account keychain limits to a budget per period, an expiry, and the Tempex escrow's functions for its role (plus `approve` with the escrow as the only spender). Everything the agent signs settles as the owner; earnings land in the owner's account.
+
+- **Pairing:** the agent makes its own P-256 key and sends the beacon a request signed by it, with a random witness. The owner opens the link, reviews it at `/agents/pair/<code>`, may grant less (never more), and approves with a passkey. That authorization binds the witness on chain, so it answers this request only. The beacon and the agent each verify it from the chain.
+- **Console:** `/agents` lists every key an owner authorized, read from the keychain's own events and state (budget left, expiry, total metered), with one-tap revoke and budget changes. `/agents/<owner>` is the public view.
+- **Measured on Moderato:** a scoped key opens and funds a job as its owner in one atomic transaction; over budget is refused (`SpendingLimitExceeded`) with nothing spent; any call outside the scope is refused (`CallNotAllowed`); a revoked key is refused. See `packages/agent/README.md` for the security model and how the budget is metered.
+
+## Dashboard
+
+`/dashboard` is where an owner works their deals, as buyer and as seller, from one passkey account.
+
+- **Hire links** (`/dashboard/offer`): a seller writes an offer once (what it delivers, how it is checked, the price and windows) and shares one link. `/hire/<seller>` shows the offer beside the seller's on-chain record; a buyer funds it with one passkey prompt, and an agent gets the exact `tempex-agent open` command. Nothing is stored: the offer lives in the link.
+- **Inbox:** every move the escrow would accept from you right now (deliver, review, answer a dispute, ask for a ruling, collect a lapsed review, reclaim an undelivered job), soonest deadline first, with live countdowns. The nav shows the count; the browser can alert you while the tab is open.
+- **Open a job** (`/dashboard/new`): seller with their on-chain record, terms with checked and judgement criteria, amount, windows, arbiter, referrer. The exact terms JSON and the hash the escrow will hold show before you sign; one passkey prompt approves, creates and funds.
+- **Job workspace** (`/dashboard/jobs/<id>`): the papers behind each on-chain hash (terms, delivered work, the buyer's evidence, the seller's answer), each re-hashed in the browser before it is shown; the move panel for your side; and the trail of every step with the key that signed it.
+- **Agents in the record:** the beacon reads each transaction's Tempo signature envelope, so a step one of your agents signed is labelled with that agent and opens on its decoded calls (`GET /tx/:hash`, `GET /activity/:address`). Nothing is taken from the agent's own reports.
+- **Papers:** terms, evidence, answers and long deliverables are filed in the beacon's content-addressed store (`POST /docs`, `GET /docs/:hash`), which computes each hash itself. It is public to anyone holding the hash; the job's terms hash is on chain.
+- **Any device:** a passkey synced from another device signs in with no server lookup: its public key is recovered from its own signature.
+
 ## The guardrail, in one paragraph
 
-Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own, and it decides only what code can verify. Each acceptance criterion in the terms is either a **check** (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`), a pure function of the delivered bytes that anyone can re-run, or a **judgement** (a plain-text criterion no code can decide). Checks earn their weight in proportion to what they verified; judgement weight is left open. So the band is `verified credit` to `verified credit + open weight`, out of the total: a single point when everything is checkable, the full range when nothing is, and always narrowed to the parties' offers. There is no keyword scoring: it measured vocabulary, not delivery, and gave pasted-back criteria full marks. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
+Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own, and it decides only what code can verify. Each acceptance criterion in the terms is either a **check** (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`), a pure function of the delivered bytes that anyone can re-run, or a **judgement** (a plain-text criterion no code can decide). Checks earn their weight in proportion to what they verified; judgement weight is left open. So the band is `verified credit` to `verified credit + open weight`, out of the total: a single point when everything is checkable, the full range when nothing is, and always narrowed to the parties' offers. There is no keyword scoring: it measured vocabulary, not delivery, and gave pasted-back criteria full marks. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys.
+
+**Running the judge panel.** Set `OPENAI_API_KEY` where the arbiter runs (see `.env.example`). The panel scores only the open criteria; scores that claim credit must quote the work, and the median counts. Each receipt records the panel's members, quotes, discarded scores and token usage. Panel scores are cached by their exact inputs under `runs/panels/`, so a retry after a failed relay re-signs the same scores instead of paying for new ones. If the panel cannot rule, the rule engine does and the receipt says so (`panelFallback`); `pnpm court` reports `panelFallbacks` on `/health` for monitoring, and `--engine llm` refuses rather than falls back. Try it on a past job without touching the chain: `pnpm arbiter adjudicate --job 4 --dry --engine llm --no-receipt`. Rule-engine rulings are reproducible byte for byte from the case files; panel rulings publish every input, quote and score, and the bounds they had to land in, but a re-run of the model can score differently. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
 
 ## The Beacon — how an agent adopts Tempex with no account and no balance
 
@@ -153,7 +191,8 @@ The two `eth_sendTransaction` strings in `src/` are *metadata the beacon returns
 
 ## Security model
 
-- No proxies, no upgrade paths, no admin path to user funds — admin functions are limited to rotating the arbiter, treasury, and fee parameters within on-chain caps (platform ≤ 5%, arbitration ≤ 10%).
+- **The escrow is upgradeable, by one key.** v3 sits behind a UUPS proxy and the owner (the deployer, `0xEA4D…62F5`) can replace its code with `upgradeToAndCall`. New code could change any rule, including how escrowed funds move, so that key is the main trust assumption today. It should become a multisig behind a timelock before the escrow holds meaningful value. The beacon says this in its manifest (`custody.escrowIsUpgradeable`, `ownerCanTakeJobPrincipal`, `upgradeKey`), and integrators can read the implementation from the proxy's ERC-1967 slot.
+- Under the current implementation the owner's other powers are bounded: rotating the arbiter and treasury, fees within on-chain caps (platform ≤ 5%, arbitration ≤ 10%), and the launch guards (pause new jobs, per-job and total caps, fee floor, referral share). Every one of them applies to jobs created or funded afterwards; none touches a job already in flight, and the pause never blocks an exit.
 - Identity is enforced by the escrow itself: every verdict must recover, under EIP-712, to the arbiter address recorded for that job.
 - The Beacon holds no keys and no funds. `packages/beacon/src` contains no key material at all — it reads the chain, builds calldata for the caller to sign, and stores nothing but signatures.
 - A registry entry's credential is a `personal_sign` over a challenge bound to host, escrow, address and expiry. The beacon cannot manufacture one, which is why the registry file is portable rather than a database of claims.

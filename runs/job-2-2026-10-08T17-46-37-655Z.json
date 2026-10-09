@@ -1,0 +1,149 @@
+{
+  "tempex": "adjudication-receipt/1",
+  "command": "court",
+  "at": "2026-10-08T17:46:37.656Z",
+  "chainId": 42431,
+  "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "relayExplorer": "https://explore.testnet.tempo.xyz/tx/0x6963a8ffe1cf016fc87907377947f4fdc1d3d4f5b0e4ca51a49a33d21b5c03e1",
+  "jobId": 2,
+  "engine": "rules",
+  "model": "tempex-rules/1",
+  "amount": "12500000",
+  "evidenceHash": "0x4296d2008c7fe4fb5091e1a9bcfd15d5322e9956f26c62d64b02a0b6a584cb3f",
+  "ruling": {
+    "jobId": 2,
+    "sellerAwardBps": 500,
+    "evidenceHash": "0x4296d2008c7fe4fb5091e1a9bcfd15d5322e9956f26c62d64b02a0b6a584cb3f",
+    "rationaleHash": "0xb70d780bb5b847da478ceda3dcfad53fdd7e53b4f7e3eeaa87b268bd93262df5",
+    "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.00; the deliverable is not JSON, so nothing can be selected from it. french \"The strings are written in French\" (language, weight 2): earned 0.00; the deliverable is not JSON, so nothing can be selected from it. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; the deliverable is not JSON, so nothing can be selected from it. dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; the deliverable is not JSON, so nothing can be selected from it. glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; the deliverable is not JSON, so nothing can be selected from it. tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 0.00 of 10 weight, 1 open; band 0-1000 bps; ruling 500 bps of the disputed amount, i.e. 5.0% to the seller of \"The criteria, pasted back as the delivery\" (job 2).",
+    "issuedAt": 1791481594,
+    "validUntil": 1791567996,
+    "model": "tempex-rules/1"
+  },
+  "verdict": {
+    "jobId": "2",
+    "sellerAwardBps": 500,
+    "evidenceHash": "0x4296d2008c7fe4fb5091e1a9bcfd15d5322e9956f26c62d64b02a0b6a584cb3f",
+    "rationaleHash": "0xb70d780bb5b847da478ceda3dcfad53fdd7e53b4f7e3eeaa87b268bd93262df5",
+    "issuedAt": "1791481594",
+    "validUntil": "1791567996"
+  },
+  "signature": "0x3e48390aa944efc9109716522fd068ed9718b962c5aa8bd92b2e1bf4ede3a1977b1d6e72a22a8c0f6a4566ab3da52adfd550d5cd202c0146cf0e2bb3411b92051b",
+  "digest": "0x6ce57b95150e06252371540309f24921917054da820989e3f50b5d5ebc8756fc",
+  "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "certified": true,
+  "money": {
+    "amount": "12500000",
+    "bond": "625000",
+    "bondToSeller": "30000",
+    "arbitrationFee": "500000",
+    "arbitrationFeeBps": 200,
+    "sellerAmount": "180000",
+    "buyerAmount": "12445000"
+  },
+  "band": {
+    "lowBps": 0,
+    "highBps": 1000,
+    "center": 500
+  },
+  "offers": {
+    "lowBps": 0,
+    "highBps": 10000
+  },
+  "boundedBand": {
+    "lowBps": 0,
+    "highBps": 1000,
+    "center": 500
+  },
+  "signals": {
+    "criteria": [
+      {
+        "id": "keys",
+        "text": "Every checkout and email string in the brief is delivered",
+        "weight": 3,
+        "kind": "check",
+        "check": "jsonKeys",
+        "credit": 0,
+        "passed": false,
+        "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+      },
+      {
+        "id": "french",
+        "text": "The strings are written in French",
+        "weight": 2,
+        "kind": "check",
+        "check": "language",
+        "credit": 0,
+        "passed": false,
+        "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+      },
+      {
+        "id": "prices",
+        "text": "Prices use the French format, e.g. 12,50 €",
+        "weight": 2,
+        "kind": "check",
+        "check": "regex",
+        "credit": 0,
+        "passed": false,
+        "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+      },
+      {
+        "id": "dates",
+        "text": "Dates use the French long format, e.g. 7 octobre 2026",
+        "weight": 1,
+        "kind": "check",
+        "check": "regex",
+        "credit": 0,
+        "passed": false,
+        "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+      },
+      {
+        "id": "glossary",
+        "text": "The supplied glossary terms are used",
+        "weight": 1,
+        "kind": "check",
+        "check": "contains",
+        "credit": 0,
+        "passed": false,
+        "evidence": "the deliverable is not JSON, so nothing can be selected from it"
+      },
+      {
+        "id": "tone",
+        "text": "The copy reads naturally to a French shopper",
+        "weight": 1,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      }
+    ],
+    "totalWeight": 10,
+    "checkedWeight": 9,
+    "earnedWeight": 0,
+    "openWeight": 1,
+    "artifactsDeclared": 0,
+    "artifactsVerifiable": 0,
+    "evidenceStrength": 1,
+    "integrity": {
+      "termsHashMatches": true,
+      "deliverableHashMatches": true
+    },
+    "scoredCopy": "uri",
+    "deliverableText": "Every checkout and email string in the brief is delivered. The strings are written in French. Prices use the French format, e.g. 12,50 €. Dates use the French long format, e.g. 7 octobre 2026. The supplied glossary terms are used. The copy reads naturally to a French shopper.",
+    "sellerResponded": true
+  },
+  "clamped": false,
+  "flags": [],
+  "notes": [
+    "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+  ],
+  "relay": {
+    "jobId": 2,
+    "digest": "0x6ce57b95150e06252371540309f24921917054da820989e3f50b5d5ebc8756fc",
+    "sellerAwardBps": 500,
+    "sellerAmount": "180000",
+    "buyerAmount": "12445000",
+    "arbitrationFee": "500000",
+    "hash": "0x6963a8ffe1cf016fc87907377947f4fdc1d3d4f5b0e4ca51a49a33d21b5c03e1"
+  }
+}

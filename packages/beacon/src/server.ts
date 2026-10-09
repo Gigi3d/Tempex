@@ -8,7 +8,12 @@ import {
   type BlueprintAction,
   type RefreshResult,
 } from './beacon.js';
+import { resolve as resolvePath } from 'node:path';
+
+import { AgentDesk } from './agents.js';
 import { endpoint } from './config.js';
+import { DocStore } from './docs.js';
+import { TxInspector, activityOf } from './inspect.js';
 import type { JobStage } from './ledger.js';
 import { ROUTES } from './manifest.js';
 import type { Role } from './onboard.js';
@@ -39,7 +44,9 @@ const ERROR_NAMES: Record<number, string> = {
   404: 'not_found',
   405: 'method_not_allowed',
   409: 'conflict',
+  410: 'gone',
   413: 'payload_too_large',
+  429: 'too_many_requests',
   500: 'internal_error',
 };
 
@@ -51,6 +58,10 @@ type Ctx = {
   /// Present only on a paid route that was paid for: the receipt of the transfer that
   /// unlocked this response, which is the payer's proof it was charged once.
   settled: Settlement | null;
+  desk: AgentDesk;
+  docs: DocStore;
+  inspector: TxInspector;
+  ip: string;
 };
 
 type Handler = (ctx: Ctx) => Promise<unknown> | unknown;
@@ -58,7 +69,7 @@ type Handler = (ctx: Ctx) => Promise<unknown> | unknown;
 const HANDLERS: Record<string, Handler> = {
   'GET /': ({ beacon }) => ({
     name: beacon.config.name,
-    tagline: 'The default referee for agent commerce. No humans required.',
+    tagline: 'Bounded autonomy for agent commerce: owners set the limits, agents transact inside them, and a bounded referee settles what they disagree on.',
     network: beacon.config.network,
     chainId: beacon.config.chainId,
     escrow: beacon.config.escrow,
@@ -71,6 +82,21 @@ const HANDLERS: Record<string, Handler> = {
     paid: ROUTES.filter((route) => route.paid).map((route) => `${route.method} ${route.path}`),
     note: 'Everything an agent needs in order to decide whether to use this protocol is free. Only discovery queries are priced, and that price is a spam cost, not a subscription.',
   }),
+
+  'POST /agents/pair': ({ desk, body, ip }) => desk.request(body, ip),
+  'GET /agents/pair/:code': ({ desk, params }) => desk.get(params['code'] ?? ''),
+  'POST /agents/pair/:code/confirm': ({ desk, params, body }) => desk.confirm(params['code'] ?? '', body),
+  'GET /agents/:owner': ({ desk, params }) => desk.agentsOf(params['owner'] ?? ''),
+
+  'POST /docs': ({ docs, body, ip }) => docs.put(body, ip),
+  'GET /docs/:hash': ({ docs, params }) => {
+    const found = docs.get(params['hash'] ?? '');
+    if (!found) throw new BeaconError('no document is filed under that hash', 404, 'POST /docs files one; the store computes the hash itself.');
+    return found;
+  },
+  'GET /tx/:hash': ({ inspector, params }) => inspector.inspect(params['hash'] ?? ''),
+  'GET /activity/:address': ({ beacon, inspector, params }) =>
+    activityOf(inspector, addr(params['address'], 'address'), beacon.view.jobs, beacon.view.withdrawals),
 
   'GET /.well-known/tempex.json': ({ beacon }) => beacon.manifest(),
   'GET /.well-known/agent.json': ({ beacon }) => beacon.card(),
@@ -177,6 +203,7 @@ const LIVE = new Set([
   'GET /reputation/:address',
   'GET /discover',
   'GET /health',
+  'GET /activity/:address',
 ]);
 
 const COMPILED = ROUTES.map((route) => ({
@@ -268,6 +295,20 @@ export async function startBeaconServer(beacon: Beacon, options: ServerOptions =
 
   head = (await sync()).head;
 
+  const desk = new AgentDesk({
+    reader: beacon.reader,
+    chainId: beacon.config.chainId,
+    escrow: beacon.config.escrow,
+    token: beacon.config.token,
+    fromBlock: beacon.config.indexFromBlock,
+    chunkBlocks: beacon.config.scanChunkBlocks,
+    approveUrl: beacon.config.pairUrl,
+    profilesFile: resolvePath(beacon.config.agentProfilesFile),
+  });
+
+  const docs = new DocStore(resolvePath(beacon.config.dataDir, 'docs'));
+  const inspector = new TxInspector(beacon.reader, { escrow: beacon.config.escrow, token: beacon.config.token });
+
   const timer = setInterval(() => {
     void sync().catch(() => undefined);
   }, options.syncIntervalMs ?? SYNC_INTERVAL_MS);
@@ -356,8 +397,11 @@ export async function startBeaconServer(beacon: Beacon, options: ServerOptions =
       if (LIVE.has(route.key) && (inFlight || Date.now() - syncedAt > SYNC_STALE_MS)) await sync();
 
       const body = await readBody(req);
-      const payload = await HANDLERS[route.key]!({ beacon, url, params: route.params, body, settled });
-      send(res, route.key === 'POST /registry' ? 201 : 200, payload, {
+      const forwarded = beacon.config.trustProxy ? String(req.headers['x-forwarded-for'] ?? '').split(',')[0]?.trim() : '';
+      const ip = forwarded || req.socket.remoteAddress || 'unknown';
+      const payload = await HANDLERS[route.key]!({ beacon, url, params: route.params, body, settled, desk, docs, inspector, ip });
+      const created = route.key === 'POST /registry' || route.key === 'POST /agents/pair' || (route.key === 'POST /docs' && (payload as { existed?: boolean }).existed === false);
+      send(res, created ? 201 : 200, payload, {
         'x-tempex-index-head': head.toString(),
         ...(settled?.tx ? { 'x-tempex-settled': settled.tx } : {}),
       });

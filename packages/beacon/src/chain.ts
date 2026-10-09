@@ -55,7 +55,22 @@ export type EscrowConfig = {
   withdrawMemo: Hex;
   jobCount: bigint;
   nextJobId: bigint;
+  /// v3 and later: the upgrade path and the launch guards. Null on an escrow
+  /// that predates them (v2 is neither upgradeable nor guarded).
+  upgrade: { implementation: Address; version: string } | null;
+  guards: {
+    newJobsPaused: boolean;
+    maxJobAmount: bigint;
+    maxOpenValue: bigint;
+    openValue: bigint;
+    arbitrationFeeFloor: bigint;
+    referralShareBps: number;
+    maxReferralShareBps: number;
+  } | null;
 };
+
+/// ERC-1967 implementation slot: keccak256("eip1967.proxy.implementation") - 1.
+const IMPLEMENTATION_SLOT = '0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc';
 
 /// The escrow's own view of its governance and fee schedule.
 ///
@@ -90,6 +105,36 @@ export async function escrowConfig(reader: ChainReader, escrow: Address): Promis
     read<bigint>(reader, escrow, 'nextJobId'),
   ]);
 
+  // An escrow that answers `version()` is v3: a proxy whose owner can replace
+  // the code. Read the implementation from the proxy's own storage slot rather
+  // than trusting any record of it.
+  let upgrade: EscrowConfig['upgrade'] = null;
+  let guards: EscrowConfig['guards'] = null;
+  const version = await read<string>(reader, escrow, 'version').catch(() => null);
+  if (version !== null) {
+    const slot = await reader.getStorageAt({ address: escrow, slot: IMPLEMENTATION_SLOT });
+    upgrade = { implementation: `0x${(slot ?? '0x').slice(-40).padStart(40, '0')}` as Address, version };
+    const [newJobsPaused, maxJobAmount, maxOpenValue, openValue, arbitrationFeeFloor, referralShareBps, maxReferralShareBps] =
+      await Promise.all([
+        read<boolean>(reader, escrow, 'newJobsPaused'),
+        read<bigint>(reader, escrow, 'maxJobAmount'),
+        read<bigint>(reader, escrow, 'maxOpenValue'),
+        read<bigint>(reader, escrow, 'openValue'),
+        read<bigint>(reader, escrow, 'arbitrationFeeFloor'),
+        read<number>(reader, escrow, 'referralShareBps'),
+        read<number>(reader, escrow, 'MAX_REFERRAL_SHARE_BPS'),
+      ]);
+    guards = {
+      newJobsPaused,
+      maxJobAmount,
+      maxOpenValue,
+      openValue,
+      arbitrationFeeFloor,
+      referralShareBps: Number(referralShareBps),
+      maxReferralShareBps: Number(maxReferralShareBps),
+    };
+  }
+
   return {
     escrow,
     arbiter,
@@ -104,6 +149,8 @@ export async function escrowConfig(reader: ChainReader, escrow: Address): Promis
     withdrawMemo,
     jobCount,
     nextJobId,
+    upgrade,
+    guards,
   };
 }
 

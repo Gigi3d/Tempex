@@ -51,6 +51,12 @@ const baked = snapshot.beacon;
 
 export const getStats = (): Promise<Sourced<Stats>> => sourced('/stats', 30, () => baked?.stats);
 export const getJobs = (): Promise<Sourced<JobsList>> => sourced('/jobs', 15, () => baked?.jobs);
+export const getJobsFor = (address: string): Promise<Sourced<JobsList>> =>
+  sourced(`/jobs?address=${encodeURIComponent(address)}`, 15, () =>
+    baked?.jobs
+      ? { ...baked.jobs, jobs: baked.jobs.jobs.filter((job) => [job.buyer, job.seller].some((party) => party.toLowerCase() === address.toLowerCase())) }
+      : undefined,
+  );
 export const getJob = (id: string): Promise<Sourced<JobRecord>> => sourced(`/jobs/${encodeURIComponent(id)}`, 15, () => baked?.detail[id]);
 export const getProof = (id: string): Promise<Sourced<Proof>> => sourced(`/proof/${encodeURIComponent(id)}`, 60, () => baked?.proofs[id]);
 export const getArbiters = (): Promise<Sourced<Arbiters>> => sourced('/arbiters', 60, () => baked?.arbiters);

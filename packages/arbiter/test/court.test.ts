@@ -50,7 +50,9 @@ describe('court', () => {
   it('reports which key it rules with', async () => {
     const response = await fetch(url('/health'));
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), { ok: true, arbiter: ARBITER, escrow: stub.addresses.escrow, sponsored: true });
+    const body = (await response.json()) as Record<string, unknown>;
+    assert.deepEqual({ ok: body['ok'], arbiter: body['arbiter'], escrow: body['escrow'], sponsored: body['sponsored'] }, { ok: true, arbiter: ARBITER, escrow: stub.addresses.escrow, sponsored: true });
+    assert.equal(body['panelFallbacks'], 0);
   });
 
   it('answers unknown routes with 404', async () => {

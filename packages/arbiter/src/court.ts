@@ -2,7 +2,8 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 
 import { caseIntegrity, writeCase, type EvidenceCase, type TempexClient } from '@tempex/sdk';
 
-import { RefusalError, adjudicate, type AdjudicationEngine, type AdjudicationResult } from './adjudicate.js';
+import { RefusalError, adjudicate, type AdjudicationEngine, type AdjudicationResult, type PanelCache } from './adjudicate.js';
+import { llmConfigFromEnv } from './llm.js';
 
 /// The arbiter as an HTTP service: anyone may hand it the evidence for a
 /// disputed job, and it rules only if that evidence is exactly what the parties
@@ -20,6 +21,8 @@ export type CourtOptions = {
   origins: string[];
   evidenceDir: string;
   sponsored: boolean;
+  /// Reuses paid-for panel scores when a ruling is retried on the same inputs.
+  panelCache?: PanelCache;
   log?: (line: string) => void;
   onRuling?: (result: AdjudicationResult) => void;
 };
@@ -57,6 +60,10 @@ export function startCourt(options: CourtOptions): { close: () => Promise<void>;
   // One ruling per job at a time: a second request while the first is relaying
   // would only race it to the same verdict.
   const inFlight = new Set<string>();
+  // Health a monitor can alert on: a judge panel that keeps falling back means
+  // a dead key or an exhausted budget, and every ruling quietly losing its judge.
+  const judge = llmConfigFromEnv();
+  const stats = { rulings: 0, panelRulings: 0, panelFallbacks: 0, lastFallback: null as null | { jobId: string; at: string; reason: string } };
 
   const server = createServer(async (request, response) => {
     const requestOrigin = request.headers.origin ?? null;
@@ -74,7 +81,20 @@ export function startCourt(options: CourtOptions): { close: () => Promise<void>;
     }
     const url = new URL(request.url ?? '/', 'http://court');
     if (request.method === 'GET' && url.pathname === '/health') {
-      send(response, 200, { ok: true, arbiter: options.client.address, escrow: options.client.addresses.escrow, sponsored: options.sponsored }, origin);
+      send(
+        response,
+        200,
+        {
+          ok: true,
+          arbiter: options.client.address,
+          escrow: options.client.addresses.escrow,
+          sponsored: options.sponsored,
+          judge: judge ? { models: judge.models, panelSize: judge.panelSize } : null,
+          engine: options.engine ?? 'auto',
+          ...stats,
+        },
+        origin,
+      );
       return;
     }
     const match = /^\/rule\/(\d+)$/.exec(url.pathname);
@@ -114,10 +134,17 @@ export function startCourt(options: CourtOptions): { close: () => Promise<void>;
         engine: options.engine,
         relay: true,
         writeOptions: options.sponsored ? { sponsored: true } : {},
+        ...(options.panelCache ? { panelCache: options.panelCache } : {}),
         log: (line) => log(`job ${jobId}: ${line}`),
       });
       // The case files are the record a stranger re-derives the ruling from.
       writeCase(options.evidenceDir, BigInt(jobId), evidenceCase);
+      stats.rulings += 1;
+      if (result.panel) stats.panelRulings += 1;
+      if (result.panelFallback !== undefined) {
+        stats.panelFallbacks += 1;
+        stats.lastFallback = { jobId, at: new Date().toISOString(), reason: result.panelFallback.slice(0, 300) };
+      }
       options.onRuling?.(result);
       log(`job ${jobId}: ruled ${result.ruling.sellerAwardBps} bps${result.relay ? `, relayed in ${result.relay.hash}` : ''}`);
       send(
@@ -132,6 +159,8 @@ export function startCourt(options: CourtOptions): { close: () => Promise<void>;
           band: result.band,
           boundedBand: result.boundedBand,
           clamped: result.clamped,
+          panelFallback: result.panelFallback ?? null,
+          usage: result.panel?.usage ?? null,
           money: result.money,
           digest: result.digest,
           signature: result.signature,

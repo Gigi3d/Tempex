@@ -80,7 +80,7 @@ export function PayoutPreview({ job }: { job: JobRecord }) {
           </thead>
           <tbody>
             {points.map((award) => {
-              const money = disputeSettlement({ amount: BigInt(job.amount), arbitrationFeeBps: job.terms!.arbitrationFeeBps, sellerAwardBps: award });
+              const money = disputeSettlement({ amount: BigInt(job.amount), arbitrationFeeBps: job.terms!.arbitrationFeeBps, sellerAwardBps: award, arbitrationFeeFloor: BigInt(job.terms!.arbitrationFeeFloor ?? '0') });
               const paid = job.verdict?.sellerAwardBps === award;
               return (
                 <tr key={award} className={paid ? 'bg-ref/5' : undefined}>

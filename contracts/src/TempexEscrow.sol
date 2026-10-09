@@ -2,10 +2,13 @@
 pragma solidity 0.8.28;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {EIP712Upgradeable} from
+    "@openzeppelin/contracts-upgradeable/utils/cryptography/EIP712Upgradeable.sol";
+import {Ownable2StepUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/access/Ownable2StepUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from
+    "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 import {ITIP20} from "./ITIP20.sol";
 
@@ -51,7 +54,26 @@ import {ITIP20} from "./ITIP20.sol";
 /// offers span, so the arbiter can only choose between the parties' positions,
 /// never beyond them. A seller that does not respond is treated as asking for
 /// everything.
-contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
+///
+/// Upgradeable (UUPS): users talk to an ERC-1967 proxy, and the owner key can
+/// replace the implementation. That key can therefore change any rule, including
+/// how escrowed funds move. It is a single key for now; it should become a
+/// multisig behind a timelock before the escrow holds meaningful value.
+///
+/// Launch guards, all owner-set and none able to touch a job already in flight:
+/// a pause on new jobs (exits always stay open), a per-job amount cap and a cap
+/// on the total value held in open jobs, a minimum arbitration fee locked per
+/// job, and a referral share that pays the platform that brought a job part of
+/// the protocol's fees on it.
+///
+/// Storage: new state variables go after the last one declared below, never in
+/// between, so an upgrade keeps every existing slot where it was.
+contract TempexEscrow is
+    EIP712Upgradeable,
+    Ownable2StepUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable
+{
     uint16 public constant BPS_DENOMINATOR = 10_000;
     uint16 public constant MAX_PLATFORM_FEE_BPS = 500;
     uint16 public constant MAX_ARBITRATION_FEE_BPS = 1_000;
@@ -71,6 +93,8 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     uint16 public constant DISPUTE_BOND_BPS = 500;
     /// @notice Most the protocol may take of a listed arbiter's fee.
     uint16 public constant MAX_PROTOCOL_CUT_BPS = 5_000;
+    /// @notice Most of the protocol's fees on a job its referrer may receive.
+    uint16 public constant MAX_REFERRAL_SHARE_BPS = 5_000;
 
     /// @dev Memo tag on settlement withdrawals. Funding memos carry the job id itself,
     /// so an indexer can reconcile a transfer to a job without reading contract logs.
@@ -141,13 +165,13 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         "Verdict(uint256 jobId,uint16 sellerAwardBps,bytes32 evidenceHash,bytes32 rationaleHash,uint64 issuedAt,uint64 validUntil)"
     );
 
-    ITIP20 public immutable paymentToken;
+    ITIP20 public paymentToken;
     address public arbiter;
     address public treasury;
     uint16 public platformFeeBps;
     uint16 public arbitrationFeeBps;
     /// @notice Share of a listed arbiter's fee the treasury keeps, for new jobs.
-    uint16 public protocolCutBps = 2_000;
+    uint16 public protocolCutBps;
     mapping(address arbiter => ArbiterListing) public arbiterListings;
     /// @notice Where the delivered work can be fetched (ipfs://, ar://, https://,
     /// or data:). Its bytes must hash to the job's deliverableHash, so anyone,
@@ -163,6 +187,34 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     uint256 public jobCount;
     mapping(uint256 jobId => Job) private _jobs;
     mapping(address account => uint256 amount) public credits;
+
+    /// @notice Terms added in v3, locked per job at creation like the rest. Kept
+    /// out of `Job` so `getJob` reads the same as it always has.
+    struct JobExtras {
+        /// who brought the job; paid `referralShareBps` of the protocol's fees on it
+        address referrer;
+        uint16 referralShareBps;
+        /// least the arbitration fee can be, in token units (never above the job amount)
+        uint128 arbitrationFeeFloor;
+    }
+
+    /// @notice While true, no job can be created or funded. Everything a job
+    /// already in flight needs (deliver, accept, dispute, respond, resolve,
+    /// settle, refund, withdraw) keeps working.
+    bool public newJobsPaused;
+    /// @notice Largest amount one job may escrow.
+    uint256 public maxJobAmount;
+    /// @notice Most value all open jobs together may hold.
+    uint256 public maxOpenValue;
+    /// @notice Value held by jobs that are funded and not yet settled or refunded
+    /// (dispute bonds excluded).
+    uint256 public openValue;
+    /// @notice Minimum arbitration fee, in token units, for jobs created afterwards.
+    uint256 public arbitrationFeeFloor;
+    /// @notice Share of the protocol's fees paid to a job's referrer, for jobs
+    /// created afterwards.
+    uint16 public referralShareBps;
+    mapping(uint256 jobId => JobExtras) public jobExtras;
 
     event JobCreated(
         uint256 indexed jobId,
@@ -224,15 +276,37 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     event ArbiterUpdated(address indexed arbiter);
     event TreasuryUpdated(address indexed treasury);
     event FeesUpdated(uint16 platformFeeBps, uint16 arbitrationFeeBps);
+    event NewJobsPaused(bool paused);
+    event LimitsUpdated(uint256 maxJobAmount, uint256 maxOpenValue);
+    event ArbitrationFeeFloorUpdated(uint256 arbitrationFeeFloor);
+    event ReferralShareUpdated(uint16 referralShareBps);
+    /// @notice The referrer and share this job pays, fixed at creation.
+    event JobReferred(uint256 indexed jobId, address indexed referrer, uint16 referralShareBps);
+    event ReferralPaid(uint256 indexed jobId, address indexed referrer, uint256 amount);
+    /// @notice The minimum arbitration fee this job locked, when there is one.
+    event ArbitrationFeeFloorLocked(uint256 indexed jobId, uint256 arbitrationFeeFloor);
 
-    constructor(
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Sets up the proxy. Starts unpaused, with no caps, no fee floor, no
+    /// referral share and a 20% protocol cut; the deploy script sets the launch
+    /// values in the same broadcast.
+    function initialize(
         ITIP20 paymentToken_,
         address owner_,
         address arbiter_,
         address treasury_,
         uint16 platformFeeBps_,
         uint16 arbitrationFeeBps_
-    ) EIP712("Tempex", "1") Ownable(owner_) {
+    ) external initializer {
+        __EIP712_init("Tempex", "1");
+        __Ownable_init(owner_);
+        __Ownable2Step_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
         require(address(paymentToken_) != address(0), "token=0");
         require(arbiter_ != address(0), "arbiter=0");
         require(treasury_ != address(0), "treasury=0");
@@ -243,7 +317,18 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         treasury = treasury_;
         platformFeeBps = platformFeeBps_;
         arbitrationFeeBps = arbitrationFeeBps_;
+        protocolCutBps = 2_000;
+        maxJobAmount = type(uint256).max;
+        maxOpenValue = type(uint256).max;
     }
+
+    /// @notice The implementation's version, so an upgrade is visible on chain.
+    function version() external pure virtual returns (string memory) {
+        return "3.0.0";
+    }
+
+    /// @dev Only the owner key can replace the implementation.
+    function _authorizeUpgrade(address) internal override onlyOwner {}
 
     // ---------------------------------------------------------------- jobs
 
@@ -274,6 +359,37 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(chosenArbiter != msg.sender && chosenArbiter != seller, "party cannot judge");
         jobId = _createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow);
         _lockTerms(jobId, chosenArbiter, listing.feeBps, protocolCutBps);
+    }
+
+    /// @notice Creates a job brought by a referrer, such as the marketplace or
+    /// agent framework the buyer came through. The referrer is paid
+    /// `referralShareBps` of whatever the protocol earns on this job. Pass
+    /// `address(0)` as `chosenArbiter` for the house arbiter.
+    function createJobWithReferrer(
+        address seller,
+        uint256 amount,
+        bytes32 termsHash,
+        uint64 deliveryDeadline,
+        uint64 reviewWindow,
+        address chosenArbiter,
+        address referrer
+    ) external returns (uint256 jobId) {
+        require(referrer != address(0), "referrer=0");
+        require(referrer != msg.sender && referrer != seller, "party cannot refer");
+        address judge = arbiter;
+        uint16 fee = arbitrationFeeBps;
+        uint16 cut = BPS_DENOMINATOR;
+        if (chosenArbiter != address(0)) {
+            ArbiterListing storage listing = arbiterListings[chosenArbiter];
+            require(listing.active, "arbiter not listed");
+            require(chosenArbiter != msg.sender && chosenArbiter != seller, "party cannot judge");
+            (judge, fee, cut) = (chosenArbiter, listing.feeBps, protocolCutBps);
+        }
+        jobId = _createJob(seller, amount, termsHash, deliveryDeadline, reviewWindow);
+        _lockTerms(jobId, judge, fee, cut);
+        jobExtras[jobId].referrer = referrer;
+        jobExtras[jobId].referralShareBps = referralShareBps;
+        emit JobReferred(jobId, referrer, referralShareBps);
     }
 
     /// @notice One milestone of a plan: its own terms document, amount and deadline.
@@ -328,8 +444,10 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         uint64 deliveryDeadline,
         uint64 reviewWindow
     ) private returns (uint256 jobId) {
+        require(!newJobsPaused, "new jobs paused");
         require(seller != address(0) && seller != msg.sender, "invalid seller");
         require(amount > 0, "amount=0");
+        require(amount <= maxJobAmount, "amount above job cap");
         require(deliveryDeadline > block.timestamp, "deadline in past");
         require(reviewWindow > 0, "reviewWindow=0");
         require(reviewWindow <= MAX_REVIEW_WINDOW, "reviewWindow too long");
@@ -357,7 +475,11 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         job.platformFeeBps = platformFeeBps;
         job.arbitrationFeeBps = arbitrationFee;
         job.protocolCutBps = cut;
+        // setArbitrationFeeFloor bounds the floor to uint128, so the cast is exact.
+        // forge-lint: disable-next-line(unsafe-typecast)
+        jobExtras[jobId].arbitrationFeeFloor = uint128(arbitrationFeeFloor);
         emit JobTermsLocked(jobId, arbiter_, platformFeeBps, arbitrationFee, cut);
+        if (arbitrationFeeFloor != 0) emit ArbitrationFeeFloorLocked(jobId, arbitrationFeeFloor);
     }
 
     function fund(uint256 jobId) external nonReentrant {
@@ -365,8 +487,12 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(job.state == JobState.Created, "not open");
         require(msg.sender == job.buyer, "only buyer");
         require(block.timestamp < job.deliveryDeadline, "deadline passed");
+        require(!newJobsPaused, "new jobs paused");
+        require(job.amount <= maxJobAmount, "amount above job cap");
+        require(openValue + job.amount <= maxOpenValue, "escrow cap reached");
 
         job.state = JobState.Funded;
+        openValue += job.amount;
         // TIP-20 reverts on failure and returns nothing, so no bool check is needed.
         // The memo is the job id: the payment itself carries the reconciliation key.
         paymentToken.transferFromWithMemo(msg.sender, address(this), job.amount, bytes32(jobId));
@@ -426,8 +552,9 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         uint256 sellerAmount = job.amount - fee;
 
         job.state = JobState.Settled;
+        openValue -= job.amount;
         credits[job.seller] += sellerAmount;
-        credits[treasury] += fee;
+        _creditProtocol(jobId, fee);
 
         emit JobAccepted(jobId, sellerAmount, fee);
     }
@@ -562,15 +689,16 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         bytes32 digest = verdictDigest(verdict);
         require(ECDSA.recover(digest, signature) == job.arbiter, "bad verdict signature");
 
-        uint256 fee = (job.amount * job.arbitrationFeeBps) / BPS_DENOMINATOR;
+        uint256 fee = arbitrationFee(jobId);
         (uint256 sellerAmount, uint256 buyerAmount, uint256 bondToSeller) =
             disputeSettlement(job.amount, disputeBond(jobId), fee, verdict.sellerAwardBps);
 
         job.state = JobState.Settled;
+        openValue -= job.amount;
         job.verdictHash = digest;
         credits[job.seller] += sellerAmount;
         credits[job.buyer] += buyerAmount;
-        _payArbitrationFee(job, fee);
+        _payArbitrationFee(jobId, job, fee);
         emit DisputeBondSettled(jobId, bondToSeller);
 
         emit VerdictResolved(
@@ -618,6 +746,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         uint256 buyerAmount = job.amount - sellerAmount;
 
         job.state = JobState.Settled;
+        openValue -= job.amount;
         credits[job.seller] += sellerAmount;
         // the arbiter failed, not the buyer: the bond goes back in full
         credits[job.buyer] += buyerAmount + disputeBond(jobId);
@@ -627,10 +756,37 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
     }
 
 
-    function _payArbitrationFee(Job storage job, uint256 fee) private {
+    /// @notice The fee a ruling on this job charges: its locked rate, raised to
+    /// its locked floor when the rate is not zero, never more than the job amount.
+    /// An arbiter listed at a zero fee stays free.
+    function arbitrationFee(uint256 jobId) public view returns (uint256 fee) {
+        Job storage job = _jobs[jobId];
+        if (job.arbitrationFeeBps == 0) return 0;
+        fee = (job.amount * job.arbitrationFeeBps) / BPS_DENOMINATOR;
+        uint256 floor = jobExtras[jobId].arbitrationFeeFloor;
+        if (fee < floor) fee = floor;
+        if (fee > job.amount) fee = job.amount;
+    }
+
+    function _payArbitrationFee(uint256 jobId, Job storage job, uint256 fee) private {
         uint256 protocolShare = (fee * job.protocolCutBps) / BPS_DENOMINATOR;
-        credits[treasury] += protocolShare;
+        _creditProtocol(jobId, protocolShare);
         credits[job.arbiter] += fee - protocolShare;
+    }
+
+    /// @dev Everything the protocol earns on a job goes through here, so the
+    /// job's referrer, if it has one, is paid its locked share of all of it.
+    function _creditProtocol(uint256 jobId, uint256 amount) private {
+        JobExtras storage extras = jobExtras[jobId];
+        uint256 referral;
+        if (extras.referrer != address(0)) {
+            referral = (amount * extras.referralShareBps) / BPS_DENOMINATOR;
+            if (referral > 0) {
+                credits[extras.referrer] += referral;
+                emit ReferralPaid(jobId, extras.referrer, referral);
+            }
+        }
+        credits[treasury] += amount - referral;
     }
 
     /// @notice Refunds the buyer when the seller misses the delivery deadline.
@@ -641,6 +797,7 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         require(block.timestamp > job.deliveryDeadline, "deadline not passed");
 
         job.state = JobState.Refunded;
+        openValue -= job.amount;
         credits[job.buyer] += job.amount;
 
         emit JobRefunded(jobId, job.amount);
@@ -734,5 +891,35 @@ contract TempexEscrow is EIP712, Ownable2Step, ReentrancyGuard {
         platformFeeBps = platformFeeBps_;
         arbitrationFeeBps = arbitrationFeeBps_;
         emit FeesUpdated(platformFeeBps_, arbitrationFeeBps_);
+    }
+
+    /// @notice Stops new jobs from being created or funded. Jobs already in flight
+    /// can still be delivered, disputed, ruled, settled, refunded and withdrawn.
+    function setNewJobsPaused(bool paused) external onlyOwner {
+        newJobsPaused = paused;
+        emit NewJobsPaused(paused);
+    }
+
+    /// @notice Caps for jobs created or funded afterwards. `type(uint256).max`
+    /// means no cap. Lowering a cap never touches value already escrowed.
+    function setLimits(uint256 maxJobAmount_, uint256 maxOpenValue_) external onlyOwner {
+        require(maxJobAmount_ > 0 && maxOpenValue_ > 0, "cap=0; pause instead");
+        maxJobAmount = maxJobAmount_;
+        maxOpenValue = maxOpenValue_;
+        emit LimitsUpdated(maxJobAmount_, maxOpenValue_);
+    }
+
+    /// @notice Minimum arbitration fee, in token units, for jobs created afterwards.
+    function setArbitrationFeeFloor(uint256 floor) external onlyOwner {
+        require(floor <= type(uint128).max, "floor too high");
+        arbitrationFeeFloor = floor;
+        emit ArbitrationFeeFloorUpdated(floor);
+    }
+
+    /// @notice Referrers' share of the protocol's fees, for jobs created afterwards.
+    function setReferralShare(uint16 referralShareBps_) external onlyOwner {
+        require(referralShareBps_ <= MAX_REFERRAL_SHARE_BPS, "referralShare too high");
+        referralShareBps = referralShareBps_;
+        emit ReferralShareUpdated(referralShareBps_);
     }
 }

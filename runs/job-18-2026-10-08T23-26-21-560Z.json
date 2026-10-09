@@ -1,0 +1,120 @@
+{
+  "tempex": "adjudication-receipt/1",
+  "command": "court",
+  "at": "2026-10-08T23:26:21.560Z",
+  "chainId": 42431,
+  "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "relayExplorer": "https://explore.testnet.tempo.xyz/tx/0xc40c51312d672142b3a4f98a7cbfd59129f152b3117f235d98dd98d5468bd0c0",
+  "jobId": 18,
+  "engine": "rules",
+  "model": "tempex-rules/1",
+  "amount": "3000000",
+  "evidenceHash": "0xc6a65579ee29da5e4165dc6fd6f9709f2ef4e41eb90d6dac2b61e408fbc9bbe8",
+  "ruling": {
+    "jobId": 18,
+    "sellerAwardBps": 7000,
+    "evidenceHash": "0xc6a65579ee29da5e4165dc6fd6f9709f2ef4e41eb90d6dac2b61e408fbc9bbe8",
+    "rationaleHash": "0xe704bf3d7d4bf71857d1821494b7ac8ad3de3d49a42bcf3ae3651c8f34cdb0ac",
+    "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. c1 \"Explains why every sponsored transaction can be nonce 0\" (weight 3): open; a judgement criterion: no check can decide it. c2 \"Names nonceKey\" (contains, weight 1): met; 2 of 2 required strings present. c3 \"At least 60 words\" (count, weight 1): met; 1125 words, within the agreed 60+. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 2.00 of 5 weight, 3 open; band 4000-9000 bps; ruling 7000 bps of the disputed amount, i.e. 70.0% to the seller of \"Explain Tempo expiring nonces\" (job 18).",
+    "issuedAt": 1791501974,
+    "validUntil": 1791588380,
+    "model": "tempex-rules/1"
+  },
+  "verdict": {
+    "jobId": "18",
+    "sellerAwardBps": 7000,
+    "evidenceHash": "0xc6a65579ee29da5e4165dc6fd6f9709f2ef4e41eb90d6dac2b61e408fbc9bbe8",
+    "rationaleHash": "0xe704bf3d7d4bf71857d1821494b7ac8ad3de3d49a42bcf3ae3651c8f34cdb0ac",
+    "issuedAt": "1791501974",
+    "validUntil": "1791588380"
+  },
+  "signature": "0x61b677f94a412845b231812cc751e48ffe283ad6f3a3b8f837775326ca78b62b6aeba01d432d9cedc201e7209fcf214468909102d0dbfd3e88d5c2b4a93fa0221c",
+  "digest": "0x1e98359190260d9c5dac8380bd96a98d42f75f35dc014ae053e0ef25f44e5c25",
+  "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "certified": true,
+  "money": {
+    "amount": "3000000",
+    "bond": "150000",
+    "bondToSeller": "0",
+    "arbitrationFee": "500000",
+    "arbitrationFeeBps": 200,
+    "sellerAmount": "1950000",
+    "buyerAmount": "700000"
+  },
+  "band": {
+    "lowBps": 4000,
+    "highBps": 10000,
+    "center": 7000
+  },
+  "offers": {
+    "lowBps": 1500,
+    "highBps": 9000
+  },
+  "boundedBand": {
+    "lowBps": 4000,
+    "highBps": 9000,
+    "center": 7000
+  },
+  "signals": {
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Explains why every sponsored transaction can be nonce 0",
+        "weight": 3,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      },
+      {
+        "id": "c2",
+        "text": "Names nonceKey",
+        "weight": 1,
+        "kind": "check",
+        "check": "contains",
+        "credit": 1,
+        "passed": true,
+        "evidence": "2 of 2 required strings present"
+      },
+      {
+        "id": "c3",
+        "text": "At least 60 words",
+        "weight": 1,
+        "kind": "check",
+        "check": "count",
+        "credit": 1,
+        "passed": true,
+        "evidence": "1125 words, within the agreed 60+"
+      }
+    ],
+    "totalWeight": 5,
+    "checkedWeight": 2,
+    "earnedWeight": 2,
+    "openWeight": 3,
+    "artifactsDeclared": 1,
+    "artifactsVerifiable": 1,
+    "evidenceStrength": 1,
+    "integrity": {
+      "termsHashMatches": true,
+      "deliverableHashMatches": true
+    },
+    "scoredCopy": "uri",
+    "deliverableText": "# Expiring nonces on Tempo\n\n- Line 1: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 2: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 3: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 4: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 5: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 6: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 7: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 8: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 9: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 10: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 11: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 12: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 13: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 14: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 15: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 16: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 17: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 18: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 19: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 20: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 21: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 22: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 23: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 24: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 25: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 26: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 27: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 28: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 29: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 30: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 31: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 32: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 33: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 34: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 35: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 36: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 37: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 38: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 39: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.\n- Line 40: a sponsored transaction sets nonceKey to the max lane and validBefore a short time ahead, so every such transaction can be nonce 0 without colliding.",
+    "sellerResponded": true
+  },
+  "clamped": false,
+  "flags": [],
+  "notes": [
+    "the parties' offers [1500, 9000] narrowed the rule band [4000, 10000] to [4000, 9000]",
+    "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+  ],
+  "relay": {
+    "jobId": 18,
+    "digest": "0x1e98359190260d9c5dac8380bd96a98d42f75f35dc014ae053e0ef25f44e5c25",
+    "sellerAwardBps": 7000,
+    "sellerAmount": "1950000",
+    "buyerAmount": "700000",
+    "arbitrationFee": "500000",
+    "hash": "0xc40c51312d672142b3a4f98a7cbfd59129f152b3117f235d98dd98d5468bd0c0"
+  }
+}

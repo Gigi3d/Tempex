@@ -63,6 +63,7 @@ export {
   awardBounds,
   disputeBond,
   disputeSettlement,
+  arbitrationFeeFor,
   JOB_STATES,
   SELLER_RESPONSE_WINDOW_SECONDS,
   TempexClient,
@@ -76,7 +77,9 @@ export {
 } from './client.js';
 export type {
   ArbiterListing,
+  EscrowGuards,
   FeePayment,
+  JobExtras,
   Job,
   JobState,
   MemoTransfer,
@@ -99,3 +102,5 @@ export {
   planProblems,
 } from './milestones.js';
 export type { MilestoneJobs, MilestonePlan } from './milestones.js';
+
+export * from './agents.js';

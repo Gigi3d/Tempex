@@ -13,7 +13,7 @@ function nextDeadline(job: JobRecord): string {
   const now = Date.now() / 1000;
   if (job.stage === 'funded') return `delivery ${until(job.deliveryDeadline, now)}`;
   if (job.stage === 'delivered' && job.delivered) return `review ${until(job.delivered.reviewDeadline, now)}`;
-  if (job.stage === 'disputed' && job.dispute) return `response ${until(job.dispute.responseDeadline, now)}`;
+  if (job.stage === 'disputed' && job.dispute) return job.response ? 'awaiting ruling' : `response ${until(job.dispute.responseDeadline ?? job.dispute.disputedAt + 7 * 86_400, now)}`;
   return '—';
 }
 

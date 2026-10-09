@@ -14,7 +14,7 @@ import {
   type JobTerms,
   type SellerResponse,
 } from '@tempex/sdk/browser';
-import type { Address, Hex } from 'viem';
+import { getAddress, type Address, type Hex } from 'viem';
 import { Account, WebAuthnP256, WebCryptoP256 } from 'viem/tempo';
 
 import type { CorpusCase } from './snapshot';
@@ -41,7 +41,7 @@ const write = { sponsored: true } as const;
 /// The sponsor fills each transaction against its own node, which can trail the
 /// block the last write landed in by a moment. A revert at fill time means
 /// nothing was sent, so it is safe to wait and try again.
-async function settled<T>(action: () => Promise<T>, attempts = 5): Promise<T> {
+export async function settled<T>(action: () => Promise<T>, attempts = 5): Promise<T> {
   for (let attempt = 1; ; attempt += 1) {
     try {
       return await action();
@@ -129,7 +129,17 @@ function dataUri(text: string): string {
   return `data:text/plain;charset=utf-8;base64,${btoa(binary)}`;
 }
 
-export async function openDeal(buyer: Seat, seller: Seat, scenario: CorpusCase, table: Table) {
+/// A `?ref=0x…` link names who brought the deal; v3 escrows pay that referrer a
+/// share of the protocol's fees on the job.
+export function referrerFromUrl(): Address | null {
+  if (typeof window === 'undefined') return null;
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  // Normalized through the lowercase form, so a link with a mistyped checksum
+  // still names the same address instead of failing at signing time.
+  return ref && /^0x[0-9a-fA-F]{40}$/.test(ref) ? getAddress(ref.toLowerCase()) : null;
+}
+
+export async function openDeal(buyer: Seat, seller: Seat, scenario: CorpusCase, table: Table, referrer: Address | null = null) {
   const terms = termsFor(scenario, buyer.address, seller.address);
   const amount = amountOf(scenario);
   const approved = await settled(() => buyer.client.approveEscrow(amount, write));
@@ -142,6 +152,7 @@ export async function openDeal(buyer: Seat, seller: Seat, scenario: CorpusCase, 
       deliveryDeadline: now + scenario.deliveryDeadlineSeconds,
       reviewWindow: scenario.reviewWindowSeconds,
       ...(table.arbiter ? { arbiter: table.arbiter } : {}),
+      ...(referrer ? { referrer } : {}),
     },
     write,
   ));
@@ -224,6 +235,9 @@ export type Ruling = {
   clamped: boolean;
   money: { sellerAmount: string; buyerAmount: string; arbitrationFee: string; bond: string; bondToSeller: string };
   relay: { hash: string } | null;
+  /// Why a configured judge panel could not rule, when it could not.
+  panelFallback?: string | null;
+  usage?: { inputTokens: number; outputTokens: number } | null;
 };
 
 export async function callReferee(jobId: bigint, evidenceCase: EvidenceCase): Promise<Ruling> {

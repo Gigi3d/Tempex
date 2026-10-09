@@ -32,7 +32,7 @@ import { fileURLToPath } from 'node:url';
 import { keccak256, pad, toBytes, toFunctionSelector, toHex } from 'viem';
 import type { Address, Hex } from 'viem';
 
-import { accountFor, addressFor, privateKeyFor, tip20Abi } from '@tempex/sdk';
+import { accountFor, addressFor, hashCanonical, privateKeyFor, tip20Abi } from '@tempex/sdk';
 
 import {
   Beacon,
@@ -277,8 +277,12 @@ async function main(): Promise<void> {
   pass(`verdictDigest selector ${verdictSelector}`);
 
   assert(manifest.protocol.custody.beaconHoldsKeys === false, 'manifest states the beacon holds no keys');
-  assert(manifest.protocol.custody.escrowIsUpgradeable === false, 'manifest states the escrow is not upgradeable');
-  assert(manifest.protocol.custody.ownerCanTakeJobPrincipal === false, 'manifest states the owner cannot take principal');
+  // An upgradeable escrow must say so, name the key that can upgrade it, and
+  // admit that key could move principal; a v2 escrow must say none of that.
+  const custody = manifest.protocol.custody;
+  assert(custody.escrowIsUpgradeable === (custody.implementation !== null), 'manifest states upgradeability exactly when it names an implementation');
+  assert(custody.ownerCanTakeJobPrincipal === custody.escrowIsUpgradeable, 'manifest admits the upgrade key could take principal');
+  assert(!custody.escrowIsUpgradeable || custody.upgradeKey === manifest.protocol.owner, 'manifest names the owner as the upgrade key');
   pass('custody claims are stated, and the owner powers list is published next to them');
 
   assert(
@@ -372,9 +376,29 @@ async function main(): Promise<void> {
     '/ready': `?role=seller&address=${seller}`,
     '/quote': '?role=buyer&amount=25',
   };
-  const freeGets = ROUTES.filter((route) => route.method === 'GET' && !route.paid);
+  // A pairing exists only while an agent is waiting for its owner, so its route
+  // is checked for a clean 404 below rather than walked with a made-up code.
+  // The document store files under the hash it computes; the routes below then
+  // read that document back and decode the job's opening transaction.
+  const smokeTerms = { title: 'smoke', deliverableSpec: 'smoke check of the document store', acceptanceCriteria: ['exists'], amount: '1', buyer: seller, seller };
+  const filed = await post(`${server.url}/docs`, { kind: 'terms', doc: smokeTerms });
+  assert(filed.status === 201 || filed.status === 200, `POST /docs answered 201, got ${filed.status}: ${reason(filed)}`);
+  const docHash = at<string>(filed.body, 'hash');
+  assert(docHash === hashCanonical(smokeTerms), 'the store files a document under its own canonical hash, not one the caller names');
+  pass(`POST /docs -> ${filed.status}: filed under ${docHash.slice(0, 18)}…, the hash it computed itself`);
+  const forged = await post(`${server.url}/docs`, { kind: 'terms', doc: { ...smokeTerms, buyer: 'nobody' } });
+  assert(forged.status === 400, 'a malformed document is refused');
+  const opened = await call(`${server.url}/jobs/${jobId}`);
+  const openTx = at<string>(opened.body, 'created.tx');
+
+  const freeGets = ROUTES.filter((route) => route.method === 'GET' && !route.paid && route.path !== '/agents/pair/:code');
   for (const route of freeGets) {
-    const path = route.path.replace(/:jobId/g, jobId).replace(/:address/g, seller);
+    const path = route.path
+      .replace(/:jobId/g, jobId)
+      .replace(/:address/g, seller)
+      .replace(/:owner/g, seller)
+      .replace(/^\/docs\/:hash$/, `/docs/${docHash}`)
+      .replace(/^\/tx\/:hash$/, `/tx/${openTx}`);
     const reply = await call(`${server.url}${path}${query[path] ?? ''}`);
     assert(reply.status === 200, `${route.method} ${path} answered 200, got ${reply.status}: ${reason(reply)}`);
     assert(
@@ -389,6 +413,23 @@ async function main(): Promise<void> {
     console.log(`    \x1b[32m200\x1b[0m   GET ${path}${query[path] ?? ''}`);
   }
   pass(`${freeGets.length} free GET routes answer from the same route table the manifest publishes`);
+
+  const inspected = await call(`${server.url}/tx/${openTx}`);
+  const signerKind = at<string>(inspected.body, 'signer.kind');
+  assert(signerKind === 'root' || signerKind === 'access-key', 'GET /tx/:hash names the kind of key that signed');
+  assert((at<unknown[]>(inspected.body, 'calls') ?? []).length > 0, 'GET /tx/:hash decodes the calls');
+  pass(`GET /tx/:hash -> job ${jobId} was opened by ${signerKind === 'access-key' ? 'an agent' : 'the account'}'s own key, its calls decoded`);
+  const activity = await call(`${server.url}/activity/${seller}`);
+  assert(Array.isArray(at<unknown[]>(activity.body, 'entries')), 'GET /activity/:address lists steps');
+  pass(`GET /activity/:address -> ${at<number>(activity.body, 'count')} step(s) for ${seller}, each with its signer`);
+
+  const noPairing = await call(`${server.url}/agents/pair/ZZZZ-ZZZZ`);
+  assert(noPairing.status === 404, `GET /agents/pair/<unknown> answered 404, got ${noPairing.status}`);
+  pass('GET /agents/pair/<unknown> -> 404: a pairing exists only while an agent waits for its owner');
+  const agentsOfSeller = await call(`${server.url}/agents/${seller}`);
+  const agentsBody = agentsOfSeller.body as { owner?: string; agents?: unknown[] };
+  assert(Array.isArray(agentsBody.agents) && agentsBody.owner?.toLowerCase() === seller.toLowerCase(), 'GET /agents/:owner lists the keys an owner authorized, read from the keychain');
+  pass(`GET /agents/:owner -> ${agentsBody.agents?.length ?? 0} key(s) for ${seller}`);
 
   const withdraw = await post(`${server.url}/blueprint/withdraw`, {});
   assert(withdraw.status === 200, `POST /blueprint/withdraw answered 200, got ${withdraw.status}: ${reason(withdraw)}`);

@@ -37,6 +37,19 @@ import {
 } from './milestones.js';
 
 const ZERO_BYTES32 = `0x${'0'.repeat(64)}`;
+
+export type JobExtras = { referrer: Address; referralShareBps: number; arbitrationFeeFloor: bigint };
+
+export type EscrowGuards = {
+  owner: Address;
+  version: string;
+  newJobsPaused: boolean;
+  maxJobAmount: bigint;
+  maxOpenValue: bigint;
+  openValue: bigint;
+  arbitrationFeeFloor: bigint;
+  referralShareBps: number;
+};
 const ZERO_ADDRESS = `0x${'0'.repeat(40)}`;
 
 export {
@@ -47,6 +60,7 @@ export {
   DISPUTE_BOND_BPS,
   disputeBond,
   disputeSettlement,
+  arbitrationFeeFor,
   responseDeadline,
   evidenceClosedAt,
 } from './math.js';
@@ -95,6 +109,10 @@ export class TempexClient {
   readonly addresses: TempexAddresses;
   readonly feeToken: Address;
   private readonly client: TempoClient;
+  /// Reads go through a client with no account. A view call made "as" an access
+  /// key is checked against that key's call scopes by Tempo's keychain, so an
+  /// agent scoped to the escrow's write functions could not even read a job.
+  private readonly reader: Client<Transport, typeof tempoTestnet>;
 
   constructor(params: TempexClientParams) {
     this.account = params.account;
@@ -109,6 +127,7 @@ export class TempexClient {
       feeToken: this.feeToken,
       transport,
     });
+    this.reader = createClient({ chain: tempoTestnet, transport: http(params.rpcUrl ?? RPC_URL) }) as never;
   }
 
   get address(): Address {
@@ -136,7 +155,15 @@ export class TempexClient {
       ...(options.sponsored ? { feePayer: true } : {}),
     });
 
-    const receipt = await this.client.waitForTransactionReceipt({ hash });
+    // Sponsored Tempo transactions use expiring nonces: every one of them is
+    // nonce 0 in the same lane. viem's replacement detection matches on sender
+    // and nonce, so while this transaction is still pending it would mistake the
+    // sender's previous transaction for a "replacement" and return that receipt.
+    // Wait for this hash and nothing else.
+    const receipt = await this.client.waitForTransactionReceipt({ hash, checkReplacement: false });
+    if (receipt.transactionHash.toLowerCase() !== hash.toLowerCase()) {
+      throw new Error(`waited for ${hash} but got the receipt of ${receipt.transactionHash}`);
+    }
     if (receipt.status !== 'success') {
       throw new Error(`transaction reverted: ${hash}`);
     }
@@ -155,7 +182,7 @@ export class TempexClient {
   }
 
   private async read<T>(functionName: string, args: readonly unknown[] = []): Promise<T> {
-    return this.client.readContract({
+    return (this.reader as unknown as TempoClient).readContract({
       address: this.addresses.escrow,
       abi: tempexEscrowAbi,
       functionName: functionName as never,
@@ -166,7 +193,7 @@ export class TempexClient {
   // ----------------------------------------------------------------- token
 
   async tokenBalance(account: Address = this.address): Promise<bigint> {
-    return this.client.readContract({
+    return (this.reader as unknown as TempoClient).readContract({
       address: this.addresses.token,
       abi: tip20Abi,
       functionName: 'balanceOf',
@@ -213,10 +240,25 @@ export class TempexClient {
       reviewWindow: number;
       /// A listed arbiter to judge this job. Omit for the house arbiter.
       arbiter?: Address;
+      /// Who brought the job (a marketplace, an agent framework). Paid the
+      /// escrow's referral share of the protocol's fees on it. v3 escrows only.
+      referrer?: Address;
+      /// Put the token approval in the same transaction, so approve, create and
+      /// fund land together or not at all. For an agent key this also means a
+      /// failed open never spends any of its budget.
+      approve?: boolean;
     },
     options: WriteOptions = {},
   ): Promise<{ jobId: bigint; hash: Hex }> {
     const predicted = await this.nextJobId();
+    const approval = params.approve
+      ? [
+          {
+            to: this.addresses.token,
+            data: encodeFunctionData({ abi: tip20Abi, functionName: 'approve', args: [this.addresses.escrow, params.amount] }),
+          },
+        ]
+      : [];
     const common = [
       params.seller,
       params.amount,
@@ -226,9 +268,12 @@ export class TempexClient {
     ] as const;
     const receipt = await this.send(
       [
-        params.arbiter === undefined
-          ? this.call('createJob', [...common])
-          : this.call('createJobWithArbiter', [...common, params.arbiter]),
+        ...approval,
+        params.referrer !== undefined
+          ? this.call('createJobWithReferrer', [...common, params.arbiter ?? ZERO_ADDRESS, params.referrer])
+          : params.arbiter === undefined
+            ? this.call('createJob', [...common])
+            : this.call('createJobWithArbiter', [...common, params.arbiter]),
         this.call('fund', [predicted]),
       ],
       options,
@@ -287,6 +332,25 @@ export class TempexClient {
 
   async fund(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
     return this.send([this.call('fund', [jobId])], options);
+  }
+
+  /// Funds a job that was created earlier and left unfunded, with the allowance
+  /// for it in the same transaction: both land or neither does.
+  async approveAndFund(jobId: bigint, amount: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send(
+      [
+        {
+          to: this.addresses.token,
+          data: encodeFunctionData({ abi: tip20Abi, functionName: 'approve', args: [this.addresses.escrow, amount] }),
+        },
+        this.call('fund', [jobId]),
+      ],
+      options,
+    );
+  }
+
+  async cancel(jobId: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('cancel', [jobId])], options);
   }
 
   /// Commits to the delivered work by hash and, when `uri` is given, records
@@ -430,6 +494,71 @@ export class TempexClient {
 
   async credits(account: Address = this.address): Promise<bigint> {
     return this.read<bigint>('credits', [account]);
+  }
+
+  /// The exact fee a ruling on this job charges, floor included. Escrows before
+  /// v3 have no `arbitrationFee`; for them it is the locked rate alone.
+  async arbitrationFee(jobId: bigint): Promise<bigint> {
+    try {
+      return await this.read<bigint>('arbitrationFee', [jobId]);
+    } catch {
+      const job = await this.job(jobId);
+      return (job.amount * BigInt(job.arbitrationFeeBps)) / 10_000n;
+    }
+  }
+
+  /// The v3 terms kept beside the job: its referrer, the share that referrer
+  /// earns, and the minimum arbitration fee it locked.
+  async jobExtras(jobId: bigint): Promise<JobExtras> {
+    const [referrer, referralShareBps, arbitrationFeeFloor] = await this.read<readonly [Address, number, bigint]>(
+      'jobExtras',
+      [jobId],
+    );
+    return { referrer, referralShareBps: Number(referralShareBps), arbitrationFeeFloor };
+  }
+
+  /// The launch guards and who can change them. The owner can also upgrade the
+  /// escrow, so this is the first thing a cautious integrator should read.
+  async guards(): Promise<EscrowGuards> {
+    const [owner, version, newJobsPaused, maxJobAmount, maxOpenValue, openValue, arbitrationFeeFloor, referralShareBps] =
+      await Promise.all([
+        this.read<Address>('owner'),
+        this.read<string>('version'),
+        this.read<boolean>('newJobsPaused'),
+        this.read<bigint>('maxJobAmount'),
+        this.read<bigint>('maxOpenValue'),
+        this.read<bigint>('openValue'),
+        this.read<bigint>('arbitrationFeeFloor'),
+        this.read<number>('referralShareBps'),
+      ]);
+    return {
+      owner,
+      version,
+      newJobsPaused,
+      maxJobAmount,
+      maxOpenValue,
+      openValue,
+      arbitrationFeeFloor,
+      referralShareBps: Number(referralShareBps),
+    };
+  }
+
+  // ------------------------------------------------------------ owner only
+
+  async setNewJobsPaused(paused: boolean, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('setNewJobsPaused', [paused])], options);
+  }
+
+  async setLimits(maxJobAmount: bigint, maxOpenValue: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('setLimits', [maxJobAmount, maxOpenValue])], options);
+  }
+
+  async setArbitrationFeeFloor(floor: bigint, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('setArbitrationFeeFloor', [floor])], options);
+  }
+
+  async setReferralShare(referralShareBps: number, options: WriteOptions = {}): Promise<TempexReceipt> {
+    return this.send([this.call('setReferralShare', [referralShareBps])], options);
   }
 
   /// The contract's own digest. Comparing it to the off-chain signature digest

@@ -1,0 +1,110 @@
+{
+  "tempex": "adjudication-receipt/1",
+  "command": "court",
+  "at": "2026-10-08T22:39:36.716Z",
+  "chainId": 42431,
+  "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "relayExplorer": "https://explore.testnet.tempo.xyz/tx/0x61f02a4417dbf02b88063f26eb8d59d020ddd7264b685f67b10df3c1a6285835",
+  "jobId": 11,
+  "engine": "rules",
+  "model": "tempex-rules/1",
+  "amount": "4000000",
+  "evidenceHash": "0xdeffac8f9f262fe7f1bf334a45148f3ddb555216b3fc7e76569793e114783072",
+  "ruling": {
+    "jobId": 11,
+    "sellerAwardBps": 7500,
+    "evidenceHash": "0xdeffac8f9f262fe7f1bf334a45148f3ddb555216b3fc7e76569793e114783072",
+    "rationaleHash": "0x681b60485c0e63014ce368a83c9f751ca4352399070ef27b351163c62478d6b5",
+    "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. c1 \"Covers budgets, expiry, scopes and revocation\" (weight 1): open; a judgement criterion: no check can decide it. c2 \"Mentions the keychain by name\" (contains, weight 1): met; 1 of 1 required strings present. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 1.00 of 2 weight, 1 open; band 5000-8500 bps; ruling 7500 bps of the disputed amount, i.e. 75.0% to the seller of \"Summarize the Tempo access-key spec\" (job 11).",
+    "issuedAt": 1791499169,
+    "validUntil": 1791585575,
+    "model": "tempex-rules/1"
+  },
+  "verdict": {
+    "jobId": "11",
+    "sellerAwardBps": 7500,
+    "evidenceHash": "0xdeffac8f9f262fe7f1bf334a45148f3ddb555216b3fc7e76569793e114783072",
+    "rationaleHash": "0x681b60485c0e63014ce368a83c9f751ca4352399070ef27b351163c62478d6b5",
+    "issuedAt": "1791499169",
+    "validUntil": "1791585575"
+  },
+  "signature": "0x061c7aeaf4de399b13f7155ec6f2a2c59bc24a8aa542dadaaf1dae91527a0c8f4410f915b3a0b1bb6e0519c0698c9246b4ba13a1b49e6972cae07e44894677d81c",
+  "digest": "0x4267d870bc21182f0cb0b40d214f4367c9ef4ec63ffd6c31d6c08b43e5230062",
+  "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "certified": true,
+  "money": {
+    "amount": "4000000",
+    "bond": "200000",
+    "bondToSeller": "0",
+    "arbitrationFee": "500000",
+    "arbitrationFeeBps": 200,
+    "sellerAmount": "2875000",
+    "buyerAmount": "825000"
+  },
+  "band": {
+    "lowBps": 5000,
+    "highBps": 10000,
+    "center": 7500
+  },
+  "offers": {
+    "lowBps": 2500,
+    "highBps": 8500
+  },
+  "boundedBand": {
+    "lowBps": 5000,
+    "highBps": 8500,
+    "center": 7500
+  },
+  "signals": {
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Covers budgets, expiry, scopes and revocation",
+        "weight": 1,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      },
+      {
+        "id": "c2",
+        "text": "Mentions the keychain by name",
+        "weight": 1,
+        "kind": "check",
+        "check": "contains",
+        "credit": 1,
+        "passed": true,
+        "evidence": "1 of 1 required strings present"
+      }
+    ],
+    "totalWeight": 2,
+    "checkedWeight": 1,
+    "earnedWeight": 1,
+    "openWeight": 1,
+    "artifactsDeclared": 0,
+    "artifactsVerifiable": 0,
+    "evidenceStrength": 1,
+    "integrity": {
+      "termsHashMatches": true,
+      "deliverableHashMatches": true
+    },
+    "scoredCopy": "uri",
+    "deliverableText": "# Tempo access keys\n\nAn access key signs for an account through the account keychain. Each key has a budget per token and period, an expiry, and call scopes. The owner revokes it in one transaction.",
+    "sellerResponded": true
+  },
+  "clamped": false,
+  "flags": [],
+  "notes": [
+    "the parties' offers [2500, 8500] narrowed the rule band [5000, 10000] to [5000, 8500]",
+    "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+  ],
+  "relay": {
+    "jobId": 11,
+    "digest": "0x4267d870bc21182f0cb0b40d214f4367c9ef4ec63ffd6c31d6c08b43e5230062",
+    "sellerAwardBps": 7500,
+    "sellerAmount": "2875000",
+    "buyerAmount": "825000",
+    "arbitrationFee": "500000",
+    "hash": "0x61f02a4417dbf02b88063f26eb8d59d020ddd7264b685f67b10df3c1a6285835"
+  }
+}

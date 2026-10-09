@@ -21,7 +21,12 @@ const WHO_TONE: Record<Entry['who'], string> = { pip: 'text-pip', bolt: 'text-bo
 const WHO_NAME: Record<Entry['who'], string> = { pip: 'PIP', bolt: 'BOLT', ref: 'REF', tempo: 'TEMPO' };
 
 export function PlayTable({ table, scenarios }: { table: play.Table; scenarios: CorpusCase[] }) {
-  const [scenarioId, setScenarioId] = useState(scenarios[0]!.id);
+  // A link can pick the case (?scenario=echo) and name a referrer (?ref=0x…).
+  const [scenarioId, setScenarioId] = useState(() => {
+    const wanted = new URLSearchParams(window.location.search).get('scenario');
+    return scenarios.find((entry) => entry.id === wanted)?.id ?? scenarios[0]!.id;
+  });
+  const [referrer] = useState(play.referrerFromUrl);
   const scenario = scenarios.find((entry) => entry.id === scenarioId)!;
   const [stage, setStage] = useState<Stage>('seat');
   const [busy, setBusy] = useState<string | null>(null);
@@ -114,11 +119,15 @@ export function PlayTable({ table, scenarios }: { table: play.Table; scenarios: 
 
   const open = (pip = buyer, bolt = seller) =>
     run('Opening the deal', async () => {
-      const opened = await play.openDeal(pip!, bolt!, scenario, table);
+      const opened = await play.openDeal(pip!, bolt!, scenario, table, referrer);
       setJobId(opened.jobId);
       setTerms(opened.terms);
       note({ who: 'pip', text: 'approved the escrow', hash: opened.approveHash });
-      note({ who: 'pip', text: `opened job ${opened.jobId} and escrowed ${amount(escrowed)} αUSD in one transaction`, hash: opened.hash });
+      note({
+        who: 'pip',
+        text: `opened job ${opened.jobId} and escrowed ${amount(escrowed)} αUSD in one transaction${referrer ? `, referred by ${shortHash(referrer)}` : ''}`,
+        hash: opened.hash,
+      });
       setBalance(await play.balanceOf(pip!));
       setStage('deliver');
       return opened;
@@ -309,6 +318,7 @@ export function PlayTable({ table, scenarios }: { table: play.Table; scenarios: 
                 ['escrow', `${amount(escrowed)} αUSD`],
                 ['referee', table.arbiter ? shortHash(table.arbiter) : 'house arbiter'],
                 ['fees', 'sponsored'],
+                ...(referrer ? [['referrer', shortHash(referrer)]] : []),
               ].map(([k, v]) => (
                 <div key={k} className="bg-ink-2 p-3">
                   <dt className="label">{k}</dt>
@@ -474,12 +484,17 @@ export function PlayTable({ table, scenarios }: { table: play.Table; scenarios: 
                 <p className="display text-[clamp(36px,5vw,64px)]">{pct(ruling.sellerAwardBps)} to Bolt.</p>
                 <RulingGauge ruleBand={ruling.band} offers={preview?.offers ?? null} awardBps={ruling.sellerAwardBps} />
                 <p className="max-w-[70ch] text-[14px] leading-relaxed text-fg-2">{ruling.rationale}</p>
+                {ruling.panelFallback ? (
+                  <p className="border border-pip-dim px-4 py-3 font-mono text-[12px] text-pip">
+                    The judge panel was unavailable, so the rule engine ruled and judgement criteria stood at the neutral midpoint.
+                  </p>
+                ) : null}
                 <dl className="grid gap-px border hairline bg-line text-[13px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
                   {[
                     ['Bolt gets', amount(ruling.money.sellerAmount, 'ledger')],
                     ['Pip gets back', amount(ruling.money.buyerAmount, 'ledger')],
                     ['referee fee', amount(ruling.money.arbitrationFee, 'ledger')],
-                    ['engine', ruling.engine],
+                    ['engine', ruling.engine === 'llm' ? `judge panel${ruling.usage ? ` · ${(ruling.usage.inputTokens + ruling.usage.outputTokens).toLocaleString('en-US')} tokens` : ''}` : 'rule engine'],
                   ].map(([k, v]) => (
                     <div key={k} className="bg-ink-2 p-3">
                       <dt className="label">{k}</dt>

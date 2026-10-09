@@ -3,62 +3,62 @@
   "scenario": "underdelivered",
   "title": "Localization sprint, partly delivered",
   "session": "underdelivered",
-  "startedAt": "2026-10-07T02:12:18.507Z",
-  "updatedAt": "2026-10-07T02:12:27.826Z",
-  "submittedAt": "2026-10-07T02:12:18.507Z",
-  "predictedJobId": "4",
-  "jobId": "4",
+  "startedAt": "2026-10-08T17:37:26.765Z",
+  "updatedAt": "2026-10-08T17:39:54.691Z",
+  "submittedAt": "2026-10-08T17:37:26.765Z",
+  "predictedJobId": "1",
+  "jobId": "1",
   "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
   "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-  "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+  "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
   "amount": "25000000",
   "stages": {
     "case": {
-      "predictedJobId": "4",
+      "predictedJobId": "1",
       "jobId": "",
-      "submittedAt": "2026-10-07T02:12:18.507Z",
+      "submittedAt": "2026-10-08T17:37:26.765Z",
       "termsHash": "0x46d03fcc230f1b0fe8d89bd032f06043b3b4108979a0434efe78cc507cf1d250",
       "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6",
-      "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
+      "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
       "amount": "25000000",
-      "termsPath": "/home/user/tempex/evidence/job-4.terms.json",
-      "bundlePath": "/home/user/tempex/evidence/job-4.evidence.json"
+      "termsPath": "/home/user/tempex/evidence/job-1.terms.json",
+      "bundlePath": "/home/user/tempex/evidence/job-1.evidence.json"
     },
     "approve": {
-      "hash": "0xcf3e8cb885f9f9d0cc1200b7b01bbcd1dcf1e223aed090cfcb6a367bf430027a",
+      "hash": "0xdc0046c45e82c0fa9a1d38711c0e8f2eddac157b7494a73174f51b5894cf3608",
       "amount": "25000000"
     },
     "open": {
-      "hash": "0xea291d7fc3024cb436ac1ad2f04a6a8b2a004d244a1a947c388a876f3d40a438",
-      "jobId": "4",
-      "deliveryDeadline": "1791342739",
-      "reviewWindow": "3600"
+      "hash": "0xdc0046c45e82c0fa9a1d38711c0e8f2eddac157b7494a73174f51b5894cf3608",
+      "jobId": "1",
+      "deliveryDeadline": "0",
+      "reviewWindow": "0"
     },
     "deliver": {
-      "hash": "0x5f22640e59d762febc461343a1fdba062d5c3973f59ef82f9de0c4d905428971",
+      "hash": "0x165bb11eb1ca8b45c91f52d4d46a0c445500fd5353cd4f2f674bbb7f540d5201",
       "deliverableHash": "0x07576e79d0309b23ccfcb62e16eb3536cb69bc91ba3714cbf0601ad6e35db7d6"
     },
     "dispute": {
-      "hash": "0xc3339b98d7ced2e1fd6c706d2bb36450d33a962193006897e5c311067dee3d76",
-      "disputeHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-      "rederived": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-      "response": "0x1225bc623a6cc3de95ab7727a9e160422f58157c5249496706d06f023aaebf48",
-      "responseHash": "0xc9e147d1e0ceaabc6c3ccfc20491dac028aaf81967ded47427f4e47fdb20a9a6"
+      "hash": "0x4d31571b7a28d675790bc48658515bd88343b1fda26b5399b7989f5070f02b82",
+      "disputeHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+      "rederived": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+      "response": "0xb125b39d1ae937a5a2c89690424beb5ced9c9a945b7fb67d8db5458bb54c6995",
+      "responseHash": "0xdc54a172a2deafd4381f3efb39018abc55bc64a221caaf39d53a95e3c860b41f"
     },
     "rule": {
-      "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
-      "signature": "0x2f9235fda4e8dd73558eb8ae1014dac1d8c1f1dcc72abe233463f2fddd3c818f518dda0d157a7450fac619bc933a5de2ca8d22178c7fa9fc7497addea7448a201b",
+      "digest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
+      "signature": "0xbdf1c95577aa5a6e5570b70210f389ebbf90ad9d18c95cae6feaabfaf5f2bfb721fdf3ee9b3ae779a911d35b1b3575b3f4838628662020871aefc4d708e26d111c",
       "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
       "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
       "certified": "true",
       "engine": "rules",
       "model": "tempex-rules/1",
       "sellerAwardBps": "4750",
-      "evidenceHash": "0xa0d1f1b87202a213338961688cb8200237c06bdc113c0ee6287076b66b7f36b0",
-      "rationaleHash": "0x0473557570d133f2dacf6f61f5a6af685ad7da6c6ad376a86ea6cdec4ca121be",
-      "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 4).",
-      "issuedAt": "1791339142",
-      "validUntil": "1791425543",
+      "evidenceHash": "0x0ffccd56888e97de710185ef12f2d3c037c27cb02ce37cdf2299b5d485207589",
+      "rationaleHash": "0xe141485ca0b86875b9612c8e5fb1c6cf16d6197e3f9fe3859559eb67f24ff3ed",
+      "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. keys \"Every checkout and email string in the brief is delivered\" (jsonKeys, weight 3): earned 0.75; 6 of 8 required keys present; missing checkout.coupon, checkout.terms. french \"The strings are written in French\" (language, weight 2): met; written in fra. prices \"Prices use the French format, e.g. 12,50 €\" (regex, weight 2): earned 0.00; 0 of 2 values match /^\\d+,\\d{2} €$/; first miss checkout.total = \"$12.50\". dates \"Dates use the French long format, e.g. 7 octobre 2026\" (regex, weight 1): earned 0.00; 0 of 1 values match /^\\d{1,2} (janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre) \\d{4}$/; first miss order.placed = \"October 7, 2026\". glossary \"The supplied glossary terms are used\" (contains, weight 1): earned 0.00; 0 of 2 required strings present; missing \"Valider la commande\", \"Code promo\". tone \"The copy reads naturally to a French shopper\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 4.25 of 10 weight, 1 open; band 4250-5000 bps; ruling 4750 bps of the disputed amount, i.e. 47.5% to the seller of \"Localization sprint, partly delivered\" (job 1).",
+      "issuedAt": "1791481187",
+      "validUntil": "1791567589",
       "amount": "25000000",
       "bond": "1250000",
       "bondToSeller": "480937",
@@ -69,16 +69,16 @@
       "band": "4250-5250"
     },
     "relay": {
-      "hash": "0x3a03525d4227bec88bc57d7ff1b3e1d9f6e03653f73b6d55ff2a6056035274d5",
+      "hash": "0x2dee1b6208f7fb1f6d73f6dee9c21a112cd7654ff065920f3f96536f1aa19449",
       "relayer": "0xEA4D86301245fcEaB4c6BcF2999EC393104362F5",
-      "digest": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011",
+      "digest": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40",
       "sellerAmount": "12093437",
       "buyerAmount": "13656563",
       "arbitrationFee": "500000",
-      "verdictHash": "0x0093c825cb371b1947ba9847af1f5f274032c96e1e18e07e297bfe0c82925011"
+      "verdictHash": "0xa4cf57c25ee2d0a68f61e8bc31fb3679f83cf179080cdcc8ad2e12d800eb7e40"
     },
     "settle": {
-      "at": "2026-10-07T02:12:27.826Z"
+      "at": "2026-10-08T17:39:54.691Z"
     }
   }
 }

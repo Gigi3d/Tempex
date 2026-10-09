@@ -18,6 +18,7 @@
     "deploy:escrow": "tsx scripts/deploy.ts"
   },
   "dependencies": {
+    "ox": "^0.14.45",
     "viem": "^2.38.5"
   },
   "devDependencies": {
