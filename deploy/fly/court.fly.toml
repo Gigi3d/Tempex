@@ -1,0 +1,29 @@
+# fly deploy --config deploy/fly/court.fly.toml   (run from the repo root)
+# Private on purpose: no [http_service], so no public address. The web app
+# reaches it at http://tempex-court.internal:8788 over Fly's private network.
+# The one secret: fly secrets set ARBITER_KEY=... --app tempex-court
+app = "tempex-court"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile.node"
+
+[env]
+  TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz"
+  TEMPEX_ESCROW = "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a"
+  TEMPEX_TOKEN = "0x20c0000000000000000000000000000000000001"
+  ARBITER_ADDRESS = "0x3425173FAB110f780482af62Bf603b9A7D023905"
+  COURT_PORT = "8788"
+  TEMPEX_EVIDENCE_DIR = "/data/evidence"
+  TEMPEX_RUNS_DIR = "/data/runs"
+
+[processes]
+  app = "pnpm court --host ::"
+
+[mounts]
+  source = "court_data"
+  destination = "/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

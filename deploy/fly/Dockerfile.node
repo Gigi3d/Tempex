@@ -1,0 +1,16 @@
+# The beacon and the court: plain Node services run straight from TypeScript
+# with tsx, the same way `pnpm beacon` and `pnpm court` run locally.
+FROM node:22-slim
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.34.5 --activate
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json tsconfig.base.json ./
+COPY packages/sdk/package.json packages/sdk/
+COPY packages/arbiter/package.json packages/arbiter/
+COPY packages/beacon/package.json packages/beacon/
+RUN pnpm install --frozen-lockfile --filter @tempex/beacon... --filter @tempex/arbiter...
+COPY packages/sdk packages/sdk
+COPY packages/arbiter packages/arbiter
+COPY packages/beacon packages/beacon
+ENV NODE_ENV=production
+# Each fly.toml picks what to run.
+CMD ["pnpm", "beacon"]
