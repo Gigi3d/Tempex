@@ -79,7 +79,7 @@ Tempex is those four things, composed so that each one is checkable independentl
 └───────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-13,650 hand-written lines (source and scripts; 15,622 including the generated ABIs), plus 1,636 lines of tests: 1,087 of Solidity (61 tests, one fuzzed) and 549 of TypeScript (45 tests). One Solidity contract, no proxies, no upgrade path.
+About 26,000 hand-written lines of source, scripts and web app, plus about 2,700 lines of tests: 85 Solidity tests (two fuzzed) and 94 TypeScript tests. One Solidity contract behind a UUPS proxy, upgradeable today by one disclosed key (§11.1).
 
 The box says **27 events** because that is the ABI's count: `TempexEscrow.sol` declares 24, and `Ownable2Step` and `EIP712` contribute `OwnershipTransferStarted`, `OwnershipTransferred` and `EIP712DomainChanged`.
 
@@ -443,7 +443,7 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
 
 ## 12. Evidence
 
-**The current deployment, v3.** `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a`, deployed and verified by `pnpm deploy:escrow`. About 21 jobs on chain, **every one opened by us while testing**: disputes ruled and relayed, deliveries accepted, refunds, jobs opened by agent keys, and job 21 funded from a hire link. The first outside job is the next milestone. Through the dashboard, a full pass of 47 checks (every screen, dialog and passkey prompt, both sides, agent keys, pairing, revoke) passed live.
+**The current deployment, v3.** `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a`, deployed and verified by `pnpm deploy:escrow`. 26 jobs on chain, **every one opened by us while testing**: disputes settled and relayed, deliveries accepted, refunds, jobs opened by agent keys, job 21 funded from a hire link, and job 26, 400 labeled images sold by one agent to another and settled at 81.25% by rule. The first outside job is the next milestone. Through the dashboard, a full pass of 47 checks (every screen, dialog and passkey prompt, both sides, agent keys, pairing, revoke) passed live.
 
 **The second version's deployment.** `0x001c8C3391E591C9CBDFdFE4227e585b86041157`, deployed and verified by `pnpm deploy:escrow` (§8.3). On chain: **4 jobs**, 100 alphaUSD escrowed in total. Jobs 1, 3 and 4 were disputed, answered by the seller, and settled by a verdict from a listed arbiter, relayed by a key that is neither party nor arbiter; job 2 (the SDK smoke test) sits `Funded` under the house arbiter, refundable by anyone after its deadline. The treasury holds 0.30 alphaUSD of credited protocol fees.
 

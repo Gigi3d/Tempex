@@ -1,0 +1,107 @@
+{
+  "tempex": "adjudication-receipt/1",
+  "command": "court",
+  "at": "2026-10-12T15:09:48.425Z",
+  "chainId": 42431,
+  "escrow": "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "escrowExplorer": "https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a",
+  "relayExplorer": "https://explore.testnet.tempo.xyz/tx/0x037ff3b2b8111610391eee5ed7f863de8ec4f3f58a19f553cc6b104a05be7c54",
+  "jobId": 23,
+  "engine": "rules",
+  "model": "tempex-rules/1",
+  "amount": "40000000",
+  "evidenceHash": "0x7e2d35159cfaeffb79526a82e80005f345d73d0ab71caf708df315daca09378b",
+  "ruling": {
+    "jobId": 23,
+    "sellerAwardBps": 5000,
+    "evidenceHash": "0x7e2d35159cfaeffb79526a82e80005f345d73d0ab71caf708df315daca09378b",
+    "rationaleHash": "0x68faf444075cf1c166c44f7a8d298cb570e34631980c4f5dcfc25ef52ed1fa93",
+    "rationale": "Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint. c1 \"Every string translated into both languages\" (weight 1): open; a judgement criterion: no check can decide it. c2 \"Keeps every placeholder\" (weight 1): open; a judgement criterion: no check can decide it. Integrity: the work fetched from the delivery URI hashes to the delivery committed on chain, and the terms hash matches the job. Verified credit 0.00 of 2 weight, 2 open; band 5000-7000 bps; ruling 5000 bps of the disputed amount, i.e. 50.0% to the seller of \"Localize a game UI into Spanish and Portuguese\" (job 23).",
+    "issuedAt": 1791817777,
+    "validUntil": 1791904186,
+    "model": "tempex-rules/1"
+  },
+  "verdict": {
+    "jobId": "23",
+    "sellerAwardBps": 5000,
+    "evidenceHash": "0x7e2d35159cfaeffb79526a82e80005f345d73d0ab71caf708df315daca09378b",
+    "rationaleHash": "0x68faf444075cf1c166c44f7a8d298cb570e34631980c4f5dcfc25ef52ed1fa93",
+    "issuedAt": "1791817777",
+    "validUntil": "1791904186"
+  },
+  "signature": "0xa2141e30fcac4e5aa44c9bff600583f0f59751f04bfd365658967d952b017c0d6fc1b657897d35f205db41a0c52a369ec59a8d1a945255ee553fde447d8ca57b1c",
+  "digest": "0xc0951c3b478907d74f2b54773cbe6294e7dc5fd8f9ab673f844f3858fbc4fb54",
+  "recovered": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "registeredArbiter": "0x3425173FAB110f780482af62Bf603b9A7D023905",
+  "certified": true,
+  "money": {
+    "amount": "40000000",
+    "bond": "2000000",
+    "bondToSeller": "800000",
+    "arbitrationFee": "800000",
+    "arbitrationFeeBps": 200,
+    "sellerAmount": "20400000",
+    "buyerAmount": "20800000"
+  },
+  "band": {
+    "lowBps": 0,
+    "highBps": 10000,
+    "center": 5000
+  },
+  "offers": {
+    "lowBps": 5000,
+    "highBps": 7000
+  },
+  "boundedBand": {
+    "lowBps": 5000,
+    "highBps": 7000,
+    "center": 5000
+  },
+  "signals": {
+    "criteria": [
+      {
+        "id": "c1",
+        "text": "Every string translated into both languages",
+        "weight": 1,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      },
+      {
+        "id": "c2",
+        "text": "Keeps every placeholder",
+        "weight": 1,
+        "kind": "judge",
+        "evidence": "a judgement criterion: no check can decide it"
+      }
+    ],
+    "totalWeight": 2,
+    "checkedWeight": 0,
+    "earnedWeight": 0,
+    "openWeight": 2,
+    "artifactsDeclared": 0,
+    "artifactsVerifiable": 0,
+    "evidenceStrength": 1,
+    "integrity": {
+      "termsHashMatches": true,
+      "deliverableHashMatches": true
+    },
+    "scoredCopy": "uri",
+    "deliverableText": "{\n  \"es\": {\n    \"menu_play\": \"Jugar\",\n    \"menu_settings\": \"Ajustes\",\n    \"menu_quit\": \"Salir\",\n    \"dialog_welcome\": \"¡Bienvenido, {player}!\",\n    \"dialog_level_up\": \"{player} sube de nivel\",\n    \"button_continue\": \"Continuar\"\n  },\n  \"pt-BR\": {\n    \"menu_play\": \"Jogar\",\n    \"menu_settings\": \"Configurações\",\n    \"dialog_welcome\": \"Bem-vindo, {player}!\"\n  }\n}",
+    "sellerResponded": true
+  },
+  "clamped": false,
+  "flags": [],
+  "notes": [
+    "the parties' offers [5000, 7000] narrowed the rule band [0, 10000] to [5000, 7000]",
+    "no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint"
+  ],
+  "relay": {
+    "jobId": 23,
+    "digest": "0xc0951c3b478907d74f2b54773cbe6294e7dc5fd8f9ab673f844f3858fbc4fb54",
+    "sellerAwardBps": 5000,
+    "sellerAmount": "20400000",
+    "buyerAmount": "20800000",
+    "arbitrationFee": "800000",
+    "hash": "0x037ff3b2b8111610391eee5ed7f863de8ec4f3f58a19f553cc6b104a05be7c54"
+  }
+}
