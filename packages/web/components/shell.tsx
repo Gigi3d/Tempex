@@ -6,6 +6,7 @@ import { beaconUrl } from '@/lib/beacon';
 import { snapshot } from '@/lib/snapshot';
 
 import { InboxBadge } from './desk/inbox-badge';
+import { MobileMenu } from './mobile-menu';
 import { Hash, Wordmark } from './ui';
 
 const NAV = [
@@ -26,14 +27,17 @@ export function Header() {
         <Link href="/" aria-label="Tempex home" className="shrink-0">
           <Wordmark />
         </Link>
-        <nav aria-label="Main" className="ml-auto flex min-w-0 items-center gap-0 overflow-x-auto text-[14px] text-fg-2 [mask-image:linear-gradient(to_right,black_80%,transparent)] md:gap-1 md:[mask-image:none]">
+        <nav aria-label="Main" className="ml-auto hidden min-w-0 items-center gap-1 text-[14px] text-fg-2 md:flex">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="inline-flex shrink-0 items-center px-2 py-2 transition-colors hover:text-fg md:px-3">
+            <Link key={item.href} href={item.href} className="inline-flex shrink-0 items-center px-3 py-2 transition-colors hover:text-fg">
               {item.label}
               {item.href === '/dashboard' ? <InboxBadge /> : null}
             </Link>
           ))}
         </nav>
+        <div className="ml-auto md:hidden">
+          <MobileMenu items={NAV} />
+        </div>
         <Link href="/agents" className="btn btn-primary hidden md:inline-flex">
           Give an agent a key
         </Link>
