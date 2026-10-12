@@ -20,7 +20,9 @@ Agents can now pay each other. The hard part is letting them do it without handi
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
-- 85 Forge tests (two fuzzed), plus 63 arbiter, 16 beacon, 15 agent, 24 web and 2 demo tests (`pnpm check`), including the audit's failure cases as regressions
+**Submission materials:** [pitch deck](https://claude.ai/artifact/AY9K1TZWFJKednRrSSfzEd) · [demo film storyboard, "While You Sleep"](https://claude.ai/artifact/J8bvCxvXmxjoBh1aPfmBL7) · [strategy review](https://claude.ai/artifact/KmEWpkkTvtFuveEiNvbZpt) · [technical writeup](docs/technical-writeup.md)
+
+- 85 Forge tests (two fuzzed), plus 39 arbiter, 16 beacon, 15 agent and 24 web tests (`pnpm check`), including the audit's failure cases as regressions
 - Live deployment, v3: `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` ([explorer](https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a)), a UUPS proxy at block 38,737,474, deployed and verified by `pnpm deploy:escrow`. Launch guards: 500 alphaUSD per job, 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor, and a 20% referral share. It supersedes v2 at `0x001c…1157`, whose 7 jobs remain on chain.
 - Both final live runs: 23/23 expectations passed, unsponsored and sponsored
 - Beacon smoke: 214 assertions against the live chain, 0 units spent
@@ -185,7 +187,8 @@ The two `eth_sendTransaction` strings in `src/` are *metadata the beacon returns
 ## Live evidence
 
 - `deployments/moderato.json` — deployment record (block 37,010,916)
-- `evidence/` — job terms and evidence artifacts for the settled jobs
+- `evidence/` — job terms, the buyer's evidence and the seller's response for every settled job, enough to re-derive each ruling
+- `runs/job-*.json` — the arbiter's receipt for each ruling, including job 26 (400 labeled images, settled at 81.25% by rule)
 - `runs/demo-*.json` — lifecycle receipts, one per live run, every expectation asserted (23/23 on both final runs)
 - `runs/beacon-smoke-*.json` — the beacon's live receipt: every assertion, the index it rebuilt, the routes it served, and the treasury balance before and after. 0 spent.
 - Job 3's receipt caught our own fee-accounting bug — the 485-raw-unit Tempo fee deducted from the same stablecoin balance; fixed before the clean runs. The receipts are the point.
@@ -206,4 +209,4 @@ The two `eth_sendTransaction` strings in `src/` are *metadata the beacon returns
 
 ## License
 
-MIT (see `contracts/lib/` for vendored Foundry and OpenZeppelin licenses).
+MIT, see [`LICENSE`](LICENSE) (and `contracts/lib/` for vendored Foundry and OpenZeppelin licenses).
