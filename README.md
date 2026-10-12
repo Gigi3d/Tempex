@@ -98,6 +98,7 @@ pnpm test:ts                # arbiter: checks, band properties, audit regression
 pnpm check                  # all of the above, plus demo predict and drill
 
 pnpm demo drill             # offline: push scripted award proposals through the band guardrail
+pnpm --filter @tempex/demo seed   # 8 real testnet jobs on the hosted site (--site, --dry, --only)
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
