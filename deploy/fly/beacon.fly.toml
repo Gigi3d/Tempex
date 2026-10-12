@@ -33,6 +33,7 @@ primary_region = "lhr"
   destination = "/data"
 
 [http_service]
+  processes = ["app"]
   internal_port = 8787
   force_https = true
   # Never sleep: the job index lives in memory and rebuilds from the chain on a cold start.
