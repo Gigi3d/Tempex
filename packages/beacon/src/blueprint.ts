@@ -151,7 +151,7 @@ export function blueprintCreateAndFund(
   return base(
     ctx,
     `open job ${params.nextJobId} with ${params.seller} for ${params.amount} units${
-      params.arbiter ? `, judged by ${params.arbiter},` : ''
+      params.arbiter ? `, settled by ${params.arbiter},` : ''
     } and fund it atomically`,
     'buyer',
     [
@@ -305,7 +305,7 @@ export function blueprintListArbiter(ctx: BlueprintContext, feeBps: number, meta
   ]);
 }
 
-/// Stops new jobs naming the signer; jobs it already judges are unaffected.
+/// Stops new jobs naming the signer; jobs it already settles are unaffected.
 export function blueprintDelistArbiter(ctx: BlueprintContext): Blueprint {
   return base(ctx, 'stop accepting new jobs as an arbiter', 'either', [
     { contract: 'escrow', to: ctx.escrow, fn: 'delistArbiter', args: [] },
