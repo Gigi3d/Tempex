@@ -25,14 +25,14 @@ const GUARANTEES = [
     cta: 'See every job',
   },
   {
-    title: 'Judgement',
-    body: 'Scored per criterion, with partial credit. Not a yes or no.',
+    title: 'Settlement by rule',
+    body: 'Each agreed check pays its share, with partial credit. No judge, no model, no discretion.',
     href: '/cases/underdelivered',
     cta: 'Read a case',
   },
   {
     title: 'Boundedness',
-    body: 'The judge moves only inside the band the evidence and the offers allow.',
+    body: 'A ruling can only land inside the range both parties offered. The contract rejects anything else.',
     href: '/demo#cage',
     cta: 'Try to break it',
   },
@@ -63,15 +63,15 @@ export default async function Home() {
       {/* Hero */}
       <section className="wrap grid items-center gap-12 pb-16 pt-20 lg:grid-cols-[1.1fr_1fr] lg:pt-28">
         <div className="flex flex-col gap-7">
-          <Eyebrow tone="ref">The escrow and dispute layer for agent-to-agent commerce</Eyebrow>
+          <Eyebrow tone="ref">Bounded settlement for agent-to-agent commerce</Eyebrow>
           <h1 className="display text-[clamp(44px,6vw,88px)]">
             <span className="block whitespace-nowrap">Your agents spend.</span>
             <span className="block whitespace-nowrap text-fg-2">Inside your limits.</span>
           </h1>
           <p className="lede">
             Give each agent a Tempo key with a budget and an expiry. It hires other agents through escrow: the money waits until
-            the work is delivered, and a disagreement goes to a referee that can only rule inside the range the evidence and both
-            offers allow. You set the limits. Tempo enforces them.
+            the work is delivered, code checks what both sides agreed, and a disagreement settles by rule inside the range both
+            offers allow. No judge, no model. You set the limits. Tempo enforces them.
           </p>
           <p className="text-[14px] text-fg-2">
             Built for agent-to-agent subcontracting: tasks worth $5 to $500 with a deliverable you can check.
@@ -135,17 +135,13 @@ export default async function Home() {
               </div>
             </div>
             <div className="flex items-start gap-3 border hairline p-4">
-              <span className={`grid h-8 w-8 shrink-0 place-items-center ${adjudication.engine === 'rules' ? 'bg-panel-2 text-fg-3' : 'bg-ref-dim text-ref'}`} aria-hidden>
-                {adjudication.engine === 'rules' ? '≡' : '◆'}
+              <span className="grid h-8 w-8 shrink-0 place-items-center bg-ref-dim text-ref" aria-hidden>
+                ≡
               </span>
               <div className="min-w-0">
-                <p className="text-[14px]">
-                  {adjudication.engine === 'rules' ? 'Decided by the rule engine alone' : 'Judged by a model panel, inside the band'}
-                </p>
+                <p className="text-[14px]">Settled by rule, inside the offers</p>
                 <p className="text-[12.5px] text-fg-3">
-                  {adjudication.engine === 'rules'
-                    ? `${adjudication.model}: code checked what it could, and the judgement criteria stood at the neutral midpoint. No model judged this one.`
-                    : `${adjudication.model} scored the judgement criteria from quotes it had to find in the work.`}
+                  {`${adjudication.model}: each agreed check paid its share, unchecked weight split at the midpoint, and the result stayed inside both offers. Anyone can re-run it.`}
                 </p>
               </div>
             </div>
@@ -164,7 +160,7 @@ export default async function Home() {
         {[
           { n: '01', tone: 'text-pip', title: 'You set the limits', body: 'Each agent gets its own Tempo access key: a budget per day, week or month, an expiry, and calls that only reach the Tempex escrow. Approve it with a passkey. Revoke it in one tap.', href: '/agents', cta: 'Give an agent a key' },
           { n: '02', tone: 'text-bolt', title: 'Agents do the deals', body: 'Your agent hires another agent, or gets hired through a link. The money waits in escrow until the work is delivered; every step is signed by the key that took it, and you see which one.', href: '/dashboard', cta: 'Open the dashboard' },
-          { n: '03', tone: 'text-ref', title: 'The chain keeps everyone honest', body: 'Tempo enforces the budget. The escrow enforces the deadlines. If the two sides disagree, the referee rules inside the range both offers allow, and the contract rejects anything outside it.', href: '/demo#cage', cta: 'Try to break the referee' },
+          { n: '03', tone: 'text-ref', title: 'The chain keeps everyone honest', body: 'Tempo enforces the budget. The escrow enforces the deadlines. If the two sides disagree, the agreed checks decide it by rule, inside the range both offers allow, and the contract rejects anything outside it.', href: '/demo#cage', cta: 'Try to break the bounds' },
         ].map((step) => (
           <Link key={step.n} href={step.href} className="group flex flex-col gap-3 bg-panel p-6 transition-colors hover:bg-panel-2">
             <span className={`font-mono text-[12px] ${step.tone}`}>{step.n}</span>
@@ -299,7 +295,7 @@ await relayer.resolve(jobId, verdict, signature);`}</pre>
           {[
             { who: <Pip id="cast-pip" size={120} mood="happy" />, name: 'Pip', role: 'the buyer', tone: 'pip' as const, text: 'Pays 25 αUSD into escrow for a French checkout locale. The money waits.' },
             { who: <Bolt id="cast-bolt" size={120} mood="happy" />, name: 'Bolt', role: 'the seller', tone: 'bolt' as const, text: 'Delivers most of it. Prices and dates stay in US format. Then it is disputed.' },
-            { who: <Ref id="cast-ref" size={120} mood="calm" />, name: 'Ref', role: 'the referee', tone: 'ref' as const, text: 'Checks what code can check, scores the rest, and lands inside both offers.' },
+            { who: <Ref id="cast-ref" size={120} mood="calm" />, name: 'Ref', role: 'the referee', tone: 'ref' as const, text: 'Runs the checks both sides agreed, splits what no check decides, and lands inside both offers.' },
           ].map((c) => (
             <div key={c.name} className="flex flex-col gap-4 bg-ink-2 p-8">
               {c.who}

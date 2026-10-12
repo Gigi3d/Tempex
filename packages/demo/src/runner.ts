@@ -10,7 +10,6 @@ import {
   runStamp,
   runsDir as resolveRunsDir,
   writeJson,
-  type AdjudicationEngine,
   type AdjudicationResult,
   type VerdictMoney,
 } from '@tempex/arbiter';
@@ -110,13 +109,12 @@ export type DemoOptions = {
   force?: boolean;
   /// Discard the recorded session and start over.
   fresh?: boolean;
-  /// Judge the job by the arbiter key as a listed market arbiter, named with
+  /// Settle the job with the arbiter key as a listed market arbiter, named with
   /// createJobWithArbiter, instead of the escrow's house arbiter. Lets anyone run
   /// the full lifecycle with keys of their own, and exercises the arbiter market.
   listedArbiter?: boolean;
   /// Session name; `runs/demo-<session>.json`. Defaults to the scenario id.
   session?: string;
-  engine?: AdjudicationEngine;
   evidenceDir?: string;
   runsDir?: string;
   write?: (line: string) => void;
@@ -151,7 +149,6 @@ type ResolvedOptions = {
   force: boolean;
   fresh: boolean;
   listedArbiter: boolean;
-  engine: AdjudicationEngine;
   session: string;
   evidenceDir: string;
   runsDir: string;
@@ -611,7 +608,6 @@ class DemoRun {
       client: this.clients.arbiter,
       jobId,
       evidenceCase: response === undefined ? evidenceCase : { ...evidenceCase, response },
-      engine: this.options.engine,
       dryRun: false,
       relay: false,
       writeOptions: this.writeOptions,
@@ -637,10 +633,8 @@ class DemoRun {
     this.expect('certified', 'true', String(result.certified));
 
     this.transcript.row(
-      'engine',
-      result.engine === 'llm'
-        ? `${result.model} — a model judged inside the band`
-        : `${result.model} — deterministic, no model in the loop`,
+      'rule',
+      `${result.model} — bounded settlement, arithmetic on public inputs`,
     );
     for (const criterion of signals.criteria) {
       this.transcript.row(
@@ -652,7 +646,7 @@ class DemoRun {
     }
     this.transcript.row(
       'verified',
-      `${signals.earnedWeight.toFixed(2)} of ${signals.totalWeight} weight decided by checks on the delivered bytes; ${signals.openWeight} left to judgement`,
+      `${signals.earnedWeight.toFixed(2)} of ${signals.totalWeight} weight decided by checks on the delivered bytes; ${signals.openWeight} unchecked, split at the midpoint`,
     );
     this.transcript.prose(ruling.rationale, 'rationale');
     this.transcript.row('band', `${band.lowBps}-${band.highBps} bps around ${band.center}`);
@@ -1049,7 +1043,6 @@ export async function runDemo(options: DemoOptions): Promise<DemoResult> {
     force: options.force ?? false,
     fresh: options.fresh ?? false,
     listedArbiter: options.listedArbiter ?? false,
-    engine: options.engine ?? 'auto',
     session: name,
     evidenceDir,
     runsDir,

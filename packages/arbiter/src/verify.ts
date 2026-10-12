@@ -88,7 +88,7 @@ const FIXTURE_CLAIM = 'The glossary terms are missing from the delivery.';
 
 /// A dispute that never happened, shaped exactly like one that did: a partial
 /// delivery against three agreed criteria. The copy is French (check met), the
-/// prices kept US formatting (check failed), and the glossary is a judgement left
+/// prices kept US formatting (check failed), and the glossary is an unchecked criterion left
 /// open, so the band is 4000-6000 bps.
 ///
 /// `analyze` is a pure function, so a fabricated job proves the band without
@@ -214,12 +214,12 @@ export async function verifyArbiter(params: { client: TempexClient }): Promise<V
       : `band ${band.lowBps}-${band.highBps} bps (centre ${band.center}), signals ${signalsDigest(fromDisk)}`,
   );
 
-  // ---- 3. the guardrail pulls a judge into that band ----
+  // ---- 3. the guardrail pulls any award into that band ----
   const low = clampToBand(band.lowBps - 2_500, band);
   const high = clampToBand(band.highBps + 2_500, band);
   const centre = clampToBand(band.center, band);
   check(
-    'a judge outside the band is clamped into it',
+    'an award outside the band is clamped into it',
     low.clamped &&
       low.bps === band.lowBps &&
       high.clamped &&

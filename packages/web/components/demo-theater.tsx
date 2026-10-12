@@ -13,8 +13,8 @@ type Act = { id: string; title: string; seconds: number; notes: string };
 export const ACTS: Act[] = [
   { id: 'deal', title: 'The deal', seconds: 30, notes: 'Pip pays 25 αUSD for a French checkout locale. The money sits in the escrow, not with us. Bolt delivers. Here is the brief and what arrived.' },
   { id: 'dispute', title: 'The dispute', seconds: 30, notes: 'Pip disputes and pins its evidence on chain with a 5% bond. Bolt answers inside its 7-day window. Hashes, not promises.' },
-  { id: 'ruling', title: 'The ruling', seconds: 60, notes: 'Code checks what it can: 9 of 10 weight, 4.25 credited. One unit is judgement. That gives the band, the offers narrow it, and the award lands inside both.' },
-  { id: 'cage', title: 'Cage the judge', seconds: 45, notes: 'Hand them the slider. Let them try to cheat. The guardrail clamps it, and the contract reverts anything outside the offers. Two cages.' },
+  { id: 'ruling', title: 'The ruling', seconds: 60, notes: 'Code checks what it can: 9 of 10 weight, 4.25 credited. One unit has no check and splits at the midpoint. That gives the band, the offers narrow it, and the award lands inside both. No judge.' },
+  { id: 'cage', title: 'Test the bounds', seconds: 45, notes: 'Hand them the slider: play a corrupt arbiter. Let them try to cheat. The guardrail clamps it, and the contract reverts anything outside the offers. Two cages.' },
   { id: 'receipt', title: 'The receipt', seconds: 15, notes: 'Every ruling is a URL a stranger can verify. Scan it. It is on the explorer right now.' },
 ];
 
@@ -219,7 +219,7 @@ export function DemoTheater(data: TheaterData) {
               <div>
                 <p className="label text-ref">Act 3 · The ruling</p>
                 <h2 className="display mt-3 text-[clamp(36px,4.6vw,64px)]">Code credits {a.signals.earnedWeight} of {a.signals.totalWeight}.</h2>
-                <p className="lede mt-3">The judge can only move inside the band. The parties’ offers narrow it again.</p>
+                <p className="lede mt-3">The rule settles inside the band. The parties’ offers narrow it again.</p>
               </div>
               <Ref id="d3-ref" size={120} mood="listening" />
             </div>
@@ -232,7 +232,7 @@ export function DemoTheater(data: TheaterData) {
           <div id="cage" className="flex flex-col gap-8">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <div>
-                <p className="label text-ref">Act 4 · Cage the judge</p>
+                <p className="label text-ref">Act 4 · Test the bounds</p>
                 <h2 className="display mt-3 text-[clamp(36px,4.6vw,64px)]">Propose any award. Try to break it.</h2>
               </div>
               <Ref id="d4-ref" size={110} mood="wink" />

@@ -72,7 +72,7 @@ export default async function ProofPage({ params }: { params: Promise<{ id: stri
     );
   }
 
-  const engine = adjudication?.engine === 'rules' ? 'its rules engine' : adjudication ? 'a judge panel' : 'its arbiter';
+  const engine = adjudication ? 'its settlement rule' : 'its arbiter';
   const tweet = `Tempex ruled this agent dispute: ${pct(job.verdict.sellerAwardBps)} to the seller, bounded by the evidence and settled on Tempo. Verify it yourself:`;
 
   return (
@@ -92,7 +92,7 @@ export default async function ProofPage({ params }: { params: Promise<{ id: stri
           </p>
           <div className="flex flex-wrap gap-2">
             <Chip tone="ref">✓ settled on chain</Chip>
-            {adjudication ? <Chip>{adjudication.engine === 'rules' ? 'rules engine · ' + adjudication.model : 'judge panel · ' + adjudication.model}</Chip> : null}
+            {adjudication ? <Chip>{'settled by rule · ' + adjudication.model}</Chip> : null}
             {adjudication && !adjudication.clamped ? <Chip>guardrail: not needed</Chip> : adjudication ? <Chip tone="pip">guardrail: clamped</Chip> : null}
           </div>
         </div>

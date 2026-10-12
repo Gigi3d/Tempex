@@ -1,21 +1,21 @@
 # Tempex
 
-**Tempex is the escrow and dispute layer for agent-to-agent commerce: agents pay into escrow inside limits their owners set, and disagreements are settled by a referee bounded to the range both sides agreed.**
+**Tempex is bounded settlement for agent-to-agent commerce: agents pay into escrow inside limits their owners set, code checks what both sides agreed, and any dispute settles by rule inside the range both sides offered.**
 
-Settlement infrastructure for the agent economy, covering payment, proof of delivery and dispute resolution in one contract.
+Settlement infrastructure for the agent economy, covering payment, proof of delivery and bounded dispute settlement in one contract. No judge, no model, no discretion: every ruling is arithmetic anyone can re-run.
 
 Agents can now pay each other. The hard part is letting them do it without handing them your wallet, and settling the deal when the work comes back wrong. Tempex is three things that fit together on Tempo:
 
 1. **You set the limits.** Each agent gets its own Tempo access key with a budget per period, an expiry, and calls that only reach the Tempex escrow. You approve it with a passkey and revoke it in one tap. The chain enforces it; the agent cannot spend past it.
 2. **Agents do the deals.** An agent hires another agent, or gets hired through a link. The money waits in escrow until the work is delivered, and every step is signed by the key that took it, so you can see which agent did what.
-3. **A bounded referee settles disagreements.** Code decides every acceptance criterion it can check. A model judges the rest when one is configured. Neither can rule outside the range the evidence and both parties' offers allow, and the contract rejects any verdict that tries.
+3. **Disputes settle by rule, inside bounds.** Each agreed check pays its share of the price, with partial credit. Weight no check can decide splits at the midpoint. The result lands inside the range both parties offered, and the contract rejects any verdict that does not. There is no judge and no model anywhere in a ruling.
 
 **The wedge:** agent-to-agent subcontracting, tasks worth $5 to $500 with a deliverable that can be checked. Small enough that no one hires a lawyer, large enough that "pay and hope" is not acceptable.
 
 **Where it stands, plainly:**
 
 - Every job on chain so far was opened by us, testing. The next milestone is the first job from someone else: [hire links](#dashboard) exist to make that one link and one passkey prompt.
-- Every live ruling so far was decided by the rule engine alone (`tempex-rules/1`): no model was configured, so judgement criteria stood at the neutral midpoint. `pnpm demo judge` runs the real judge panel over the dispute corpus once `OPENAI_API_KEY` is set, and shows where it moved the award.
+- Every ruling is settled by one deterministic rule (`tempex-rules/1`) and can be re-derived byte for byte from the case files. Disputes are only as decidable as the checks the parties agreed: the more of a job's terms are checkable, the tighter the settlement.
 - One disclosed key can upgrade the escrow today. It becomes a timelocked multisig, after an external audit, before mainnet.
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
@@ -30,8 +30,8 @@ Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moder
 | Pillar | What it means |
 |---|---|
 | **Custody** | Funds are locked in one escrow contract, never held by us. One disclosed upgrade key can change the contract today; it becomes a timelocked multisig before mainnet. |
-| **Judgement** | Qualitative delivery is scored ("4 of 8 criteria met"), not reduced to yes/no. |
-| **Boundedness** | The judge has no unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the arbiter clamps the model's proposal into a rule-derived band inside that range, and the receipt lets anyone re-derive the band. |
+| **Settlement by rule** | Delivery is measured per agreed check ("300 of 400 labels valid"), with partial credit, not reduced to yes/no. No judge, no model. |
+| **Boundedness** | No arbiter has unilateral power, at two layers. On chain, `resolve` rejects any award outside the range spanned by the buyer's and the seller's final offers. Off chain, the settlement rule lands inside a band derived from the agreed checks, inside that range, and the receipt lets anyone re-derive it. |
 | **Verifiability** | A stranger can reconstruct exactly why the money moved: evidence hash, verdict digest, EIP-712 signature, JSON receipt per run. |
 
 ## How a deal plays out
@@ -75,11 +75,11 @@ buyer                TempexEscrow                seller                arbiter
 |---|---|---|---|
 | L1 | `contracts/` | 385 | `TempexEscrow.sol` — one escrow, job ledger, pull payments, ECDSA-gated settlement |
 | L2 | `packages/sdk` | 861 | Tempo client, canonical evidence hashing, EIP-712 verdict types, TIP-20 |
-| L3 | `packages/arbiter` | 2,075 | rules → band → prompt → LLM → clamp → certify → sign |
+| L3 | `packages/arbiter` | 2,311 | checks → band → offers → certify → sign |
 | L4 | `packages/beacon` | 4,933 | 27-route front door: manifest, evidence, reputation, agent desk, document store, signer attribution, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
 | L7 | `packages/agent` | — | Agent wallets: a scoped, budgeted, revocable Tempo access key under the owner's account, with pairing, a CLI and an encrypted key store |
-| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Judge's seat, Demo Theater, explorer, receipts, cases, console |
+| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Referee's seat, Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
 
@@ -90,11 +90,10 @@ pnpm install
 cp .env.example .env        # fill in testnet keys: cast wallet new
 pnpm test                   # forge test — 61/61
 pnpm typecheck
-pnpm test:ts                # arbiter: checks, band properties, judge panel, audit regressions, court; web: evidence parity
+pnpm test:ts                # arbiter: checks, band properties, audit regressions, court; web: evidence parity
 pnpm check                  # all of the above, plus demo predict and drill
 
-pnpm demo drill             # offline: push scripted judge proposals through the band guardrail
-pnpm demo judge             # the real judge panel over the corpus, beside the rule engine (needs OPENAI_API_KEY)
+pnpm demo drill             # offline: push scripted award proposals through the band guardrail
 pnpm demo                   # live: full lifecycle on Moderato, writes runs/*.json receipt
 pnpm arbiter                # arbiter service: watch disputes, adjudicate, sign verdicts
 pnpm beacon                 # beacon: the HTTP front door agents discover Tempex through
@@ -123,7 +122,7 @@ An agent never holds its owner's money. It holds a Tempo **access key** under th
 
 - **Hire links** (`/dashboard/offer`): a seller writes an offer once (what it delivers, how it is checked, the price and windows) and shares one link. `/hire/<seller>` shows the offer beside the seller's on-chain record; a buyer funds it with one passkey prompt, and an agent gets the exact `tempex-agent open` command. Nothing is stored: the offer lives in the link.
 - **Inbox:** every move the escrow would accept from you right now (deliver, review, answer a dispute, ask for a ruling, collect a lapsed review, reclaim an undelivered job), soonest deadline first, with live countdowns. The nav shows the count; the browser can alert you while the tab is open.
-- **Open a job** (`/dashboard/new`): seller with their on-chain record, terms with checked and judgement criteria, amount, windows, arbiter, referrer. The exact terms JSON and the hash the escrow will hold show before you sign; one passkey prompt approves, creates and funds.
+- **Open a job** (`/dashboard/new`): seller with their on-chain record, terms with checked and unchecked criteria, amount, windows, arbiter, referrer. The exact terms JSON and the hash the escrow will hold show before you sign; one passkey prompt approves, creates and funds.
 - **Job workspace** (`/dashboard/jobs/<id>`): the papers behind each on-chain hash (terms, delivered work, the buyer's evidence, the seller's answer), each re-hashed in the browser before it is shown; the move panel for your side; and the trail of every step with the key that signed it.
 - **Agents in the record:** the beacon reads each transaction's Tempo signature envelope, so a step one of your agents signed is labelled with that agent and opens on its decoded calls (`GET /tx/:hash`, `GET /activity/:address`). Nothing is taken from the agent's own reports.
 - **Papers:** terms, evidence, answers and long deliverables are filed in the beacon's content-addressed store (`POST /docs`, `GET /docs/:hash`), which computes each hash itself. It is public to anyone holding the hash; the job's terms hash is on chain.
@@ -131,9 +130,9 @@ An agent never holds its owner's money. It holds a Tempo **access key** under th
 
 ## The guardrail, in one paragraph
 
-Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own, and it decides only what code can verify. Each acceptance criterion in the terms is either a **check** (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`), a pure function of the delivered bytes that anyone can re-run, or a **judgement** (a plain-text criterion no code can decide). Checks earn their weight in proportion to what they verified; judgement weight is left open. So the band is `verified credit` to `verified credit + open weight`, out of the total: a single point when everything is checkable, the full range when nothing is, and always narrowed to the parties' offers. There is no keyword scoring: it measured vocabulary, not delivery, and gave pasted-back criteria full marks. The LLM judge may propose any award; `clampToBand` bounds it to the band. A proposal already inside the band passes through **unclamped** — a clamp that fires on every input is not a guardrail, it is a replacement for the judge. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys.
+Two layers bound every ruling. The outer one is on chain: the buyer's dispute pins a final offer (the most it concedes the seller earned), the seller's response pins a final ask (the least it will accept), and `resolve` reverts unless the award lands between them, whoever the arbiter is and whatever its code does. The inner one is the arbiter's own, and it decides only what code can verify. Each acceptance criterion in the terms is either a **check** (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`), a pure function of the delivered bytes that anyone can re-run, or **unchecked** (a plain-text criterion no code can decide). Checks earn their weight in proportion to what they verified; unchecked weight is left open. So the band is `verified credit` to `verified credit + open weight`, out of the total: a single point when everything is checkable, the full range when nothing is, and always narrowed to the parties' offers. The ruling is the band's centre: verified credit, plus half the open weight. There is no keyword scoring and no model: it is arithmetic on the delivered bytes and the two offers. `clampToBand` also bounds any award a listed arbiter proposes; a proposal already inside the band passes through **unclamped**. The drill (`pnpm demo drill`) proves all of this against the real clamp, offline, no keys.
 
-**Running the judge panel.** Set `OPENAI_API_KEY` where the arbiter runs (see `.env.example`). The panel scores only the open criteria; scores that claim credit must quote the work, and the median counts. Each receipt records the panel's members, quotes, discarded scores and token usage. Panel scores are cached by their exact inputs under `runs/panels/`, so a retry after a failed relay re-signs the same scores instead of paying for new ones. If the panel cannot rule, the rule engine does and the receipt says so (`panelFallback`); `pnpm court` reports `panelFallbacks` on `/health` for monitoring, and `--engine llm` refuses rather than falls back. Try it on a past job without touching the chain: `pnpm arbiter adjudicate --job 4 --dry --engine llm --no-receipt`. Rule-engine rulings are reproducible byte for byte from the case files; panel rulings publish every input, quote and score, and the bounds they had to land in, but a re-run of the model can score differently. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
+**Why no judge.** A model can be argued with, prompted around and paid for twice; a rule cannot. Tempex settles only what the parties agreed could be measured, splits what they did not at the midpoint, and holds the result inside their own offers. That makes the outcome predictable before anyone disputes, which is what lets small deals settle without lawyers. The inner band is enforced by the arbiter's code, not the contract, which is why it is published and re-derivable; the outer bound is the one no arbiter can cross.
 
 ## The Beacon — how an agent adopts Tempex with no account and no balance
 

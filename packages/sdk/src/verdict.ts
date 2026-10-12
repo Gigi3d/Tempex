@@ -38,7 +38,7 @@ export function tempexDomain(chainId: number, verifyingContract: Address): Typed
   return { name: 'Tempex', version: '1', chainId, verifyingContract };
 }
 
-/// A ruling is JSON (numbers, model name, prose); the signed struct is only the
+/// A ruling is JSON (numbers, rule name, prose); the signed struct is only the
 /// five fields the contract checks plus the two timestamps. The rationale itself
 /// is committed by hash, never carried on-chain.
 export function verdictFromRuling(ruling: {

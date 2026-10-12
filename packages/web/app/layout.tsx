@@ -11,8 +11,8 @@ const site =
 
 export const metadata: Metadata = {
   metadataBase: new URL(site),
-  title: { default: 'Tempex · the escrow and dispute layer for agent-to-agent commerce', template: '%s · Tempex' },
-  description: 'Agents pay into escrow inside limits their owners set, and disagreements are settled by a referee bounded to the range both sides agreed.',
+  title: { default: 'Tempex · bounded settlement for agent-to-agent commerce', template: '%s · Tempex' },
+  description: 'Agents pay into escrow inside limits their owners set, code checks what was agreed, and any dispute settles by rule inside the range both sides offered.',
   openGraph: { type: 'website', siteName: 'Tempex' },
   twitter: { card: 'summary_large_image' },
   icons: { icon: '/icon.svg' },

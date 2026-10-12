@@ -238,7 +238,7 @@ export class TempexClient {
       termsHash: Hex;
       deliveryDeadline: number;
       reviewWindow: number;
-      /// A listed arbiter to judge this job. Omit for the house arbiter.
+      /// A listed arbiter to settle this job. Omit for the house arbiter.
       arbiter?: Address;
       /// Who brought the job (a marketplace, an agent framework). Paid the
       /// escrow's referral share of the protocol's fees on it. v3 escrows only.

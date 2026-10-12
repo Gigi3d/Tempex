@@ -1,14 +1,13 @@
 import type { RuleBand } from './rules.js';
 
-/// The guardrail on its own: pure functions with no network, keys or model
-/// clients, so a browser can run the exact code that bounds every ruling.
+/// The guardrail on its own: pure functions with no network or keys, so a browser can run the exact code that bounds every ruling.
 
 export const clamp = (value: number, low: number, high: number): number =>
   Math.min(high, Math.max(low, value));
 
-/// The guardrail, in one place: whatever a judge proposes is pulled into the band
-/// the objective signals justify. Exported so it can be exercised without a live
-/// dispute — this is the line the "bounded judge" claim rests on.
+/// The guardrail, in one place: any proposed award is pulled into the band the
+/// verified signals justify. Exported so it can be exercised without a live
+/// dispute; this is the line the "bounded settlement" claim rests on.
 export function clampToBand(
   requestedBps: number,
   band: RuleBand,
@@ -19,7 +18,7 @@ export function clampToBand(
 
 /// Narrows the rule band to the range the parties' final offers allow. The escrow
 /// rejects any award outside the offers, so a band reaching past them would only
-/// let the judge propose something that cannot settle. When the two ranges do
+/// allow an award that cannot settle. When the two ranges do
 /// not meet, the band collapses to the offer edge nearest the evidence.
 export function withinOffers(
   band: RuleBand,

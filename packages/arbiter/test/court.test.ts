@@ -52,7 +52,8 @@ describe('court', () => {
     assert.equal(response.status, 200);
     const body = (await response.json()) as Record<string, unknown>;
     assert.deepEqual({ ok: body['ok'], arbiter: body['arbiter'], escrow: body['escrow'], sponsored: body['sponsored'] }, { ok: true, arbiter: ARBITER, escrow: stub.addresses.escrow, sponsored: true });
-    assert.equal(body['panelFallbacks'], 0);
+    assert.equal(body['engine'], 'rules');
+    assert.equal(body['rulings'], 0);
   });
 
   it('answers unknown routes with 404', async () => {

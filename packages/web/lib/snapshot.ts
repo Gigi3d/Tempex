@@ -6,7 +6,7 @@ import type { Arbiters, JobRecord, JobsList, Proof, Quote, Reputation, RouteInfo
 /// demo runner (runs/demo-*.json).
 export type Adjudication = {
   jobId: number;
-  engine: 'rules' | 'llm' | 'panel' | string;
+  engine: 'rules' | string;
   model: string;
   amount: string;
   evidenceHash: string;

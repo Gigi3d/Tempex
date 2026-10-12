@@ -4,8 +4,8 @@ import { snapshot } from '@/lib/snapshot';
 
 export const dynamic = 'force-dynamic';
 export const metadata = {
-  title: "Judge's seat",
-  description: 'Strike a real deal on Tempo from your browser: escrow it, dispute it, and watch the referee rule and settle.',
+  title: "Referee's seat",
+  description: 'Strike a real deal on Tempo from your browser: escrow it, dispute it, and watch it settle by rule.',
 };
 
 export default async function PlayPage() {
@@ -15,7 +15,7 @@ export default async function PlayPage() {
   return (
     <div className="wrap pt-10 pb-24">
       <div className="mb-10 flex flex-col gap-4">
-        <p className="label text-ref">Judge&rsquo;s seat · live on Moderato</p>
+        <p className="label text-ref">Referee&rsquo;s seat · live on Moderato</p>
         <h1 className="display text-[clamp(40px,5.4vw,76px)]">
           <span className="block">Strike a deal.</span>
           <span className="block text-fg-3">Break it. Get a fair ruling.</span>

@@ -12,7 +12,7 @@ function round(value: number): string {
 }
 
 /// One row per criterion. Code decides the checks; the hatched rows are the
-/// weight only a judge can fill.
+/// weight no check decided, which splits at the midpoint.
 export function CriterionScorecard({ rows, totals, animate = false }: { rows: CriterionSignal[]; totals: ScorecardTotals; animate?: boolean }) {
   return (
     <div className="flex flex-col">
@@ -57,7 +57,7 @@ export function CriterionScorecard({ rows, totals, animate = false }: { rows: Cr
                   </td>
                   <td>
                     {open ? (
-                      <span className="chip chip-pip">judgement</span>
+                      <span className="chip chip-pip">unchecked · midpoint</span>
                     ) : partial ? (
                       <span className="chip chip-ref">{fraction(row.evidence) ?? `${Math.round(credit * 100)}%`}</span>
                     ) : credit >= 1 ? (
@@ -77,8 +77,8 @@ export function CriterionScorecard({ rows, totals, animate = false }: { rows: Cr
           Code checked {round(totals.checked)} of {round(totals.total)} weight and credited {round(totals.earned)}.
         </span>{' '}
         {totals.open > 0
-          ? `${round(totals.open)} ${totals.open === 1 ? 'unit is' : 'units are'} left to judgement.`
-          : 'Nothing is left to judgement.'}
+          ? `${round(totals.open)} ${totals.open === 1 ? 'unit has' : 'units have'} no check and ${totals.open === 1 ? 'splits' : 'split'} at the midpoint.`
+          : 'Every unit was decided by a check.'}
       </p>
     </div>
   );

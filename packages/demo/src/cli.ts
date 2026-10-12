@@ -1,11 +1,8 @@
 import { formatBps } from '@tempex/arbiter';
 import { CHAIN_ID } from '@tempex/sdk';
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 import { drill, renderDrill } from './drill.js';
-import { judgeCorpus, renderComparisons } from './judge.js';
 import { caseHashes, predictAll, renderPredictions, ARBITRATION_FEE_BPS } from './predict.js';
 import { runDemo, type DemoResult } from './runner.js';
 import { DEFAULT_SCENARIO, SCENARIOS, scenarioById, type ScenarioId } from './scenarios.js';
@@ -81,15 +78,6 @@ function stageFlag(flags: Record<string, FlagValue>, name: string): DemoStage | 
   return stage;
 }
 
-function engineFlag(flags: Record<string, FlagValue>): 'auto' | 'rules' | 'llm' {
-  const value = stringFlag(flags, 'engine');
-  if (value === undefined) return 'auto';
-  if (value !== 'auto' && value !== 'rules' && value !== 'llm') {
-    throw new UsageError(`--engine must be auto, rules or llm (got ${value})`);
-  }
-  return value;
-}
-
 // ------------------------------------------------------------------- commands
 
 function help(): void {
@@ -97,8 +85,7 @@ function help(): void {
   out('');
   out('  run       drive a dispute end to end against the live chain');
   out('  predict   run the rule engine over the corpus offline; no keys, no network');
-  out('  drill     push scripted judge proposals through the band guardrail');
-  out('  judge     the real judge panel over the corpus, beside the rule engine (needs OPENAI_API_KEY)');
+  out('  drill     push scripted award proposals through the band guardrail');
   out('  stages    the demo spine, in order, and what each stage proves');
   out('  scenarios the dispute corpus: what each case delivers and what it should rule');
   out('');
@@ -107,8 +94,7 @@ function help(): void {
   out('  --from <stage>    first stage to run (default case)');
   out('  --upto <stage>    last stage to run (default settle)');
   out('  --sponsored       route every write through the hosted fee payer');
-  out('  --listed-arbiter  judge with the arbiter key as a listed market arbiter, not the house arbiter');
-  out('  --engine <e>      auto | rules | llm (default auto)');
+  out('  --listed-arbiter  settle with the arbiter key as a listed market arbiter, not the house arbiter');
   out('  --force           re-run stages this session already recorded');
   out('  --fresh           discard the recorded session and start over');
   out('  --session <name>  session file name (default: the scenario id)');
@@ -195,7 +181,7 @@ function predict(flags: Record<string, FlagValue>): number {
 function drillGuardrail(): number {
   const report = drill();
   out('');
-  out('the guardrail — what a judge is allowed to propose, and what survives');
+  out('the guardrail — what any arbiter is allowed to propose, and what survives');
   out('');
   process.stdout.write(renderDrill(report));
   return report.ok ? 0 : 3;
@@ -233,21 +219,6 @@ async function main(argv: string[]): Promise<number> {
   }
   if (command === 'predict') return predict(flags);
   if (command === 'drill') return drillGuardrail();
-  if (command === 'judge') {
-    const { model, comparisons } = await judgeCorpus();
-    out('');
-    out(`judge panel (${model}) beside the rule engine, on the dispute corpus`);
-    out('');
-    process.stdout.write(renderComparisons(comparisons));
-    const dir = resolve(process.cwd(), '../../runs');
-    mkdirSync(dir, { recursive: true });
-    const file = resolve(dir, `judge-${new Date().toISOString().replace(/[:.]/g, '-')}.json`);
-    writeFileSync(file, `${JSON.stringify({ tempex: 'judge-comparison/1', model, at: new Date().toISOString(), comparisons }, null, 2)}\n`);
-    out('');
-    out(`written ${file}`);
-    return 0;
-  }
-
   if (command === 'run') {
     const asJson = boolFlag(flags, 'json');
     const scenario = scenarioFlag(flags);
@@ -260,7 +231,6 @@ async function main(argv: string[]): Promise<number> {
       fresh: boolFlag(flags, 'fresh'),
       listedArbiter: boolFlag(flags, 'listed-arbiter'),
       session: stringFlag(flags, 'session'),
-      engine: engineFlag(flags),
       ...(asJson ? {} : { write: (line) => trace(line) }),
     });
     return reportRun(result, asJson);

@@ -18,7 +18,7 @@ const LEFT = 128;
 const RIGHT = 704;
 const x = (bps: number): number => LEFT + (Math.max(0, Math.min(10_000, bps)) / 10_000) * (RIGHT - LEFT);
 
-/// The whole protocol in one picture: evidence bounds the judge, the parties'
+/// The whole protocol in one picture: evidence bounds the award, the parties'
 /// final offers bound it harder, and the ruling lands inside both.
 export function RulingGauge({ ruleBand, offers, awardBps, size = 'full', animate = true }: RulingGaugeProps) {
   const effective = ruleBand && offers ? withinOffers({ ...ruleBand, center: (ruleBand.lowBps + ruleBand.highBps) / 2 }, offers) : ruleBand ?? null;

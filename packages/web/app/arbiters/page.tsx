@@ -5,7 +5,7 @@ import { getArbiters } from '@/lib/beacon';
 import type { ArbiterListing } from '@/lib/types';
 
 export const revalidate = 60;
-export const metadata = { title: 'Arbiter market', description: 'Who can judge a Tempex job, at what fee, with what track record.' };
+export const metadata = { title: 'Arbiter market', description: 'Who can settle a Tempex job, at what fee, with what track record.' };
 
 function Row({ listing, house }: { listing: ArbiterListing; house?: boolean }) {
   const r = listing.record;

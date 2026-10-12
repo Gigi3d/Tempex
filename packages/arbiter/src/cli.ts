@@ -16,11 +16,10 @@ import {
 import {
   RefusalError,
   adjudicate,
-  type AdjudicationEngine,
   type AdjudicationResult,
 } from './adjudicate.js';
 import { formatBps } from './rules.js';
-import { evidenceDir, filePanelCache, jsonText, receiptPath, repoRoot, runsDir, writeJson } from './store.js';
+import { evidenceDir, jsonText, receiptPath, repoRoot, runsDir, writeJson } from './store.js';
 import { startCourt } from './court.js';
 import { verifyArbiter } from './verify.js';
 import { watchDisputes } from './watch.js';
@@ -79,15 +78,6 @@ function numberFlag(flags: Record<string, FlagValue>, name: string): number | un
   return parsed;
 }
 
-function engineFlag(flags: Record<string, FlagValue>): AdjudicationEngine {
-  const value = stringFlag(flags, 'engine');
-  if (value === undefined) return 'auto';
-  if (value !== 'auto' && value !== 'rules' && value !== 'llm') {
-    throw new UsageError(`--engine must be auto, rules or llm (got ${value})`);
-  }
-  return value;
-}
-
 /// One identity, one client: the arbiter's own key, from the gitignored .env.
 function arbiterClient(sponsored: boolean): TempexClient {
   loadEnv(repoRoot());
@@ -127,17 +117,9 @@ function printResult(result: AdjudicationResult, receipt: string | null): void {
     'band',
     `${band.lowBps}-${band.highBps} bps (centre ${band.center}) — checks earned ` +
       `${result.signals.earnedWeight.toFixed(2)} of ${result.signals.checkedWeight}, ` +
-      `${result.signals.openWeight} of ${result.signals.totalWeight} weight left to judgement`,
+      `${result.signals.openWeight} of ${result.signals.totalWeight} weight without a check, split at the midpoint`,
   );
-  row(
-    'engine',
-    result.engine === 'llm'
-      ? `${result.model}${result.requestedBps !== undefined ? ` proposed ${result.requestedBps} bps` : ''}`
-      : `${result.model} (no model in the loop)`,
-  );
-  if (result.clamped && result.requestedBps !== undefined) {
-    row('clamped', `${result.requestedBps} bps -> ${ruling.sellerAwardBps} bps, into the band`);
-  }
+  row('rule', `${result.model} (bounded settlement: checks, then the midpoint, inside the offers)`);
   row(
     'ruling',
     `${formatBps(ruling.sellerAwardBps)} to the seller — seller ${formatToken(money.sellerAmount)}, ` +
@@ -203,13 +185,11 @@ async function cmdAdjudicate(flags: Record<string, FlagValue>): Promise<number> 
     client,
     jobId,
     evidenceCase,
-    engine: engineFlag(flags),
     ttlSeconds: numberFlag(flags, 'ttl'),
     dryRun,
     relay,
     writeOptions: sponsored ? { sponsored } : {},
     log: asJson ? undefined : trace,
-    panelCache: filePanelCache(),
   });
 
   const receipt =
@@ -247,14 +227,12 @@ async function cmdWatch(flags: Record<string, FlagValue>): Promise<number> {
     client,
     evidenceDir: evidenceDir(),
     runsDir: runsDir(),
-    engine: engineFlag(flags),
     ttlSeconds: numberFlag(flags, 'ttl'),
     fromBlock: fromRaw === undefined ? undefined : BigInt(fromRaw),
     relay,
     poll,
     once,
     writeOptions: sponsored ? { sponsored } : {},
-    panelCache: filePanelCache(),
     log: (line) => out(`[${stamp()}] ${line}`),
     onRuling: (result) => {
       const path = writeJson(receiptPath(result.jobId), receiptFor(result, client, 'watch'));
@@ -317,7 +295,7 @@ async function cmdList(flags: Record<string, FlagValue>): Promise<number> {
   if (flags['delist'] === true) {
     const receipt = await client.delistArbiter({ sponsored });
     row('delisted', explorerTx(receipt.transactionHash));
-    out('new jobs can no longer name this arbiter; jobs it already judges are unaffected');
+    out('new jobs can no longer name this arbiter; jobs it already settles are unaffected');
     return 0;
   }
 
@@ -331,7 +309,7 @@ async function cmdList(flags: Record<string, FlagValue>): Promise<number> {
   const listing = await client.arbiterListing(client.address);
   row('listed', explorerTx(receipt.transactionHash));
   row('fee', `${listing.feeBps} bps of each disputed job it rules, minus the protocol cut`);
-  row('profile', listing.metadataURI || '(none — set --uri so buyers can see your model and rules)');
+  row('profile', listing.metadataURI || '(none — set --uri so buyers can see your fee and rules)');
   out('');
   out('run `watch` with this key to rule on the jobs that name it');
   return 0;
@@ -353,11 +331,9 @@ async function cmdCourt(flags: Record<string, FlagValue>): Promise<number> {
     client,
     port,
     host: stringFlag(flags, 'host'),
-    engine: engineFlag(flags),
     origins,
     evidenceDir: evidenceDir(),
     sponsored,
-    panelCache: filePanelCache(),
     log: (line) => out(`[${stamp()}] ${line}`),
     onRuling: (result) => {
       const path = writeJson(receiptPath(result.jobId), receiptFor(result, client, 'court'));
@@ -380,11 +356,11 @@ async function cmdCourt(flags: Record<string, FlagValue>): Promise<number> {
 function usage(): void {
   out('Tempex arbiter — evidence in, signed verdict out.');
   out('');
-  out('  adjudicate --job <id> [--dry] [--relay] [--engine auto|rules|llm] [--ttl <s>] [--sponsored] [--json] [--no-receipt]');
-  out('  watch [--once] [--poll] [--from <block>] [--engine auto|rules|llm] [--ttl <s>] [--no-relay] [--sponsored]');
+  out('  adjudicate --job <id> [--dry] [--relay] [--ttl <s>] [--sponsored] [--json] [--no-receipt]');
+  out('  watch [--once] [--poll] [--from <block>] [--ttl <s>] [--no-relay] [--sponsored]');
   out('  verify [--json]');
   out('  list --fee <bps> [--uri <url>] [--sponsored] | list --delist');
-  out('  court [--port <n>] [--host <h>] [--origins <a,b>] [--engine auto|rules|llm] [--sponsored]');
+  out('  court [--port <n>] [--host <h>] [--origins <a,b>] [--sponsored]');
   out('');
   out('  adjudicate   rule on one dispute; --dry skips the on-chain state gate, --relay settles it');
   out('  watch        rule on every dispute as it is raised; --once scans history and exits');
@@ -392,7 +368,7 @@ function usage(): void {
   out('  list         offer this key as an arbiter buyers can choose, at its own fee');
   out('  court        rule over HTTP: POST /rule/:jobId with the evidence pinned on chain');
   out('');
-  out('OPENAI_API_KEY activates the LLM judge; without one the deterministic rule engine rules.');
+  out('Every ruling is arithmetic on public inputs: agreed checks, the midpoint, the offers.');
 }
 
 async function main(argv: string[]): Promise<number> {

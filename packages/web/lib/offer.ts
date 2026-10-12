@@ -4,7 +4,7 @@
 /// The offer itself binds nobody: the buyer's terms, filed and hashed when the
 /// job opens, are what the escrow holds both sides to.
 
-export type OfferCriterion = { text: string; kind: 'judgement' | 'contains' | 'count' | 'language'; value: string; weight: number };
+export type OfferCriterion = { text: string; kind: 'unchecked' | 'contains' | 'count' | 'language'; value: string; weight: number };
 
 export type Offer = {
   v: 1;
@@ -18,7 +18,7 @@ export type Offer = {
   reviewSeconds: number;
 };
 
-const KINDS = new Set(['judgement', 'contains', 'count', 'language']);
+const KINDS = new Set(['unchecked', 'contains', 'count', 'language']);
 const MAX_LINK_CHARS = 6_000;
 
 function toBase64Url(text: string): string {
@@ -48,7 +48,7 @@ export function decodeOffer(value: string | null | undefined): Offer | null {
     if (!Array.isArray(raw.criteria) || raw.criteria.length === 0 || raw.criteria.length > 20) return null;
     const criteria = raw.criteria.map((c) => ({
       text: String(c?.text ?? '').slice(0, 300),
-      kind: (KINDS.has(String(c?.kind)) ? c!.kind : 'judgement') as OfferCriterion['kind'],
+      kind: (KINDS.has(String(c?.kind)) ? c!.kind : 'unchecked') as OfferCriterion['kind'],
       value: String(c?.value ?? '').slice(0, 200),
       weight: Math.max(1, Math.min(10, Number(c?.weight) || 1)),
     }));

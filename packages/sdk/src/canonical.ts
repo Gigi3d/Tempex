@@ -55,8 +55,8 @@ export type CriterionCheck =
   | { type: 'contains'; at?: string; all: string[]; caseSensitive?: boolean };
 
 /// An acceptance criterion. A plain string, or an object without a `check`, is a
-/// judgement criterion: no code can decide it, so it is left to the judge and
-/// bounded by the parties' offers. An object with a `check` is decided exactly.
+/// unchecked criterion: no code can decide it, so its weight splits at the
+/// midpoint, bounded by the parties' offers. An object with a `check` is decided exactly.
 export type Criterion =
   | string
   | { id?: string; text: string; weight?: number; check?: CriterionCheck };
@@ -151,7 +151,7 @@ export type SellerResponse = {
   submittedAt: string;
 };
 
-/// What the arbiter produces. `rationaleHash` commits the model to its reasoning:
+/// What the arbiter produces. `rationaleHash` commits the arbiter to its reasoning:
 /// the full text lives in the receipt, the hash lives in the signature.
 export type Ruling = {
   jobId: number;
@@ -161,6 +161,7 @@ export type Ruling = {
   rationale: string;
   issuedAt: number;
   validUntil: number;
+  /// the settlement rule that produced the ruling, e.g. `tempex-rules/1`
   model: string;
   confidence?: number;
   factors?: string[];

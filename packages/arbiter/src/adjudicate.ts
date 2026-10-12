@@ -18,10 +18,8 @@ import {
 } from '@tempex/sdk';
 import { decodeEventLog, parseAbiItem, type Address, type Hex } from 'viem';
 
-import { judgePanel, llmConfigFromEnv, type CompleteFn, type LlmConfig, type PanelVerdict } from './llm.js';
-import { buildJudgePrompt, SYSTEM_PROMPT } from './prompt.js';
 import { analyze, composeRuleRationale, type RuleBand, type RuleSignals } from './rules.js';
-import { clamp, clampToBand, withinOffers } from './guardrail.js';
+import { clampToBand, withinOffers } from './guardrail.js';
 
 const VERDICT_RESOLVED = parseAbiItem(
   'event VerdictResolved(uint256 indexed jobId, uint16 sellerAwardBps, uint256 sellerAmount, uint256 buyerAmount, uint256 arbitrationFee, bytes32 evidenceHash, bytes32 rationaleHash, bytes32 verdictDigest)',
@@ -35,7 +33,8 @@ const ISSUED_AT_SKEW_SECONDS = 30;
 const DEFAULT_TTL_SECONDS = 86_400;
 const ZERO_HASH = `0x${'0'.repeat(64)}`;
 
-/// The name that shows up in receipts when no model was in the loop.
+/// The settlement rule's name, recorded in every ruling so a reader knows which
+/// arithmetic produced it.
 export const RULE_ENGINE_MODEL = 'tempex-rules/1';
 
 /// Raised when the arbiter will not sign. Distinct from a crash: a refusal is the
@@ -48,8 +47,6 @@ export class RefusalError extends Error {
     this.reasons = reasons;
   }
 }
-
-export type AdjudicationEngine = 'auto' | 'rules' | 'llm';
 
 export type RelayReceipt = {
   jobId: number;
@@ -82,7 +79,7 @@ export type VerdictMoney = {
 
 export type AdjudicationResult = {
   jobId: number;
-  engine: 'llm' | 'rules';
+  engine: 'rules';
   model: string;
   amount: bigint;
   evidenceHash: Hex;
@@ -94,7 +91,7 @@ export type AdjudicationResult = {
   registeredArbiter: Address;
   /// The range the parties' final offers allow, as the escrow enforces it.
   offers: { lowBps: number; highBps: number };
-  /// The rule band narrowed to the offers: the range the judge was clamped into.
+  /// The rule band narrowed to the offers: the range the settlement lands in.
   boundedBand: RuleBand;
   /// signature recovers to the registered arbiter AND the contract agrees with
   /// our digest. False here means the verdict would be rejected on chain.
@@ -102,14 +99,6 @@ export type AdjudicationResult = {
   money: VerdictMoney;
   band: RuleBand;
   signals: RuleSignals;
-  requestedBps?: number;
-  /// The judge panel's scores on the open criteria, member by member, with the
-  /// quotes that were verified and the scores that were discarded.
-  panel?: PanelVerdict;
-  /// Set when a panel was configured but could not rule, so the open criteria
-  /// stood at the neutral midpoint instead. Operators must see this: a dead key
-  /// would otherwise turn every ruling into a rule-engine ruling unnoticed.
-  panelFallback?: string;
   clamped: boolean;
   flags: string[];
   notes: string[];
@@ -120,8 +109,6 @@ export type AdjudicateParams = {
   client: TempexClient;
   jobId: bigint;
   evidenceCase: EvidenceCase;
-  engine?: AdjudicationEngine;
-  llm?: LlmConfig | null;
   ttlSeconds?: number;
   now?: number;
   dryRun?: boolean;
@@ -130,69 +117,16 @@ export type AdjudicateParams = {
   /// whether a sponsor pays the fee.
   writeOptions?: WriteOptions;
   log?: (line: string) => void;
-  /// The model call, injectable so the panel can be exercised without a network.
-  completeFn?: CompleteFn;
-  /// Remembers panel verdicts by their exact inputs, so a retry after a failed
-  /// relay re-signs the same scores instead of paying the panel again (and
-  /// possibly drawing different ones).
-  panelCache?: PanelCache;
 };
-
-export type PanelCache = {
-  get(key: string): PanelVerdict | undefined;
-  set(key: string, verdict: PanelVerdict): void;
-};
-
-/// The award a panel's scores imply: verified credit plus each open criterion's
-/// weight times its panel score, over the total weight. Inside the rule band by
-/// construction, since every open score is between 0 and 1.
-export function panelAward(signals: RuleSignals, panel: PanelVerdict): number {
-  if (signals.totalWeight <= 0) return 0;
-  const scores = new Map(panel.criteria.map((c) => [c.id, c.score]));
-  const judged = signals.criteria
-    .filter((c) => c.kind !== 'check')
-    .reduce((sum, c) => sum + c.weight * (scores.get(c.id) ?? 0.5), 0);
-  return clamp(Math.round((10_000 * (signals.earnedWeight + judged)) / signals.totalWeight), 0, 10_000);
-}
-
-/// Deterministic prose for a panel ruling: what code decided, what each open
-/// criterion scored and on what evidence, and what the panel discarded.
-function composePanelRationale(input: {
-  signals: RuleSignals;
-  panel: PanelVerdict;
-  proposalBps: number;
-}): string {
-  const { signals, panel, proposalBps } = input;
-  const lines: string[] = [`Ruled by a ${panel.label}, scoring only the criteria code could not decide.`];
-  for (const c of signals.criteria.filter((criterion) => criterion.kind === 'check')) {
-    lines.push(`${c.id}: decided by its ${c.check} check, earned ${c.credit!.toFixed(2)} of weight ${c.weight}; ${c.evidence}.`);
-  }
-  for (const c of panel.criteria) {
-    const quotes = panel.members
-      .flatMap((m) => m.scores?.find((s) => s.id === c.id)?.verifiedQuotes ?? [])
-      .slice(0, 2)
-      .map((q) => JSON.stringify(q.slice(0, 80)));
-    lines.push(
-      `${c.id}: panel median ${c.score.toFixed(2)} from ${c.accepted} accepted score(s)${c.discarded > 0 ? `, ${c.discarded} discarded for claiming credit without a verifiable quote` : ''}${c.neutral ? '; no judge supported it, so it stands at the neutral 0.50' : ''}${quotes.length > 0 ? `; evidence ${quotes.join(', ')}` : ''}.`,
-    );
-  }
-  const failed = panel.members.filter((m) => m.scores === null).length;
-  if (failed > 0) lines.push(`${failed} of ${panel.members.length} judges failed and were not counted.`);
-  const voice = panel.members.find((m) => m.scores !== null && m.rationale !== '')?.rationale;
-  if (voice) lines.push(`A judge's reasoning: ${voice}`);
-  lines.push(`Weighted award ${proposalBps} bps.`);
-  return lines.join(' ');
-}
 
 export { clampToBand, withinOffers };
 
 /// Evidence bundle in, signed verdict out.
 ///
-/// The order matters and is the point of the design: pin the evidence, derive the
-/// objective band, let the judge speak inside it, then certify against the live
-/// contract before anything is broadcast. Nothing is signed until the text
-/// signals have been computed, and nothing is relayed until the deployed escrow
-/// has confirmed it would accept the signature.
+/// The order matters and is the point of the design: pin the evidence, run the
+/// agreed checks, narrow the result to the range both parties offered, then
+/// certify against the live contract before anything is broadcast. Every step is
+/// arithmetic on public inputs, so anyone can re-derive the ruling.
 export async function adjudicate(params: AdjudicateParams): Promise<AdjudicationResult> {
   const { client, jobId, evidenceCase } = params;
   const log = params.log ?? (() => {});
@@ -215,8 +149,8 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     if (job.state !== 'Disputed') {
       throw new RefusalError([`job ${jobIdNum} is ${job.state}, not Disputed`]);
     }
-    // Each job names its own arbiter. Spending a model call on a dispute this key
-    // cannot sign for would produce a verdict the escrow rejects.
+    // Each job names its own arbiter. A verdict from any other key is one the
+    // escrow rejects.
     if (job.arbiter.toLowerCase() !== client.address.toLowerCase()) {
       throw new RefusalError([
         `job ${jobIdNum} is assigned to arbiter ${job.arbiter}, not this key ${client.address}`,
@@ -295,98 +229,20 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     );
   }
   log(
-    `band ${band.lowBps}-${band.highBps} bps (centre ${band.center}): checks earned ${signals.earnedWeight.toFixed(2)} of ${signals.checkedWeight} checked weight, ${signals.openWeight} of ${signals.totalWeight} left to judgement`,
+    `band ${band.lowBps}-${band.highBps} bps (centre ${band.center}): checks earned ${signals.earnedWeight.toFixed(2)} of ${signals.checkedWeight} checked weight, ${signals.openWeight} of ${signals.totalWeight} without a check`,
   );
 
-  // ---- judgement: a panel scores the open criteria, the rule engine otherwise ----
-  // When every criterion was decided by a check there is nothing to judge, and
-  // no model is asked: the band is a single point.
-  const llmConfig = params.llm === undefined ? llmConfigFromEnv() : params.llm;
-  const engineWanted = params.engine ?? 'auto';
-  const openIds = signals.criteria.filter((c) => c.kind !== 'check').map((c) => c.id);
-  let engine: 'llm' | 'rules' = 'rules';
-  let model = RULE_ENGINE_MODEL;
-  let requestedBps: number | undefined;
-  let panel: PanelVerdict | undefined;
-  let panelFallback: string | undefined;
-  let rationale: string | undefined;
-  const ruleRationale = (): string =>
-    composeRuleRationale({ jobId: jobIdNum, terms: evidenceCase.terms, signals, band, chosenBps: band.center });
-
-  if (engineWanted === 'llm' && llmConfig === null) {
-    throw new RefusalError(['engine "llm" was requested but no OPENAI_API_KEY is configured']);
-  }
-  if (openIds.length === 0) {
-    notes.push('every criterion was decided by its check; no judgement was needed');
-  } else if (engineWanted === 'rules' || llmConfig === null) {
-    if (llmConfig === null && engineWanted === 'auto') {
-      notes.push('no OPENAI_API_KEY configured; open criteria stand at the neutral midpoint');
-    }
-  } else {
-    const user = buildJudgePrompt({
-      jobId: jobIdNum,
-      job,
-      terms: evidenceCase.terms,
-      bundle: evidenceCase.bundle,
-      ...(response !== undefined ? { response } : {}),
-      ...(fetched !== undefined ? { fetched } : {}),
-      signals,
-      band,
-    });
-    // Everything the panel sees, and who sits on it: the same key means the
-    // same question to the same judges, so the stored answer stands.
-    const cacheKey = hashText(
-      [SYSTEM_PROMPT, user, llmConfig.models.join(','), String(llmConfig.panelSize)].join('\n\u0000\n'),
-    ).slice(2);
-    try {
-      const cached = params.panelCache?.get(cacheKey);
-      if (cached) {
-        panel = cached;
-        notes.push('judge panel scores reused from an earlier attempt on the same inputs; the panel was not asked again');
-        log(`${panel.label}: reused cached scores`);
-      } else {
-        panel = await judgePanel({
-          config: llmConfig,
-          system: SYSTEM_PROMPT,
-          user,
-          openIds,
-          deliverable: signals.deliverableText,
-          ...(params.completeFn !== undefined ? { completeFn: params.completeFn } : {}),
-        });
-        params.panelCache?.set(cacheKey, panel);
-        log(`${panel.label} used ${panel.usage.inputTokens} input + ${panel.usage.outputTokens} output tokens`);
-      }
-      engine = 'llm';
-      model = panel.label;
-      requestedBps = panelAward(signals, panel);
-      rationale = composePanelRationale({ signals, panel, proposalBps: requestedBps });
-      for (const c of panel.criteria) {
-        log(`${c.id}: median ${c.score.toFixed(2)} (${c.accepted} accepted, ${c.discarded} discarded)`);
-      }
-      const failed = panel.members.filter((m) => m.scores === null);
-      for (const member of failed) notes.push(`judge ${member.seat + 1} (${member.model}) failed: ${member.error}`);
-      if (failed.length > 0) flags.push(`judge panel short-handed: ${failed.length} of ${panel.members.length} judges failed`);
-      log(`${panel.label} proposed ${requestedBps} bps`);
-    } catch (error) {
-      const reason = error instanceof Error ? error.message : String(error);
-      if (engineWanted === 'llm') throw error;
-      panelFallback = reason;
-      flags.push('judge panel unavailable: ruled by the rule engine with open criteria at the neutral midpoint');
-      notes.push(`judge panel unavailable (${reason}); open criteria stand at the neutral midpoint`);
-      log(`WARNING judge panel unavailable: ${reason}`);
-    }
-  }
-  rationale ??= ruleRationale();
-
-  // ---- clamp the judge into the band derived from facts ----
-  const candidate = requestedBps ?? band.center;
-  const { bps: chosenBps, clamped } = clampToBand(candidate, band);
-  if (clamped) {
-    notes.push(
-      `ruling clamped from ${candidate} bps into the objective band [${band.lowBps}, ${band.highBps}]`,
-    );
-    log(`clamped ${candidate} -> ${chosenBps} bps (band ${band.lowBps}-${band.highBps})`);
-  }
+  // ---- settle: checks decide what they can, the rest splits at the midpoint ----
+  // Verified credit is fixed. Weight no check could decide is neither awarded nor
+  // refused: it splits evenly, the same neutral rule the escrow applies to a
+  // lapsed dispute. The result is then held inside the parties' offers.
+  const openWeight = signals.openWeight;
+  if (openWeight === 0) notes.push('every criterion was decided by its check');
+  else notes.push(`${openWeight} of ${signals.totalWeight} weight had no check; it splits at the midpoint of the band`);
+  const rationale = composeRuleRationale({ jobId: jobIdNum, terms: evidenceCase.terms, signals, band, chosenBps: band.center });
+  const engine = 'rules' as const;
+  const model = RULE_ENGINE_MODEL;
+  const { bps: chosenBps, clamped } = clampToBand(band.center, band);
 
   // ---- commit the ruling to a struct the escrow will accept ----
   const now = params.now ?? Math.floor(Date.now() / 1000);
@@ -459,9 +315,6 @@ export async function adjudicate(params: AdjudicateParams): Promise<Adjudication
     offers,
     boundedBand: band,
     signals,
-    ...(requestedBps !== undefined ? { requestedBps } : {}),
-    ...(panel !== undefined ? { panel } : {}),
-    ...(panelFallback !== undefined ? { panelFallback } : {}),
     clamped,
     flags,
     notes,

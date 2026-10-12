@@ -18,13 +18,13 @@ export type ClampPlaygroundProps = {
   offers: { lowBps: number; highBps: number };
   amountUnits: string;
   arbitrationFeeBps: number;
-  /// The scripted judge proposals from the corpus drill, plus the signed award.
+  /// The scripted award proposals from the corpus drill, plus the signed award.
   presets: number[];
   signedBps?: number;
   initial?: number;
 };
 
-/// Hand the judge the slider. Whatever it proposes runs through the real
+/// Play a corrupt arbiter with the slider. Whatever it proposes runs through the real
 /// clampToBand and withinOffers, and the payout through the real disputeSettlement.
 export function ClampPlayground({ band, offers, amountUnits, arbitrationFeeBps, presets, signedBps, initial }: ClampPlaygroundProps) {
   const effective = useMemo(() => withinOffers({ ...band, center: (band.lowBps + band.highBps) / 2 }, offers), [band, offers]);
@@ -60,7 +60,7 @@ export function ClampPlayground({ band, offers, amountUnits, arbitrationFeeBps, 
 
       <div>
         <label htmlFor="clamp-range" className="label">
-          The judge proposes
+          A corrupt arbiter proposes
         </label>
         <input
           id="clamp-range"
@@ -73,7 +73,7 @@ export function ClampPlayground({ band, offers, amountUnits, arbitrationFeeBps, 
           className="mt-3 w-full accent-[#4be3a6]"
           aria-valuetext={`${requested} bps`}
         />
-        <div className="mt-3 flex flex-wrap gap-2" aria-label="Scripted judge proposals from the corpus">
+        <div className="mt-3 flex flex-wrap gap-2" aria-label="Scripted award proposals from the corpus">
           {presets.map((preset) => (
             <button key={preset} type="button" onClick={() => set(preset)} className="chip hover:border-ref hover:text-fg">
               {preset}

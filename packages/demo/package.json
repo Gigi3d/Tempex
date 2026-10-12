@@ -14,9 +14,7 @@
     "start": "tsx src/cli.ts",
     "run": "tsx src/cli.ts run",
     "predict": "tsx src/cli.ts predict",
-    "drill": "tsx src/cli.ts drill",
-    "judge": "tsx src/cli.ts judge",
-    "test": "tsx --test test/*.test.ts"
+    "drill": "tsx src/cli.ts drill"
   },
   "dependencies": {
     "@tempex/arbiter": "workspace:*",

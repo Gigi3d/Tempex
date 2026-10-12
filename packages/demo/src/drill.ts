@@ -3,7 +3,7 @@ import { clampToBand, formatBps } from '@tempex/arbiter';
 import { predictScenario, type Prediction } from './predict.js';
 import { SCENARIOS, type Scenario } from './scenarios.js';
 
-/// One scripted judge proposal, and what the guardrail did to it.
+/// One scripted award proposal, and what the guardrail did to it.
 export type DrillProposal = {
   requested: number;
   bps: number;
@@ -30,22 +30,22 @@ export type DrillReport = {
 
 function reading(requested: number, low: number, high: number): string {
   if (requested < low) {
-    return `below the band — the judge leans to the buyer; the floor holds it to ${low} bps`;
+    return `below the band — the proposal leans to the buyer; the floor holds it to ${low} bps`;
   }
   if (requested > high) {
-    return `above the band — the judge leans to the seller; the ceiling holds it to ${high} bps`;
+    return `above the band — the proposal leans to the seller; the ceiling holds it to ${high} bps`;
   }
-  return 'inside the band — passes through unclamped, the judge is not overruled';
+  return 'inside the band — passes through unclamped';
 }
 
-/// Runs the corpus's scripted judge proposals through the real guardrail.
+/// Runs the corpus's scripted award proposals through the real guardrail.
 ///
 /// The claim being tested is that the arbiter is bounded, not merely automated:
-/// an LLM that is hallucinating, bribed or simply wrong can move the ruling
+/// an arbiter that is mistaken, bribed or simply wrong can move the ruling
 /// inside the band the evidence justifies and no further. The invariant that
 /// keeps the band from becoming a rubber stamp is the third one below — a request
 /// already inside passes through with `clamped: false`. A clamp that fires on
-/// every input is not a guardrail, it is a replacement for the judge.
+/// every input is not a guardrail, it is a replacement for the arbiter.
 export function drill(run: (scenario: Scenario) => Prediction = (s) => predictScenario(s)): DrillReport {
   const rows: DrillRow[] = [];
 
@@ -106,7 +106,7 @@ export function renderDrill(report: DrillReport): string {
   out.push('');
   out.push(
     report.ok
-      ? `the guardrail held on all ${report.rows.length} scenarios: no judge proposal escaped its band`
+      ? `the guardrail held on all ${report.rows.length} scenarios: no proposal escaped its band`
       : 'the guardrail is broken: see the violations above',
   );
   return `${out.join('\n')}\n`;

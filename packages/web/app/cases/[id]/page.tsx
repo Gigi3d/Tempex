@@ -84,15 +84,15 @@ export default async function CasePage({ params }: { params: Promise<{ id: strin
           <RulingGauge ruleBand={{ lowBps: p.band[0], highBps: p.band[1] }} offers={offers} awardBps={p.rulingBps} />
         </div>
         <p className="mt-2 text-[14px] text-fg-2">
-          The rules engine signs the band’s centre when no model is configured. A judge panel may move the award, but only inside
-          the effective band.
+          The settlement rule signs the band’s centre: checks pay what they verified, unchecked weight splits at the midpoint, and
+          the offers hold the result inside the effective band.
         </p>
       </section>
 
       <section className="mt-14 grid gap-8 lg:grid-cols-[1fr_1.2fr]">
         <div className="flex flex-col gap-4">
           <Eyebrow>The drill</Eyebrow>
-          <p className="text-[15px] text-fg-2">Scripted judge proposals from the corpus, run through the real clampToBand at build time. The offers narrow the band again on chain.</p>
+          <p className="text-[15px] text-fg-2">Scripted award proposals from the corpus, run through the real clampToBand at build time: whatever any arbiter proposed, this is what could settle. The offers narrow the band again on chain.</p>
           <div className="overflow-x-auto border hairline">
             <table className="table">
               <thead>
