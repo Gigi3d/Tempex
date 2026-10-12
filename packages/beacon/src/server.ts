@@ -69,7 +69,7 @@ type Handler = (ctx: Ctx) => Promise<unknown> | unknown;
 const HANDLERS: Record<string, Handler> = {
   'GET /': ({ beacon }) => ({
     name: beacon.config.name,
-    tagline: 'Bounded autonomy for agent commerce: owners set the limits, agents transact inside them, and a bounded referee settles what they disagree on.',
+    tagline: 'Tempex is the escrow and dispute layer for agent-to-agent commerce: agents pay into escrow inside limits their owners set, and disagreements are settled by a referee bounded to the range both sides agreed.',
     network: beacon.config.network,
     chainId: beacon.config.chainId,
     escrow: beacon.config.escrow,
