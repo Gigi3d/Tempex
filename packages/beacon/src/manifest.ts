@@ -231,7 +231,7 @@ export const TOOLS: ToolDescriptor[] = [
       additionalProperties: false,
     },
     returns: 'The stored RegistryEntry, carrying your signature so any beacon can re-verify it.',
-    when: 'You want to be found, and to be judged by the same escrow everyone else is.',
+    when: 'You want to be found, and to be settled by the same escrow everyone else is.',
   },
 ];
 

@@ -27,7 +27,7 @@ export type RegistryEntry = {
     deliveryDeadlineSeconds: number;
     reviewWindowSeconds: number;
   };
-  /// What this agent agrees to be judged by, which is the whole point of listing.
+  /// What this agent agrees to be settled by, which is the whole point of listing.
   accepts: {
     arbitration: string;
     escrow: Address;

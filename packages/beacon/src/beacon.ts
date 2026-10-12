@@ -721,7 +721,7 @@ export class Beacon {
           throw new BeaconError(
             `feeBps must be an integer from 0 to ${this.escrowState.maxArbitrationFeeBps}`,
             400,
-            'POST {"feeBps":250,"metadataURI":"https://you.example/arbiter.json"}; the URI should describe your model, rules and contact.',
+            'POST {"feeBps":250,"metadataURI":"https://you.example/arbiter.json"}; the URI should describe your fee, rules and contact.',
           );
         }
         return blueprintListArbiter(ctx, feeBps, String(params['metadataURI'] ?? ''));
