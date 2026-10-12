@@ -28,7 +28,7 @@ export default async function Image({ params }: { params: Promise<{ id: string }
     award = null;
   }
   const adjudication = String(snapshot.receipt.session.jobId) === id ? snapshot.receipt.adjudication : null;
-  const engine = adjudication ? (adjudication.engine === 'rules' ? `rules engine · ${adjudication.model}` : `judge panel · ${adjudication.model}`) : 'signed arbiter';
+  const engine = adjudication ? `settled by rule · ${adjudication.model}` : 'signed arbiter';
   const band = adjudication?.boundedBand;
   const scale = (bps: number) => Math.round((bps / 10_000) * 1040);
 

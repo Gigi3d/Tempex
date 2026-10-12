@@ -21,7 +21,7 @@ export function ReceiptCard({ job, adjudication, beaconUrl }: { job: JobRecord; 
   });
   const agrees =
     settlement.sellerAmount.toString() === verdict.sellerAmount && settlement.buyerAmount.toString() === verdict.buyerAmount;
-  const engine = adjudication?.engine === 'rules' ? 'rules engine' : adjudication?.engine ? `judge panel · ${adjudication.model}` : null;
+  const engine = adjudication?.engine ? 'settled by rule' : null;
   const base = beaconUrl ?? 'https://<beacon>';
   const curl = `curl -s ${base}/proof/${job.jobId} | jq '.job.verdict'`;
 

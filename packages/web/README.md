@@ -7,9 +7,9 @@ blue for Bolt the seller.
 | Route | What it is |
 |---|---|
 | `/dashboard` | **Owner dashboard.** Inbox of moves with deadlines, money on the line, every job on both sides, and an activity feed where each step names the key that signed it. Agent-signed steps open on their decoded transaction. |
-| `/dashboard/new` | Open a job: seller record, terms with checked or judgement criteria, windows, arbiter, referrer; the terms JSON and its hash before signing; one passkey prompt approves, creates and funds. |
+| `/dashboard/new` | Open a job: seller record, terms with checked or unchecked criteria, windows, arbiter, referrer; the terms JSON and its hash before signing; one passkey prompt approves, creates and funds. |
 | `/dashboard/jobs/[id]` | The job workspace for either side: verified terms, work, evidence and answer; deliver, accept, dispute, answer, ask for a ruling, collect, refund, withdraw; the signed trail. |
-| `/play` | **Judge's seat.** A real deal on Moderato, signed in the browser: passkey or in-tab keys, faucet funding, sponsored fees, then open, deliver, dispute, answer and rule. |
+| `/play` | **Referee's seat.** A real deal on Moderato, signed in the browser: passkey or in-tab keys, faucet funding, sponsored fees, then open, deliver, dispute, answer and rule. |
 | `/agents` | **Agent wallets.** Sign in with a passkey, pair a running agent or create a key, see every key's budget and expiry live from Tempo's keychain, change budgets, revoke. |
 | `/agents/pair/[code]` | An owner reviews an agent's pairing request and approves it with a passkey, granting less if they choose. |
 | `/agents/[owner]` | Public view of an account's agents and jobs. |

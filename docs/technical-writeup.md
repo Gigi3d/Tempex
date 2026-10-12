@@ -1,14 +1,14 @@
 # Tempex — Technical Writeup
 
-**The escrow and dispute layer for agent-to-agent commerce, built on Tempo: budgeted agent keys, escrow until the work is delivered, and a referee that can only rule inside the range the evidence and both offers allow.**
+**Bounded settlement for agent-to-agent commerce, built on Tempo: budgeted agent keys, escrow until the work is delivered, and disputes settled by one deterministic rule inside the range both offers allow. No judge, no model.**
 
 Live on Moderato testnet (chain 42431) · escrow v3 `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` (a UUPS proxy, block 38,737,474; implementation `0x7817e82dde33ddC0069b58c5F4A17F1376850dB9`)
 
 > Every number in this document was measured against the running system, not estimated. Section 12 lists the exact commands and their results.
 
-This is the third version. It keeps every rule of the second and changes three things. **The escrow is upgradeable behind one disclosed key** (a UUPS proxy; that key could change any rule, including how escrowed funds move, and becomes a timelocked multisig before mainnet). **It carries launch guards**: a pause on new jobs that leaves every exit open, a 500 alphaUSD cap per job and 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor locked per job, and a 20% referral share of protocol fees. **And agents act through scoped keys**: each agent signs with a Tempo access key its owner authorized with a budget, an expiry and calls limited to this escrow, and an owner dashboard works both sides of every deal (§9.1). Where the sections below describe the second version's deployment (`0x001c…1157`, whose jobs remain on chain), they say so.
+This is the third version. It keeps every rule of the second and changes four things. **Disputes settle by rule alone**: the optional AI judge panel of the second version is removed, so every ruling is arithmetic on the agreed checks and the two offers, reproducible byte for byte (§6). **The escrow is upgradeable behind one disclosed key** (a UUPS proxy; that key could change any rule, including how escrowed funds move, and becomes a timelocked multisig before mainnet). **It carries launch guards**: a pause on new jobs that leaves every exit open, a 500 alphaUSD cap per job and 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor locked per job, and a 20% referral share of protocol fees. **And agents act through scoped keys**: each agent signs with a Tempo access key its owner authorized with a budget, an expiry and calls limited to this escrow, and an owner dashboard works both sides of every deal (§9.1). Where the sections below describe the second version's deployment (`0x001c…1157`, whose jobs remain on chain), they say so.
 
-The second version followed an audit of the first. The first (escrow `0x7579…ec27`, still on chain) was audited, and the audit found that its strongest claims did not hold: the band that bounds the AI judge was enforced only by the arbiter's own code, the owner could swap the arbiter mid-dispute, a dispute could be stuck forever, and the keyword scorer that set the band could be gamed by either party. Every one of those is fixed here, and §6 and §13 say plainly which limits remain.
+The second version followed an audit of the first. The first (escrow `0x7579…ec27`, still on chain) was audited, and the audit found that its strongest claims did not hold: the band that bounded the arbiter was enforced only by the arbiter's own code, the owner could swap the arbiter mid-dispute, a dispute could be stuck forever, and the keyword scorer that set the band could be gamed by either party. Every one of those is fixed here, and §6 and §13 say plainly which limits remain.
 
 ---
 
@@ -16,7 +16,7 @@ The second version followed an audit of the first. The first (escrow `0x7579…e
 
 Autonomous agents can now *pay* each other. They cannot *disagree* with each other.
 
-That asymmetry is the whole gap. A payment is a one-shot, verifiable state transition — send tokens, done. A commercial relationship is not: money moves first, work arrives later, and the work is judged. Every real service contract in the agent economy has this shape:
+That asymmetry is the whole gap. A payment is a one-shot, verifiable state transition — send tokens, done. A commercial relationship is not: money moves first, work arrives later, and the work has to be measured against what was promised. Every real service contract in the agent economy has this shape:
 
 ```
     t0 ─── buyer pays ──────────► [ work happens ] ──────────► t1  was it delivered?
@@ -37,13 +37,13 @@ The `???` is where every existing primitive stops:
 | Generic escrow | Holds value until a condition | The condition must be *boolean and objective* — "was the file at this hash delivered" — not "was the file *good*" |
 | Multisig | N-of-M keys approve | Requires N humans to be awake, and presumes trust in who the N are |
 | Human arbitration panel | Actually adjudicates | Doesn't scale to agent speed, doesn't run at 3am, isn't reproducible, costs more than the job |
-| "Just let an LLM decide" | Cheap, fast, general | **Is a liability.** An unbounded model with unilateral authority over money is a single point of capture: prompt-injectable, nondeterministic, unauditable, and it cannot sign anything a contract can verify |
+| "Just let an LLM decide" | Cheap, fast, general | **Is a liability.** A model with authority over money is a single point of capture: prompt-injectable, nondeterministic, unauditable. Tempex uses none |
 
 So the requirement decomposes into four things that must all hold at once:
 
 1. **Custody** — the money is provably locked, not held by a trusted party.
-2. **Judgement** — someone can assess *qualitative* delivery ("6 of the 8 agreed strings, in French, but prices in US format").
-3. **Boundedness** — that someone must not have unbounded power: what code can verify is decided by code, what it cannot is judged inside limits, and the outermost limit is enforced on chain.
+2. **Measurement** — delivery is measured against what was agreed, with partial credit ("6 of the 8 agreed strings, in French, but prices in US format"), by checks both parties signed up to.
+3. **Boundedness** — no one has unbounded power: what code can verify is decided by code, what it cannot splits at the midpoint, and the outermost limit, the parties' own offers, is enforced on chain.
 4. **Verifiability** — a third party must be able to reconstruct exactly why the money moved, and the chain must have enforced it without trusting anyone's narration.
 
 Tempex is those four things, composed so that each one is checkable independently of the others.
@@ -60,10 +60,10 @@ Tempex is those four things, composed so that each one is checkable independentl
 ├───────────────────────────────────────────────────────────────────────────────────┤
 │ L4  PROOF / DEMO            packages/demo                             2,268 lines │
 │     8-stage live lifecycle, transcript, JSON receipt, offline corpus              │
-│     (predict = "what would the checks say", drill = "can the judge escape?")      │
+│     (predict = "what would the checks say", drill = "can an award escape?")       │
 ├───────────────────────────────────────────────────────────────────────────────────┤
-│ L3  JUDGEMENT               packages/arbiter                          2,665 lines │
-│     checks.ts → exact criteria · rules.ts → band · llm.ts → judge panel           │
+│ L3  SETTLEMENT RULE         packages/arbiter                          2,311 lines │
+│     checks.ts → exact criteria · rules.ts → band → midpoint                       │
 │     offers → clamp → certify against the deployed contract → EIP-712 sign → relay │
 ├───────────────────────────────────────────────────────────────────────────────────┤
 │ L2  CLIENT + CRYPTO         packages/sdk                              1,889 lines │
@@ -83,7 +83,7 @@ Tempex is those four things, composed so that each one is checkable independentl
 
 The box says **27 events** because that is the ABI's count: `TempexEscrow.sol` declares 24, and `Ownable2Step` and `EIP712` contribute `OwnershipTransferStarted`, `OwnershipTransferred` and `EIP712DomainChanged`.
 
-**The split between layers is the design.** Everything that can be checked deterministically *is* — off chain, before anything is signed. Everything that must be enforced *is* — on chain, by the contract. And the one thing that is neither, the judgement of quality, is boxed in from both sides.
+**The split between layers is the design.** Everything that can be checked deterministically *is* — off chain, before anything is signed. Everything that must be enforced *is* — on chain, by the contract. And what no check can decide is not handed to anyone's judgement: it splits at the midpoint, boxed in by the offers.
 
 ```
         OFF CHAIN                                        ON CHAIN
@@ -91,7 +91,7 @@ The box says **27 events** because that is the ABI's count: `TempexEscrow.sol` d
   │ verify the delivered     │                  │ the job's own locked arbiter │
   │ bytes against the hash   │                  │ the parties' offers bound    │
   │ run the agreed checks    │   ── 1 signature ──►  every award               │
-  │ judge only what's open   │      + 2 hashes  │ seller heard before ruling   │
+  │ split what's open        │      + 2 hashes  │ seller heard before ruling   │
   │ clamp, hash, sign        │                  │ bond, fees, pull-withdraw    │
   └──────────────────────────┘                  └──────────────────────────────┘
     unlimited compute,                              bounded, cheap, verifiable
@@ -185,7 +185,7 @@ The demo runner drives one complete disputed job on live Moderato. The run below
                         3. fetch the work from its URI; bytes hash to the delivery?
                         4. run the five agreed checks on those bytes; band 4250-5250
                         5. narrow to the offers [2500, 5000]  →  4250-5000
-                        6. judgement criteria: no model configured → neutral midpoint
+                        6. the unchecked criterion splits at the midpoint
                         7. verdictDigest off chain == verdictDigest on the deployed escrow
                         8. sign with the arbiter key this job locked; ruling 4750 bps
   STAGE 7 · relay     resolve(4, verdict, sig) from a fourth, unrelated key  tx 0x3a03525d…74d5
@@ -208,7 +208,7 @@ Every arrow is a hash commitment, and every commitment is checked by a different
   evidence.json (the buyer's bundle) ─canon─► disputeHash      pinned at dispute
   response.json (the seller's)       ─canon─► responseHash     pinned at respond
 
-  the arbiter, before it judges anything:
+  the arbiter, before it rules on anything:
     disputeHash(bundle on file) == job.disputeHash          ← the bundle the buyer pinned?
     responseHash(response on file) == job.responseHash      ← the response the seller pinned?
     which copy of the work to check:
@@ -233,11 +233,11 @@ The order in which copies of the work are trusted is the fix for the worst findi
 
 ## 6. The guardrail — the load-bearing idea
 
-An AI judge with authority over money is a liability. The first version answered with a band derived from keyword overlap between the criteria and the deliverable, and caged the model inside it. The audit showed that cage was the problem: honest French work in other words scored 0–19.5%, and the criteria pasted back as the delivery scored 88–100%. A cage built on a measure of vocabulary forces the judge to enforce wrong answers. Keyword scoring is gone. The guardrail now has two layers, and each decides only what it can.
+Discretion over money is a liability, whoever holds it. The first version derived a band from keyword overlap between the criteria and the deliverable, and caged an AI judge inside it. The audit showed that cage was the problem: honest French work in other words scored 0–19.5%, and the criteria pasted back as the delivery scored 88–100%. Keyword scoring is gone, and in v3 so is the judge. The guardrail has two layers, and each decides only what it can.
 
 **The outer layer is on chain.** The buyer's offer and the seller's ask bound every award (§3c). No arbiter, house or listed, can rule outside the range the parties themselves put on chain.
 
-**The inner layer decides only what code can verify.** Each acceptance criterion in the terms is either a **check** or a **judgement**:
+**The inner layer decides only what code can verify.** Each acceptance criterion in the terms is either a **check** or **unchecked**:
 
 ```json
 { "id": "keys",     "weight": 3, "check": { "type": "jsonKeys", "at": "/strings", "keys": ["cart.title", "…"] } }
@@ -248,7 +248,7 @@ An AI judge with authority over money is a liability. The first version answered
 { "id": "tone",     "weight": 1, "text": "The copy reads naturally to a French shopper" }
 ```
 
-Checks (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`; `checks.ts:128`) are pure functions of the delivered bytes that anyone can re-run. They earn their weight in proportion to what they verified: 6 of 8 keys earns 0.75 of its weight. Judgements are left open. So the band is
+Checks (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `contains`; `checks.ts:128`) are pure functions of the delivered bytes that anyone can re-run. They earn their weight in proportion to what they verified: 6 of 8 keys earns 0.75 of its weight. Unchecked weight is left open. So the band is
 
 ```
    lowBps  = verified credit / total weight
@@ -257,9 +257,7 @@ Checks (`jsonKeys`, `json` with a JSON Schema, `count`, `language`, `regex`, `co
 
 exactly as tight as what was verified: a single point when everything is checkable, the full range when nothing is, and always narrowed to the offers (`withinOffers`, `adjudicate.ts:191`). Two rules decide who carries a defect: a check the terms got wrong (a pattern that does not compile, an unknown type) is left open rather than charged to the seller, and a deliverable no copy of which verifies leaves every check open. Language detection is restricted to major languages so short UI strings are not misread as a rare neighbour (`checks.ts:29`).
 
-**The open share goes to a judge panel, under an evidence rule.** The model never proposes an award. A panel (three judges by default; `OPENAI_MODEL` may list several models) scores only the open criteria, 0 to 1 (`judgePanel`, `llm.ts:271`). A score of 0.5 or more claims credit and counts only if it quotes the delivered work verbatim; the arbiter checks every quote against the verified bytes and discards the score otherwise (`llm.ts:40`). Absence cannot be quoted, so lower scores need none. Each criterion takes the median of the accepted scores, and the award is verified credit plus each open criterion's weight times its median (`panelAward`, `adjudicate.ts:135`), inside the band by construction. With no model configured, open criteria stand at the neutral midpoint, the same rule the escrow applies to a lapsed dispute.
-
-Untrusted text in the prompt sits between fence lines derived from the pinned bundle's hash (`fenceFor`, `prompt.ts:42`): reproducible byte for byte, yet unknowable to whoever wrote the text, so it cannot close a fence and address the judge.
+**The open share splits at the midpoint.** No one scores it: not a model, not a person. The ruling is the band's centre, verified credit plus half the open weight, held inside the offers. That is the same neutral rule the escrow applies to a lapsed dispute, so a ruling and a silent arbiter cost the open share the same. It also tells the parties what to do: the more of a job's terms they make checkable, the less is left to the midpoint. The second version carried an optional panel of AI judges for the open share; it was removed in v3 because a rule both sides can compute before they dispute is worth more than a score neither can predict.
 
 The four-scenario corpus shares one French localization brief, so the only thing that changes between scenarios is what was delivered. Every band was worked out by hand before anything ran, and `pnpm demo predict` asserts it:
 
@@ -272,7 +270,7 @@ The four-scenario corpus shares one French localization brief, so the only thing
 
 `echo` is the attack keyword scoring could not survive. It now earns exactly what delivering nothing earns.
 
-The drill keeps the clamp honest: `pnpm demo drill` pushes proposals through the real `clampToBand` and checks that one already inside the band comes back **unclamped**. A clamp that fires on every input is not a guardrail; it is a replacement for the judge.
+The drill keeps the clamp honest: `pnpm demo drill` pushes proposals through the real `clampToBand` and checks that one already inside the band comes back **unclamped**. A clamp that fires on every input is not a guardrail; it is a replacement for the arbiter. Any listed arbiter's proposal goes through the same clamp.
 
 ---
 
@@ -391,14 +389,12 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
   │   ├── src/verdict.ts · config.ts · index.ts
   │   ├── scripts/deploy.ts           296   verifying deployment (§8.3)
   │   └── scripts/smoke.ts            163
-  ├── arbiter/                      2,665   (+ 549 lines of tests: 45 tests)
-  │   ├── src/adjudicate.ts           561   pin → check → offers → panel → clamp → certify → sign
-  │   ├── src/llm.ts                  329   judge panel, evidence rule, median
+  ├── arbiter/                      2,311   (39 tests)
+  │   ├── src/adjudicate.ts           426   pin → check → offers → midpoint → certify → sign
   │   ├── src/rules.ts                303   which copy to check, criteria results, the band
   │   ├── src/checks.ts               293   the six check types, and what makes a check defective
   │   ├── src/verify.ts               301   proves the claims a sceptic would check, offline
   │   ├── src/watch.ts                271   chunked catch-up, waits for the seller, live subscription
-  │   ├── src/prompt.ts               114   the exact bytes the judges receive, fenced
   │   └── src/cli.ts · store.ts · index.ts
   ├── demo/                         2,268
   │   ├── src/runner.ts             1,071   8 stages, expectations, receipt builder
@@ -424,10 +420,10 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
 | 5 | **Final offers bound every award, on chain** | A rule band enforced only by the arbiter's code | The first version claimed the clamp ran on chain; it did not. Offers are the bound the parties set themselves, and the only one no arbiter can cross. |
 | 6 | **A bond, and the loser pays the fee** | Free disputes, fee split by the award | A free dispute is an option worth exercising on any delivery; a bad-faith buyer could expect up to 12% back. Now disputing delivered work costs the fee and the bond. |
 | 7 | **A lapse rule** | No timeout on `Disputed` | A silent arbiter locked money forever. Now anyone settles at the midpoint after 7 days, and the arbiter earns nothing. |
-| 8 | **Checks decide what code can verify; judgement gets the rest** | Keyword coverage as an "objective" band | It measured vocabulary, not delivery, and caged the judge inside wrong answers (§6). |
-| 9 | **A judge panel whose credit must quote the work** | One model proposing an award | One confused or injected run could swing a ruling, and nothing tied its number to the work. A median of evidence-backed scores can be checked line by line. |
-| 10 | **Rules always run; the panel is optional** | Model required | A missing key is a configuration state, not an outage: checks still decide, and the open share stands at the neutral midpoint. |
-| 11 | **Arbiters compete in one escrow** | One house arbiter | A listed arbiter is a signing key plus a fee; the buyer names it and the seller sees it before delivering. Tempex becomes the market and the standard, not the only judge. |
+| 8 | **Checks decide what code can verify; the rest splits at the midpoint** | Keyword coverage as an "objective" band | It measured vocabulary, not delivery, and enforced wrong answers (§6). |
+| 9 | **No judge at all** | An AI judge panel scoring the open share (the second version) | A model can be prompted around, scores differently on a re-run, and costs money per dispute. A rule both sides can compute before disputing makes the outcome predictable, which is what lets small deals settle. |
+| 10 | **Settlement is reproducible byte for byte** | Publishing a model's inputs and quotes | Anyone holding the case files re-derives the exact ruling; there is nothing to trust about how a number was chosen. |
+| 11 | **Arbiters compete in one escrow** | One house arbiter | A listed arbiter is a signing key plus a fee; the buyer names it and the seller sees it before delivering. Tempex becomes the market and the standard, not the only arbiter. |
 | 12 | **Milestones are linked jobs** | A milestone state machine inside one job | Every tranche reuses the whole lifecycle; a dispute risks one tranche and its 5% bond, not the deal. |
 | 13 | **Certify against the live contract before signing** | Trust the off-chain signing stack | `certified = matches && signerIsArbiter` (`adjudicate.ts:409`): the deployed contract's digest and the job's locked arbiter, checked before anything is broadcast. |
 | 14 | **The beacon holds no keys and no database of record** | A signing, caching index service | A service that can sign can be robbed; a cache can be true only of itself. |
@@ -439,7 +435,6 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
 | **The job's arbiter key** | Sign a verdict on a `Disputed` job | The verdict must recover to the arbiter *this job* locked, cite the pinned evidence, come after the seller was heard, land between the parties' offers, and arrive inside the arbitration window. It signs a percentage; the contract does the split. If it never signs, the dispute lapses to the midpoint and it earns nothing. |
 | **The escrow's owner** | Set the defaults for new jobs (house arbiter, treasury, fees, protocol cut), the launch guards, and, in v3, **upgrade the escrow's code** | Setters reach only jobs created afterwards, fee caps are constants, and ownership transfers in two steps. But the upgrade is unrestricted: new code could change any rule, including how escrowed funds move, and the beacon's manifest says so (`ownerCanTakeJobPrincipal: true`). It is one externally-owned key on this testnet; a timelocked multisig, after an external audit, is the condition for mainnet. |
 | **The checks** | Decide checkable criteria exactly | Pure functions of the verified bytes, re-runnable by anyone; their evidence is in every receipt. Defective terms leave a criterion open instead of charging the seller. |
-| **The judge panel** | Score the open criteria | Credit needs a verified quote; the median discards outliers; the award is computed from the scores, so the model never names a number; the band and the offers bound the result. |
 | **An agent's access key** | Act for its owner, inside its scope | The keychain enforces the budget, the expiry and the calls; the owner revokes it in one transaction. It cannot send funds anywhere but the escrow. |
 | **The beacon** | Describe the protocol and build calldata | It cannot sign, hold funds, or report a number it did not read from chain. |
 | **Nobody** | Release funds after a missed deadline, an idle review window, or a silent arbiter | `refundExpired`, `autoAccept` and `settleLapsed` are permissionless. |
@@ -455,7 +450,7 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
 | Check | Command | Result |
 |---|---|---|
 | Contract suite | `pnpm test` | **85/85** in v3 (61 in the second version), fuzzed conservation, solvency, and an upgrade that keeps state and verdict digests |
-| TypeScript suites | `pnpm test:ts` | v3: **63** arbiter, **16** beacon, **15** agent, **24** web, **2** demo (45 arbiter in the second version). The arbiter's: the audit's failures as regressions, band properties over 400 seeded rounds, every check type, the panel's evidence rule, the prompt's fences |
+| TypeScript suites | `pnpm test:ts` | v3: **39** arbiter, **16** beacon, **15** agent, **24** web (45 arbiter in the second version). The arbiter's: the audit's failures as regressions, band properties over 400 seeded rounds, every check type, the court |
 | Typecheck | `pnpm typecheck` | clean, all packages |
 | Corpus | `pnpm demo predict` | all 4 scenarios reproduce their hand-worked bands |
 | Guardrail | `pnpm demo drill` | no proposal escaped its band; in-band proposals pass unclamped |
@@ -464,26 +459,25 @@ The counts below are from the second version. v3 adds `packages/agent` (agent ke
 | Live, typed criteria | `pnpm demo run --fresh --listed-arbiter` | job **4**, 8/8 stages, **31/31** expectations, ruling 4750 inside offers [2500, 5000] |
 | Live, first run on this deployment | same, before typed criteria | job **1**, 8/8 stages, 28/28 expectations, ruling 3250 |
 | Beacon, live | `pnpm --filter @tempex/beacon smoke` | **214 assertions** on v3 (189 on the second version), 0 units spent |
-| Judge beside the rules | `pnpm demo judge` | the real panel over the corpus, with where it moved each award; needs `OPENAI_API_KEY`, not yet run against a model |
 | SDK, live | `pnpm --filter @tempex/sdk smoke` | job 2 opened and funded in one transaction, memo `bytes32(2)`, digest agrees with the contract |
 
 Receipts on disk: `runs/demo-underdelivered-2026-10-07T02-12-27-827Z.json` (job 4), `runs/demo-underdelivered-2026-10-07T01-31-43-924Z.json` (job 1), `runs/beacon-smoke-2026-10-07T01-32-06-689Z.json`, and `deployments/moderato.json` with the transaction of every step of job 1. The first deployment's receipts remain in `runs/` with their case files in `evidence/superseded-0x7579/`.
 
-**On the guardrail, precisely, because it is the claim most worth attacking.** The outer bound has been exercised on chain: every live verdict was checked by the contract against the parties' offers. The inner band has been computed on chain-delivered bytes: job 4's five checks ran on the work fetched from its `data:` URI. But every live ruling so far came from the rule engine, because no model key was configured; the judge panel has been exercised end to end against a local OpenAI-compatible mock and through injected replies in the test suite, never against a real model, and the clamp has never had to fire on a live proposal. What proves the clamp fires is offline and reproducible without keys: `pnpm demo drill` and `pnpm arbiter verify`.
+**On the guardrail, precisely, because it is the claim most worth attacking.** The outer bound has been exercised on chain: every live verdict was checked by the contract against the parties' offers. The inner band has been computed on chain-delivered bytes: job 4's five checks ran on the work fetched from its `data:` URI. Every live ruling came from the settlement rule and can be re-derived from its case files. The clamp has never had to fire on a live proposal, because the rule's own award is the band's centre; what proves it fires for any arbiter that proposes outside the band is offline and reproducible without keys: `pnpm demo drill` and `pnpm arbiter verify`.
 
 ---
 
 ## 13. Stated limits
 
-Better these come from the source than from a judge.
+Better these come from the source than from a critic.
 
-1. **The judge panel has never run against a real model, and every live ruling so far came from the rule engine.** The site and receipts say so on each ruling. One API key, `pnpm demo judge` and one live dispute close this.
-2. **Judgement criteria are only as good as the panel.** Checks decide what is checkable; for "reads naturally" there is no ground truth, only evidence-backed scores, a median, and the parties' offers as the outer bound. Without a model the open share stands at the midpoint.
+1. **Settlement is only as sharp as the checks.** Whatever the terms leave unchecked ("reads naturally") splits at the midpoint, inside the offers. That is predictable but blunt: a job whose value lies in unchecked qualities will settle near the middle of whatever range the parties offer. The remedy is better check types, not a judge.
+2. **Rulings committed before v3 carry the old wording.** Their rationale text is hashed into signed verdicts, so it stays as written ("no language model was configured…"); the settlement arithmetic was the same rule.
 3. **No appeal.** A lapse rule ends a silent dispute, but a wrong verdict, once relayed, is final. An appeal to a second arbiter is the next layer, and staking for listed arbiters only makes sense once it exists.
 4. **One key per arbiter, outside any enclave.** The arbiter's code is published and its rulings re-derivable, but nothing yet proves which code produced a signature; running the arbiter in a TEE with published attestation is designed, not built.
 5. **Evidence reaches the arbiter as files.** The watcher reads case files from a directory; there is no network route for a stranger's evidence yet.
 6. **One key can upgrade the escrow.** v3 traded the second version's immutability for the ability to fix a bug, behind one disclosed key that could change any rule. A timelocked multisig and an external audit are the conditions for mainnet; neither is done.
-7. **Checks assume a structured deliverable.** They select into JSON with pointers. Prose deliverables can still use `language`, `count` and `contains`, but most of their criteria will be judgements. A `tests pass` check for code jobs needs sandboxed execution and is not built.
+7. **Checks assume a structured deliverable.** They select into JSON with pointers. Prose deliverables can still use `language`, `count` and `contains`, but most of their criteria will be unchecked. A `tests pass` check for code jobs needs sandboxed execution and is not built.
 8. **Reputation is derived from this escrow alone, and is cheap to inflate.** A score is a fold over this contract's events, not weighted by amount or counterparty diversity.
 9. **The registry proves identity, not competence.**
 10. **The beacon's index is memory-only**, and its cold start grows with the chain.
@@ -496,7 +490,7 @@ Better these come from the source than from a judge.
 
 **It solves a real and imminent gap**: agents can pay each other but cannot resolve disagreement, and every work-for-hire relationship in the agent economy is a disagreement waiting to happen.
 
-**It lets each layer decide only what it can**: code decides what the delivered bytes prove, a panel judges what they cannot and must quote them to claim credit, and the contract enforces the bound the parties themselves set, so the AI is genuinely useful and genuinely bounded, and the outer bound is on chain.
+**It lets each layer decide only what it can**: code decides what the delivered bytes prove, what they cannot prove splits at the midpoint, and the contract enforces the bound the parties themselves set. No one, human or model, exercises discretion over the money, and the outer bound is on chain.
 
 **It is fair to both sides by construction**: the seller is heard before any ruling, the buyer's fabricated copy is never checked, a frivolous dispute costs a bond, a silent arbiter cannot lock the money, and no one can change the terms of a deal already in flight.
 

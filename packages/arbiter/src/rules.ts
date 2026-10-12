@@ -11,20 +11,22 @@ import {
 
 import { checkProblem, runCheck } from './checks.js';
 
-/// The rule layer decides only what code can verify, and nothing else.
+/// Bounded settlement: the rule decides only what code can verify, and nothing
+/// else. There is no model and no discretion anywhere in a ruling.
 ///
 /// Each acceptance criterion in the terms is either a check (a pure function of
 /// the delivered bytes: keys present, schema satisfied, language detected, values
-/// matching a pattern) or a judgement (anything no code can decide, such as "reads
+/// matching a pattern) or unchecked (anything no code can decide, such as "reads
 /// naturally"). Checks are decided exactly and earn their weight in proportion to
-/// what they verified. Judgements are left open for the judge, bounded on chain by
-/// the parties' final offers.
+/// what they verified. Unchecked weight splits at the midpoint, and the result is
+/// bounded on chain by the parties' final offers.
 ///
 /// So the band is exactly as tight as what was verified:
 ///   lowBps  = verified credit / total weight
-///   highBps = lowBps + open weight / total weight
-/// All checks: the band is a single point and no model is needed. All judgement:
-/// the band is the full range, and only the offers bound the ruling.
+///   highBps = lowBps + unchecked weight / total weight
+///   ruling  = the band's centre, held inside the parties' offers
+/// All checks: the band is a single point. All unchecked: the band is the full
+/// range, and the ruling is the midpoint of the two offers.
 ///
 /// There is deliberately no keyword scoring. Counting words a criterion shares
 /// with a deliverable measures vocabulary, not delivery: it gave honest work in
@@ -34,10 +36,10 @@ export type CriterionResult = {
   id: string;
   text: string;
   weight: number;
-  /// 'check' was decided by code; 'judge' is left to the judge; 'open' is a
-  /// check that could not be applied (unverified deliverable, defective terms)
-  /// and is left open like a judgement.
-  kind: 'check' | 'judge' | 'open';
+  /// 'check' was decided by code; 'unchecked' carries no check and splits at
+  /// the midpoint; 'open' is a check that could not be applied (unverified
+  /// deliverable, defective terms) and splits the same way.
+  kind: 'check' | 'unchecked' | 'open';
   /// the check type, for 'check' and 'open' criteria that carry one
   check?: string;
   /// share of the weight earned, 0..1; set for 'check' criteria only
@@ -53,7 +55,7 @@ export type RuleSignals = {
   /// weight decided by checks, and the credit those checks earned
   checkedWeight: number;
   earnedWeight: number;
-  /// weight left to the judge: judgement criteria plus checks left open
+  /// weight no check decided: unchecked criteria plus checks left open
   openWeight: number;
   artifactsDeclared: number;
   artifactsVerifiable: number;
@@ -68,8 +70,7 @@ export type RuleSignals = {
   /// Whose copy of the deliverable was checked. Only a copy whose content hashes
   /// to the on-chain commitment counts as verified.
   scoredCopy: 'uri' | 'buyer' | 'seller' | 'unverified';
-  /// The verified deliverable text, so the judge and its citations read the same
-  /// bytes the checks did. Undefined when no copy verified.
+  /// The verified deliverable text, the exact bytes the checks read. Undefined when no copy verified.
   deliverableText?: string;
   /// The seller pinned a response to the dispute.
   sellerResponded: boolean;
@@ -95,12 +96,12 @@ const clamp = (value: number, low: number, high: number): number =>
 
 export const formatBps = (bps: number): string => `${(bps / 100).toFixed(1)}%`;
 
-/// Everything the arbiter knows before judgement: which copy of the work is the
-/// delivered one, what each checkable criterion earned on it, and how much weight
-/// is left to judgement.
+/// Everything the settlement rests on: which copy of the work is the delivered
+/// one, what each checkable criterion earned on it, and how much weight no check
+/// decided.
 ///
 /// Deterministic on purpose. Same files in, same band out, on any machine, with
-/// no model in the loop, so a ruling can be re-derived and argued with.
+/// no discretion in the loop, so a ruling can be re-derived and argued with.
 export function analyze(input: {
   jobId: number;
   job: Job;
@@ -186,12 +187,12 @@ export function analyze(input: {
   const results: CriterionResult[] = criteria.map((criterion): CriterionResult => {
     const base = { id: criterion.id, text: criterion.text, weight: criterion.weight };
     if (criterion.check === undefined) {
-      return { ...base, kind: 'judge', evidence: 'a judgement criterion: no check can decide it' };
+      return { ...base, kind: 'unchecked', evidence: 'no check was agreed for it, so it splits at the midpoint' };
     }
     const type = String((criterion.check as { type?: unknown }).type);
     const problem = checkProblem(criterion.check);
     if (problem !== null) {
-      flags.push(`criterion ${criterion.id}'s check cannot be applied (${problem}); it is left to judgement`);
+      flags.push(`criterion ${criterion.id}'s check cannot be applied (${problem}); it splits at the midpoint`);
       return { ...base, kind: 'open', check: type, evidence: `the agreed check is defective: ${problem}` };
     }
     if (deliverableText === undefined) {
@@ -226,7 +227,7 @@ export function analyze(input: {
   });
   const evidenceStrength = artifactsDeclared === 0 ? 1 : artifactsVerifiable / artifactsDeclared;
 
-  // ---- the band: verified credit is fixed, open weight is the judge's ----
+  // ---- the band: verified credit is fixed, open weight is undecided ----
   const totalWeight = results.reduce((sum, r) => sum + r.weight, 0);
   const checked = results.filter((r) => r.kind === 'check');
   const checkedWeight = checked.reduce((sum, r) => sum + r.weight, 0);
@@ -237,8 +238,8 @@ export function analyze(input: {
     totalWeight > 0 ? clamp(Math.round((10_000 * weight) / totalWeight), 0, 10_000) : 0;
   const lowBps = totalWeight > 0 ? toBps(earnedWeight) : 0;
   const highBps = totalWeight > 0 ? clamp(toBps(earnedWeight + openWeight), lowBps, 10_000) : 10_000;
-  // With no model, open weight is neither awarded nor refused: the centre splits
-  // it evenly, the same neutral rule the escrow applies to a lapsed dispute.
+  // Open weight is neither awarded nor refused: the centre splits it evenly,
+  // the same neutral rule the escrow applies to a lapsed dispute.
   const band: RuleBand = { lowBps, highBps, center: Math.round((lowBps + highBps) / 2) };
 
   const signals: RuleSignals = {
@@ -259,7 +260,7 @@ export function analyze(input: {
   return { signals, band, blocking, flags };
 }
 
-/// Deterministic prose for the no-model path. Built from the same results the
+/// Deterministic prose for a ruling. Built from the same results the
 /// band came from, so the written rationale cannot claim more than was measured.
 export function composeRuleRationale(input: {
   jobId: number;
@@ -273,7 +274,9 @@ export function composeRuleRationale(input: {
   const lines: string[] = [];
 
   lines.push(
-    'Ruled by the deterministic rule arbiter: no language model was configured, so checkable criteria were decided by their agreed checks and judgement criteria were left at the neutral midpoint.',
+    signals.openWeight === 0
+      ? 'Settled by rule: every criterion was decided by its agreed check, and the result was held inside the range both parties offered.'
+      : 'Settled by rule: checked criteria were decided by their agreed checks, unchecked weight split at the midpoint, and the result was held inside the range both parties offered.',
   );
 
   for (const result of signals.criteria) {

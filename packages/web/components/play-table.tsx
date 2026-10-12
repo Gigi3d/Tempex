@@ -484,17 +484,12 @@ export function PlayTable({ table, scenarios }: { table: play.Table; scenarios: 
                 <p className="display text-[clamp(36px,5vw,64px)]">{pct(ruling.sellerAwardBps)} to Bolt.</p>
                 <RulingGauge ruleBand={ruling.band} offers={preview?.offers ?? null} awardBps={ruling.sellerAwardBps} />
                 <p className="max-w-[70ch] text-[14px] leading-relaxed text-fg-2">{ruling.rationale}</p>
-                {ruling.panelFallback ? (
-                  <p className="border border-pip-dim px-4 py-3 font-mono text-[12px] text-pip">
-                    The judge panel was unavailable, so the rule engine ruled and judgement criteria stood at the neutral midpoint.
-                  </p>
-                ) : null}
                 <dl className="grid gap-px border hairline bg-line text-[13px] [grid-template-columns:repeat(auto-fit,minmax(140px,1fr))]">
                   {[
                     ['Bolt gets', amount(ruling.money.sellerAmount, 'ledger')],
                     ['Pip gets back', amount(ruling.money.buyerAmount, 'ledger')],
                     ['referee fee', amount(ruling.money.arbitrationFee, 'ledger')],
-                    ['engine', ruling.engine === 'llm' ? `judge panel${ruling.usage ? ` · ${(ruling.usage.inputTokens + ruling.usage.outputTokens).toLocaleString('en-US')} tokens` : ''}` : 'rule engine'],
+                    ['settled', `by rule · ${ruling.model}`],
                   ].map(([k, v]) => (
                     <div key={k} className="bg-ink-2 p-3">
                       <dt className="label">{k}</dt>

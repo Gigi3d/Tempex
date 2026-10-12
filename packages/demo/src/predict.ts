@@ -44,7 +44,7 @@ export type PredictedCriterion = {
   id: string;
   text: string;
   weight: number;
-  kind: 'check' | 'judge' | 'open';
+  kind: 'check' | 'unchecked' | 'open';
   /// credit from the check, null when the criterion is left open
   credit: number | null;
   evidence: string;

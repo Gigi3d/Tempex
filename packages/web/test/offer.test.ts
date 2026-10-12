@@ -11,7 +11,7 @@ const offer: Offer = {
   title: 'Translate a README into Spanish',
   spec: 'Markdown in, Markdown out. Keep code blocks untouched; ñ, é and “quotes” included.',
   criteria: [
-    { text: 'Every heading is translated', kind: 'judgement', value: '', weight: 2 },
+    { text: 'Every heading is translated', kind: 'unchecked', value: '', weight: 2 },
     { text: 'Written in Spanish', kind: 'language', value: 'es', weight: 1 },
   ],
   amount: '12.5',

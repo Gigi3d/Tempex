@@ -28,7 +28,7 @@ export type NewJobContext = {
   referralShareBps: number;
 };
 
-type CheckKind = 'judgement' | 'contains' | 'count' | 'language';
+type CheckKind = 'unchecked' | 'contains' | 'count' | 'language';
 type DraftCriterion = { text: string; kind: CheckKind; value: string; weight: number };
 
 const DELIVERY = [
@@ -75,7 +75,7 @@ export function NewJob({ context, mode = 'job' }: { context: NewJobContext; mode
   const [title, setTitle] = useState('');
   const [spec, setSpec] = useState('');
   const [criteria, setCriteria] = useState<DraftCriterion[]>([
-    { text: '', kind: 'judgement', value: '', weight: 1 },
+    { text: '', kind: 'unchecked', value: '', weight: 1 },
   ]);
   const [price, setPrice] = useState('25');
   const [delivery, setDelivery] = useState(DELIVERY[2]!.seconds);
@@ -292,7 +292,7 @@ export function NewJob({ context, mode = 'job' }: { context: NewJobContext; mode
             </Field>
             <div className="flex flex-col gap-2">
               <span className="label">Acceptance criteria</span>
-              <p className="text-[12.5px] text-fg-3">A checked criterion is decided exactly by code; a judgement one is left to the arbiter, bounded by both parties&rsquo; offers.</p>
+              <p className="text-[12.5px] text-fg-3">A checked criterion is decided exactly by code; an unchecked one splits at the midpoint in a dispute, always inside both parties&rsquo; offers.</p>
               <ol className="flex flex-col gap-px border hairline bg-line">
                 {criteria.map((criterion, index) => (
                   <li key={index} className="flex flex-col gap-3 bg-ink-2 p-3 md:flex-row md:items-center">
@@ -309,12 +309,12 @@ export function NewJob({ context, mode = 'job' }: { context: NewJobContext; mode
                       className="panel px-2 py-2 text-[13px]"
                       aria-label={`How c${index + 1} is decided`}
                     >
-                      <option value="judgement">judgement</option>
+                      <option value="unchecked">unchecked</option>
                       <option value="contains">contains…</option>
                       <option value="count">at least N words</option>
                       <option value="language">in language…</option>
                     </select>
-                    {criterion.kind !== 'judgement' ? (
+                    {criterion.kind !== 'unchecked' ? (
                       <input
                         value={criterion.value}
                         onChange={(event) => setCriteria(criteria.map((c, i) => (i === index ? { ...c, value: event.target.value } : c)))}
@@ -339,7 +339,7 @@ export function NewJob({ context, mode = 'job' }: { context: NewJobContext; mode
                   </li>
                 ))}
               </ol>
-              <button type="button" className="btn self-start px-3 py-1.5 text-[12.5px]" onClick={() => setCriteria([...criteria, { text: '', kind: 'judgement', value: '', weight: 1 }])}>
+              <button type="button" className="btn self-start px-3 py-1.5 text-[12.5px]" onClick={() => setCriteria([...criteria, { text: '', kind: 'unchecked', value: '', weight: 1 }])}>
                 + Add criterion
               </button>
             </div>

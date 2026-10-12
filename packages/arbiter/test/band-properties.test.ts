@@ -14,7 +14,7 @@ function randomCriteria(next: () => number): Criterion[] {
   const count = 1 + Math.floor(next() * 6);
   return Array.from({ length: count }, (_, i): Criterion => {
     const weight = 1 + Math.floor(next() * 5);
-    if (next() < 0.4) return { id: `j${i}`, text: `judgement ${i}`, weight };
+    if (next() < 0.4) return { id: `j${i}`, text: `unchecked ${i}`, weight };
     const template = CHECKS[Math.floor(next() * CHECKS.length)] as Exclude<Criterion, string>;
     return { ...template, id: `k${i}`, weight };
   });
@@ -34,7 +34,7 @@ describe('band invariants', () => {
     }
   });
 
-  it('is the full range when every criterion is a judgement', () => {
+  it('is the full range when no criterion has a check', () => {
     const a = analyzeCase({ delivered: HONEST_WORK, criteria: ['reads well', { text: 'is on brand', weight: 4 }] });
     assert.deepEqual([a.band.lowBps, a.band.highBps, a.band.center], [0, 10_000, 5_000]);
   });

@@ -39,7 +39,7 @@ export type Job = {
   platformFeeBps: number;
   arbitrationFeeBps: number;
   /// Treasury's share of the arbitration fee; the arbiter gets the rest. 10000
-  /// for jobs judged by the house arbiter.
+  /// for jobs settled by the house arbiter.
   protocolCutBps: number;
   /// The buyer's offer pinned at dispute: the most it concedes the seller earned.
   buyerOfferBps: number;

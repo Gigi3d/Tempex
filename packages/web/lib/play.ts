@@ -235,9 +235,6 @@ export type Ruling = {
   clamped: boolean;
   money: { sellerAmount: string; buyerAmount: string; arbitrationFee: string; bond: string; bondToSeller: string };
   relay: { hash: string } | null;
-  /// Why a configured judge panel could not rule, when it could not.
-  panelFallback?: string | null;
-  usage?: { inputTokens: number; outputTokens: number } | null;
 };
 
 export async function callReferee(jobId: bigint, evidenceCase: EvidenceCase): Promise<Ruling> {

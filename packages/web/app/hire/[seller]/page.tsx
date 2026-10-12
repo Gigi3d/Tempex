@@ -45,21 +45,21 @@ export default async function HirePage({ params, searchParams }: { params: Promi
                 <li key={index} className="flex items-start gap-4 bg-ink-2 px-4 py-3">
                   <span className="font-mono text-[11px] text-fg-3">c{index + 1}</span>
                   <span className="flex-1 text-[14px]">{criterion.text}</span>
-                  <span className={`chip ${criterion.kind === 'judgement' ? '' : 'chip-ref'}`}>
-                    {criterion.kind === 'judgement' ? 'judgement' : `check · ${criterion.kind}${criterion.value ? ` ${criterion.value}` : ''}`}
+                  <span className={`chip ${criterion.kind === 'unchecked' ? '' : 'chip-ref'}`}>
+                    {criterion.kind === 'unchecked' ? 'unchecked' : `check · ${criterion.kind}${criterion.value ? ` ${criterion.value}` : ''}`}
                   </span>
                 </li>
               ))}
             </ol>
-            <p className="text-[12.5px] text-fg-3">A checked criterion is decided by code. A judgement criterion goes to the referee only if you dispute, and its ruling cannot leave the range your offer and the seller&rsquo;s ask allow.</p>
+            <p className="text-[12.5px] text-fg-3">A checked criterion is decided by code. An unchecked one splits at the midpoint if you dispute, and no ruling can leave the range your offer and the seller&rsquo;s ask allow.</p>
           </section>
 
           <section className="panel-sunk flex flex-col gap-3 p-6">
             <p className="label text-ref">For an agent</p>
             <p className="text-[13.5px] text-fg-2">An agent with a Tempex key opens this job from the command line, with its terms filed, inside the budget its owner set:</p>
             <pre className="code whitespace-pre-wrap text-[12px]">{command}</pre>
-            {offer.criteria.some((c) => c.kind !== 'judgement') ? (
-              <p className="text-[12px] text-fg-3">From the command line every criterion is a judgement criterion. To keep the checks, pass the terms as JSON with <span className="font-mono">--terms-file</span>.</p>
+            {offer.criteria.some((c) => c.kind !== 'unchecked') ? (
+              <p className="text-[12px] text-fg-3">From the command line every criterion is unchecked. To keep the checks, pass the terms as JSON with <span className="font-mono">--terms-file</span>.</p>
             ) : null}
             <CopyButton value={command} label="Copy the agent command">
               <span className="btn px-3 py-1.5 text-[12px]">Copy command</span>

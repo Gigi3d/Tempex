@@ -16,8 +16,7 @@ import { createClient } from 'viem/tempo';
 import { http, webSocket, type Hex, type Transport } from 'viem';
 import { tempoTestnet } from 'viem/tempo/chains';
 
-import { adjudicate, type AdjudicationEngine, type AdjudicationResult, type PanelCache } from './adjudicate.js';
-import type { LlmConfig } from './llm.js';
+import { adjudicate, type AdjudicationResult } from './adjudicate.js';
 
 /// Under Moderato's 100,000-block eth_getLogs ceiling, with room to spare.
 const SCAN_CHUNK_BLOCKS = 50_000n;
@@ -26,10 +25,7 @@ export type WatchOptions = {
   client: TempexClient;
   evidenceDir: string;
   runsDir: string;
-  engine?: AdjudicationEngine;
-  llm?: LlmConfig | null;
   ttlSeconds?: number;
-  panelCache?: PanelCache;
   /// First block scanned for disputes the arbiter missed while it was offline.
   fromBlock?: bigint;
   /// Relay the verdict as well as signing it.
@@ -148,10 +144,7 @@ export async function watchDisputes(options: WatchOptions): Promise<WatchHandle>
         client: options.client,
         jobId,
         evidenceCase,
-        engine: options.engine,
-        llm: options.llm,
         ttlSeconds: options.ttlSeconds,
-        ...(options.panelCache ? { panelCache: options.panelCache } : {}),
         relay: options.relay,
         writeOptions: options.writeOptions,
         log: (line) => log(`job ${key}: ${line}`),

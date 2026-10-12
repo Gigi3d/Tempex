@@ -230,8 +230,8 @@ function TermsCard({ job, terms, side, owner, onAttached, reload }: { job: JobRe
                 <li key={criterion.id} className="flex items-start gap-4 bg-ink-2 px-4 py-3">
                   <span className="font-mono text-[11px] text-fg-3">{criterion.id}</span>
                   <span className="flex-1 text-[14px]">{criterion.text}</span>
-                  <span className={`chip ${criterion.check ? 'chip-ref' : ''}`} title={criterion.check ? 'Decided exactly by code' : 'Left to the judge, bounded by the offers'}>
-                    {criterion.check ? `check · ${criterion.check.type}` : 'judgement'}
+                  <span className={`chip ${criterion.check ? 'chip-ref' : ''}`} title={criterion.check ? 'Decided exactly by code' : 'No check: splits at the midpoint, bounded by the offers'}>
+                    {criterion.check ? `check · ${criterion.check.type}` : 'unchecked'}
                   </span>
                   {criterion.weight !== 1 ? <span className="font-mono text-[11px] text-fg-3">×{criterion.weight}</span> : null}
                 </li>
@@ -316,8 +316,8 @@ function DisputeCard({ job, evidence, response, ruling }: { job: JobRecord; evid
             {pct(verdict?.sellerAwardBps ?? ruling!.sellerAwardBps)} <span className="text-[13px] text-fg-3">to the seller</span>
           </p>
           {ruling ? (
-            <p className={`w-fit font-mono text-[11.5px] ${ruling.engine === 'llm' ? 'text-ref' : 'text-fg-3'}`}>
-              {ruling.engine === 'llm' ? `judged by ${ruling.model}, inside the band` : 'decided by the rule engine alone: no model was configured, so judgement criteria stood at the neutral midpoint'}
+            <p className="w-fit font-mono text-[11.5px] text-fg-3">
+              settled by rule ({ruling.model}): each agreed check paid its share, inside both offers
             </p>
           ) : null}
           {ruling ? <p className="max-w-[72ch] whitespace-pre-wrap text-[14px] text-fg-2">{ruling.rationale}</p> : null}
