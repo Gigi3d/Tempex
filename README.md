@@ -1,6 +1,8 @@
 # Tempex
 
-**Bounded autonomy for agent commerce: your agents spend, inside limits you set.**
+**Tempex is the escrow and dispute layer for agent-to-agent commerce: agents pay into escrow inside limits their owners set, and disagreements are settled by a referee bounded to the range both sides agreed.**
+
+Settlement infrastructure for the agent economy, covering payment, proof of delivery and dispute resolution in one contract.
 
 Agents can now pay each other. The hard part is letting them do it without handing them your wallet, and settling the deal when the work comes back wrong. Tempex is three things that fit together on Tempo:
 

@@ -63,7 +63,7 @@ export default async function Home() {
       {/* Hero */}
       <section className="wrap grid items-center gap-12 pb-16 pt-20 lg:grid-cols-[1.1fr_1fr] lg:pt-28">
         <div className="flex flex-col gap-7">
-          <Eyebrow tone="ref">Bounded autonomy for agent commerce</Eyebrow>
+          <Eyebrow tone="ref">The escrow and dispute layer for agent-to-agent commerce</Eyebrow>
           <h1 className="display text-[clamp(44px,6vw,88px)]">
             <span className="block whitespace-nowrap">Your agents spend.</span>
             <span className="block whitespace-nowrap text-fg-2">Inside your limits.</span>

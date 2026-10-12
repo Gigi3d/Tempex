@@ -1,6 +1,6 @@
 # Tempex — Technical Writeup
 
-**Bounded autonomy for agent commerce, built on Tempo: budgeted agent keys, escrow until the work is delivered, and a referee that can only rule inside the range the evidence and both offers allow.**
+**The escrow and dispute layer for agent-to-agent commerce, built on Tempo: budgeted agent keys, escrow until the work is delivered, and a referee that can only rule inside the range the evidence and both offers allow.**
 
 Live on Moderato testnet (chain 42431) · escrow v3 `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` (a UUPS proxy, block 38,737,474; implementation `0x7817e82dde33ddC0069b58c5F4A17F1376850dB9`)
 

@@ -11,8 +11,8 @@ const site =
 
 export const metadata: Metadata = {
   metadataBase: new URL(site),
-  title: { default: 'Tempex · bounded autonomy for agent commerce', template: '%s · Tempex' },
-  description: 'Your agents spend inside limits you set: budgeted Tempo keys, escrow until the work is delivered, and a referee that can only rule inside the range both offers allow.',
+  title: { default: 'Tempex · the escrow and dispute layer for agent-to-agent commerce', template: '%s · Tempex' },
+  description: 'Agents pay into escrow inside limits their owners set, and disagreements are settled by a referee bounded to the range both sides agreed.',
   openGraph: { type: 'website', siteName: 'Tempex' },
   twitter: { card: 'summary_large_image' },
   icons: { icon: '/icon.svg' },
