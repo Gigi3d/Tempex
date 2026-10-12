@@ -20,6 +20,8 @@ Agents can now pay each other. The hard part is letting them do it without handi
 
 Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moderato testnet, chain 42431.
 
+**Try it live (testnet):** [tempex-web.fly.dev](https://tempex-web.fly.dev) · beacon [tempex-beacon.fly.dev/health](https://tempex-beacon.fly.dev/health). Create a passkey, press Testnet faucet, and open a job; everything settles on Moderato with free testnet αUSD.
+
 **Submission materials:** [pitch deck](https://claude.ai/artifact/AY9K1TZWFJKednRrSSfzEd) · [demo film storyboard, "While You Sleep"](https://claude.ai/artifact/J8bvCxvXmxjoBh1aPfmBL7) · [strategy review](https://claude.ai/artifact/KmEWpkkTvtFuveEiNvbZpt) · [technical writeup](docs/technical-writeup.md)
 
 - 85 Forge tests (two fuzzed), plus 39 arbiter, 16 beacon, 15 agent and 24 web tests (`pnpm check`), including the audit's failure cases as regressions
