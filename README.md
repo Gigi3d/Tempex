@@ -184,6 +184,28 @@ grep -rnE 'privateKeyToAccount|accountFor|privateKeyFor|createWalletClient|walle
 
 The two `eth_sendTransaction` strings in `src/` are *metadata the beacon returns to the caller*, naming the RPC method to submit the calldata it built. The one `privateKey` hit is a suggested `cast wallet new` in an onboarding hint. The only keys in the package belong to the smoke script, signing as a *client* to prove registration and the payment gate.
 
+## Hosting on Fly.io
+
+Three apps, all in `deploy/fly/`, deployed from the repo root:
+
+| App | Config | Public | What it needs |
+|---|---|---|---|
+| `tempex-beacon` | `beacon.fly.toml` | yes | a 1 GB volume `beacon_data` for the document store |
+| `tempex-court` | `court.fly.toml` | **no**, private network only | a 1 GB volume `court_data`, and the secret `ARBITER_KEY` |
+| `tempex-web` | `web.fly.toml` | yes | nothing; it reaches the other two over `*.internal` |
+
+```sh
+fly apps create tempex-beacon && fly apps create tempex-court && fly apps create tempex-web
+fly volumes create beacon_data --app tempex-beacon --region lhr --size 1
+fly volumes create court_data  --app tempex-court  --region lhr --size 1
+fly secrets set ARBITER_KEY=0x... --app tempex-court --stage
+fly deploy --config deploy/fly/beacon.fly.toml
+fly deploy --config deploy/fly/court.fly.toml
+fly deploy --config deploy/fly/web.fly.toml
+```
+
+If you rename an app, change its name everywhere it appears in the three `fly.toml` files (the public URLs and the `*.internal` addresses). Passkeys are bound to the web app's domain, so pick the final one before anyone signs up.
+
 ## Live evidence
 
 - `deployments/moderato.json` — deployment record (block 37,010,916)

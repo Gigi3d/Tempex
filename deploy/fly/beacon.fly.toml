@@ -1,0 +1,52 @@
+# fly deploy --config deploy/fly/beacon.fly.toml   (run from the repo root)
+app = "tempex-beacon"
+primary_region = "lhr"
+
+[build]
+  dockerfile = "Dockerfile.node"
+
+[env]
+  TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz"
+  TEMPEX_ESCROW = "0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a"
+  TEMPEX_TOKEN = "0x20c0000000000000000000000000000000000001"
+  TEMPEX_INDEX_FROM_BLOCK = "38737474"
+  BEACON_NAME = "Tempex Beacon"
+  BEACON_NETWORK = "tempo:moderato"
+  BEACON_SPONSOR_URL = "https://sponsor.moderato.tempo.xyz"
+  BEACON_DISCOVERY_PRICE = "0.01"
+  BEACON_SCAN_CHUNK_BLOCKS = "50000"
+  BEACON_CHALLENGE_TTL = "300"
+  # Listen on IPv6 too: Fly's private network (tempex-web -> tempex-beacon.internal) is IPv6.
+  BEACON_LISTEN = "::"
+  BEACON_PORT = "8787"
+  BEACON_HOST = "https://tempex-beacon.fly.dev"
+  BEACON_PAIR_URL = "https://tempex-web.fly.dev/agents/pair"
+  BEACON_TRUST_PROXY = "1"
+  BEACON_DATA_DIR = "/data"
+  BEACON_REGISTRY_FILE = "registry.json"
+
+[processes]
+  app = "pnpm beacon"
+
+[mounts]
+  source = "beacon_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  # Never sleep: the job index lives in memory and rebuilds from the chain on a cold start.
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "30s"
+    timeout = "5s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
