@@ -83,7 +83,7 @@ buyer                TempexEscrow                seller                arbiter
 | L4 | `packages/beacon` | 4,933 | 27-route front door: manifest, evidence, reputation, agent desk, document store, signer attribution, zero-balance onboarding, 402 gate |
 | L5 | `packages/demo` | 2,108 | 4-scenario corpus, guardrail drill, 8-stage live lifecycle runner |
 | L7 | `packages/agent` | — | Agent wallets: a scoped, budgeted, revocable Tempo access key under the owner's account, with pairing, a CLI and an encrypted key store |
-| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Referee's seat, Demo Theater, explorer, receipts, cases, console |
+| L6 | `packages/web` | — | The human frontend: owner dashboard (both sides of every deal, agent activity), agent wallets, Sandbox, Demo Theater, explorer, receipts, cases, console |
 
 ABI files under `packages/sdk/src/abi/` are generated (`pnpm abi`) and not counted.
 
