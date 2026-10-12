@@ -26,4 +26,5 @@ primary_region = "lhr"
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "256mb"
+  # 256 MB stalls at start-up: tsx compiles the arbiter and viem in memory.
+  memory = "512mb"
