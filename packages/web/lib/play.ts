@@ -152,7 +152,9 @@ export async function openDeal(buyer: Seat, seller: Seat, scenario: CorpusCase, 
       termsHash: hashCanonical(terms),
       deliveryDeadline: now + scenario.deliveryDeadlineSeconds,
       reviewWindow: scenario.reviewWindowSeconds,
-      ...(table.arbiter ? { arbiter: table.arbiter } : {}),
+      // The site's own court is the escrow's house arbiter: leave the field empty
+      // so the contract uses it, since naming it would require a marketplace listing.
+      ...(table.arbiter && !table.court ? { arbiter: table.arbiter } : {}),
       ...(referrer ? { referrer } : {}),
     },
     write,
