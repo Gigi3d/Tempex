@@ -17,6 +17,7 @@ import {
 import { getAddress, type Address, type Hex } from 'viem';
 import { Account, WebAuthnP256, WebCryptoP256 } from 'viem/tempo';
 
+import { requestTestnetFunds } from './faucet';
 import type { CorpusCase } from './snapshot';
 
 /// The deal engine behind /play. Every write goes through the same TempexClient
@@ -105,7 +106,7 @@ export async function balanceOf(seat: Seat): Promise<bigint> {
 /// Tempo's testnet faucet, then a wait until the balance shows it.
 export async function fund(seat: Seat, need: bigint): Promise<bigint> {
   if ((await balanceOf(seat)) >= need) return balanceOf(seat);
-  await seat.client.fundWithFaucet();
+  await requestTestnetFunds(seat.client, seat.address);
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const balance = await balanceOf(seat);
     if (balance >= need) return balance;

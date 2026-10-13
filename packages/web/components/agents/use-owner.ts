@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 
+import { requestTestnetFunds } from '@/lib/faucet';
 import * as owner from '@/lib/owner';
 
 export type OwnerState = {
@@ -82,7 +83,7 @@ export function useOwner(protocol: owner.Protocol): OwnerState {
   const fund = useCallback(async () => {
     if (!session) return;
     await run('Asking the testnet faucet', async () => {
-      await session.tempex.fundWithFaucet();
+      await requestTestnetFunds(session.tempex, session.address);
       for (let i = 0; i < 30; i += 1) {
         const value = await session.tempex.tokenBalance();
         if (value > (balance ?? 0n)) {
