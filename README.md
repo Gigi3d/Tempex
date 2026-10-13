@@ -22,7 +22,7 @@ Built for the Colosseum World's Fair Hackathon, Tempo track. Live on Tempo Moder
 
 **Try it live (testnet):** [tempex-web.fly.dev](https://tempex-web.fly.dev) · beacon [tempex-beacon.fly.dev/health](https://tempex-beacon.fly.dev/health). Create a passkey, press Testnet faucet, and open a job; everything settles on Moderato with free testnet αUSD.
 
-**Submission materials:** [pitch deck](https://gigi3d.github.io/Tempex/deck/) ([PDF](https://gigi3d.github.io/Tempex/deck/tempex-deck.pdf)) · [demo film storyboard, "While You Sleep"](https://claude.ai/artifact/J8bvCxvXmxjoBh1aPfmBL7) · [strategy review](https://claude.ai/artifact/KmEWpkkTvtFuveEiNvbZpt) · [technical writeup](docs/technical-writeup.md)
+**Submission materials:** [pitch deck (PDF)](https://gigi3d.github.io/Tempex/deck/tempex-deck.pdf) · [demo film storyboard, "While You Sleep"](https://claude.ai/artifact/J8bvCxvXmxjoBh1aPfmBL7)
 
 - 85 Forge tests (two fuzzed), plus 39 arbiter, 16 beacon, 15 agent and 24 web tests (`pnpm check`), including the audit's failure cases as regressions
 - Live deployment, v3: `0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a` ([explorer](https://explore.testnet.tempo.xyz/address/0xe3E3Dece68B7D8AD3dc8638B38bf546FF594268a)), a UUPS proxy at block 38,737,474, deployed and verified by `pnpm deploy:escrow`. Launch guards: 500 alphaUSD per job, 25,000 across open jobs, a 0.5 alphaUSD arbitration fee floor, and a 20% referral share. It supersedes v2 at `0x001c…1157`, whose 7 jobs remain on chain.
